@@ -1,0 +1,242 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  DnDn 플랫폼 계정에 배포하는 템플릿.
+  고객 계정에서 포워딩된 이벤트를 수신하고 Lambda를 트리거합니다.
+
+Parameters:
+  AllowedAccountIds:
+    Type: CommaDelimitedList
+    Description: 이벤트를 보낼 수 있는 고객 계정 ID 목록 (쉼표 구분)
+
+  # Lambda ARN — 역할별 분리
+  WorkerLambdaArn:
+    Type: String
+    Description: CloudTrail/Config 이벤트 처리 Worker Lambda ARN
+    Default: ''
+  FindingEnricherLambdaArn:
+    Type: String
+    Description: SecurityHub Finding 처리 Lambda ARN
+    Default: ''
+  HealthEnricherLambdaArn:
+    Type: String
+    Description: AWS Health 이벤트 처리 Lambda ARN
+    Default: ''
+
+  EnableLambdaTrigger:
+    Type: String
+    AllowedValues: ['true', 'false']
+    Default: 'false'
+    Description: Lambda 트리거 활성화 (Lambda 배포 후 true로 변경)
+
+Conditions:
+  ShouldTriggerLambda: !Equals [!Ref EnableLambdaTrigger, 'true']
+
+Resources:
+
+  # ============================================================
+  #  EventBus — 고객 계정 이벤트 수신용
+  # ============================================================
+  DnDnEventBus:
+    Type: AWS::Events::EventBus
+    Properties:
+      Name: dndn-ops-events
+
+  # 크로스 계정 수신 허용 정책
+  DnDnEventBusPolicy:
+    Type: AWS::Events::EventBusPolicy
+    Properties:
+      EventBusName: !Ref DnDnEventBus
+      StatementId: AllowCustomerAccounts
+      Statement:
+        Effect: Allow
+        Principal:
+          AWS: !Ref AllowedAccountIds
+        Action: 'events:PutEvents'
+        Resource: !GetAtt DnDnEventBus.Arn
+
+  # ============================================================
+  #  수신 규칙 — CloudTrail 변경 이벤트 → Worker Lambda
+  # ============================================================
+  CloudTrailReceiveRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: DnDn-Receive-CloudTrail
+      Description: 고객 계정에서 포워딩된 CloudTrail 변경 이벤트 처리
+      EventBusName: !Ref DnDnEventBus
+      State: ENABLED
+      EventPattern:
+        detail-type:
+          - AWS API Call via CloudTrail
+      Targets:
+        - !If
+          - ShouldTriggerLambda
+          - Id: WorkerLambda
+            Arn: !Ref WorkerLambdaArn
+          - Id: LogOnly
+            Arn: !GetAtt EventLogGroup.Arn
+
+  # ============================================================
+  #  수신 규칙 — SecurityHub Finding → Finding Enricher Lambda
+  # ============================================================
+  SecurityHubReceiveRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: DnDn-Receive-SecurityHub
+      Description: 고객 계정에서 포워딩된 Security Hub finding → 이벤트 보고서 생성
+      EventBusName: !Ref DnDnEventBus
+      State: ENABLED
+      EventPattern:
+        source:
+          - aws.securityhub
+        detail-type:
+          - Security Hub Findings - Imported
+          - Security Hub Findings - Custom Action
+      Targets:
+        - !If
+          - ShouldTriggerLambda
+          - Id: FindingEnricher
+            Arn: !Ref FindingEnricherLambdaArn
+          - Id: LogOnly
+            Arn: !GetAtt EventLogGroup.Arn
+
+  # ============================================================
+  #  수신 규칙 — Config 변경 → Worker Lambda
+  # ============================================================
+  ConfigReceiveRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: DnDn-Receive-Config
+      Description: 고객 계정에서 포워딩된 Config 변경 처리
+      EventBusName: !Ref DnDnEventBus
+      State: ENABLED
+      EventPattern:
+        source:
+          - aws.config
+      Targets:
+        - !If
+          - ShouldTriggerLambda
+          - Id: WorkerLambda
+            Arn: !Ref WorkerLambdaArn
+          - Id: LogOnly
+            Arn: !GetAtt EventLogGroup.Arn
+
+  # ============================================================
+  #  수신 규칙 — AWS Health 이벤트 → Health Enricher Lambda
+  # ============================================================
+  HealthReceiveRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: DnDn-Receive-Health
+      Description: 고객 계정에서 포워딩된 AWS Health 이벤트 → 이벤트 보고서 생성
+      EventBusName: !Ref DnDnEventBus
+      State: ENABLED
+      EventPattern:
+        source:
+          - aws.health
+        detail-type:
+          - AWS Health Event
+      Targets:
+        - !If
+          - ShouldTriggerLambda
+          - Id: HealthEnricher
+            Arn: !Ref HealthEnricherLambdaArn
+          - Id: LogOnly
+            Arn: !GetAtt EventLogGroup.Arn
+
+  # ============================================================
+  #  Lambda 실행 권한 (EventBridge → Lambda)
+  # ============================================================
+
+  # CloudTrail → Worker
+  LambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    Condition: ShouldTriggerLambda
+    Properties:
+      FunctionName: !Ref WorkerLambdaArn
+      Action: 'lambda:InvokeFunction'
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt CloudTrailReceiveRule.Arn
+
+  # Config → Worker
+  LambdaInvokePermissionCfg:
+    Type: AWS::Lambda::Permission
+    Condition: ShouldTriggerLambda
+    Properties:
+      FunctionName: !Ref WorkerLambdaArn
+      Action: 'lambda:InvokeFunction'
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt ConfigReceiveRule.Arn
+
+  # SecurityHub → Finding Enricher
+  LambdaInvokePermissionSH:
+    Type: AWS::Lambda::Permission
+    Condition: ShouldTriggerLambda
+    Properties:
+      FunctionName: !Ref FindingEnricherLambdaArn
+      Action: 'lambda:InvokeFunction'
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt SecurityHubReceiveRule.Arn
+
+  # Health → Health Enricher
+  LambdaInvokePermissionHealth:
+    Type: AWS::Lambda::Permission
+    Condition: ShouldTriggerLambda
+    Properties:
+      FunctionName: !Ref HealthEnricherLambdaArn
+      Action: 'lambda:InvokeFunction'
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt HealthReceiveRule.Arn
+
+  # ============================================================
+  #  CloudWatch Log Group — Lambda 없을 때 이벤트 로깅용
+  # ============================================================
+  EventLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /dndn/ops-events
+      RetentionInDays: 30
+
+  EventLogGroupPolicy:
+    Type: AWS::Logs::ResourcePolicy
+    Properties:
+      PolicyName: DnDnEventBusToLogs
+      PolicyDocument: !Sub |
+        {
+          "Version": "2012-10-17",
+          "Statement": [{
+            "Effect": "Allow",
+            "Principal": { "Service": "events.amazonaws.com" },
+            "Action": ["logs:CreateLogStream", "logs:PutLogEvents"],
+            "Resource": "${EventLogGroup.Arn}:*"
+          }]
+        }
+
+  # ============================================================
+  #  Worker용 IAM Role — 고객 계정 AssumeRole 권한
+  # ============================================================
+  WorkerAssumePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: DnDnWorker-AssumeCustomerRoles
+      Description: Worker/Lambda가 고객 계정의 DnDnOpsAgentRole을 AssumeRole
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AssumeCustomerRoles
+            Effect: Allow
+            Action: 'sts:AssumeRole'
+            Resource: 'arn:aws:iam::*:role/DnDnOpsAgentRole'
+
+Outputs:
+  EventBusArn:
+    Description: 고객 CFN 템플릿의 DnDnEventBusArn 파라미터에 이 값을 입력
+    Value: !GetAtt DnDnEventBus.Arn
+  EventBusName:
+    Description: EventBus 이름
+    Value: !Ref DnDnEventBus
+  WorkerAssumePolicyArn:
+    Description: Worker/Lambda IAM Role에 붙일 정책 ARN
+    Value: !Ref WorkerAssumePolicy
+  LogGroupName:
+    Description: 이벤트 로그 그룹
+    Value: !Ref EventLogGroup
