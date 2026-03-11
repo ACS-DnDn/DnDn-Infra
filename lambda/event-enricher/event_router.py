@@ -7,10 +7,10 @@
   DB_PORT                  기본 3306
   DB_NAME                  데이터베이스 이름
   DB_USER                  사용자
-  DB_PASSWORD              비밀번호 (Secrets Manager ARN도 가능)
+  DB_PASSWORD              비밀번호
   REPORT_QUEUE_URL         SQS Queue URL (보고서 생성 요청 전달)
   CUSTOMER_ROLE_NAME       고객 계정 IAM Role 이름 (기본: DnDnOpsAgentRole)
-  ASSUME_ROLE_EXTERNAL_ID  AssumeRole External ID (기본: dndn-ops-agent)
+  ASSUME_ROLE_EXTERNAL_ID  AssumeRole 기본 External ID (고객별 ID는 DB에서 조회)
 """
 
 import json
@@ -49,14 +49,16 @@ def get_workspace_id(account_id: str) -> str | None:
         return cached
 
     conn = _get_conn()
-    with conn.cursor() as cur:
-        cur.execute(
-            "SELECT id FROM workspaces WHERE acct_id = %s LIMIT 1",
-            (account_id,),
-        )
-        row = cur.fetchone()
-    conn.close()
-    result = row["id"] if row else None
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT id FROM workspaces WHERE acct_id = %s LIMIT 1",
+                (account_id,),
+            )
+            row = cur.fetchone()
+        result = row["id"] if row else None
+    finally:
+        conn.close()
     _workspace_cache[account_id] = result
     return result
 
@@ -75,15 +77,14 @@ def is_event_enabled(workspace_id: str, event_key: str) -> bool:
 
     레코드가 없거나 해당 키가 없으면 기본값 False.
     """
+    conn = _get_conn()
     try:
-        conn = _get_conn()
         with conn.cursor() as cur:
             cur.execute(
                 "SELECT event_settings FROM report_settings WHERE workspace_id = %s LIMIT 1",
                 (workspace_id,),
             )
             row = cur.fetchone()
-        conn.close()
 
         if not row or not row["event_settings"]:
             return False
@@ -95,7 +96,9 @@ def is_event_enabled(workspace_id: str, event_key: str) -> bool:
         return bool(settings.get(event_key, False))
     except Exception:
         logger.exception("is_event_enabled 실패: workspace_id=%s, key=%s", workspace_id, event_key)
-        return False
+        raise
+    finally:
+        conn.close()
 
 
 # ── 보고서 생성 트리거 ─────────────────────────────────────────────────────
@@ -160,17 +163,38 @@ def trigger_report(
 _sts = boto3.client("sts", region_name=os.environ.get("AWS_REGION", "ap-northeast-2"))
 
 
+def _get_external_id(account_id: str) -> str:
+    """고객별 ExternalId를 DB에서 조회. 없으면 환경변수 기본값 사용."""
+    default_id = os.environ.get("ASSUME_ROLE_EXTERNAL_ID", "")
+    conn = _get_conn()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT external_id FROM workspaces WHERE acct_id = %s LIMIT 1",
+                (account_id,),
+            )
+            row = cur.fetchone()
+        if row and row.get("external_id"):
+            return row["external_id"]
+        if default_id:
+            return default_id
+        raise ValueError(f"ExternalId를 찾을 수 없습니다: account_id={account_id}")
+    finally:
+        conn.close()
+
+
 def get_customer_session(account_id: str) -> boto3.Session:
     """고객 계정의 DnDnOpsAgentRole을 AssumeRole → boto3 Session 반환.
 
     Lambda가 고객 계정 리소스(EC2, RDS, Health 등)에 접근할 때 사용.
     AssumeRole 실패 시 예외를 전파한다 (플랫폼 계정 fallback 방지).
+    고객별 ExternalId를 DB에서 조회하여 사용한다.
     """
     if not account_id:
         raise ValueError("account_id가 비어있습니다")
 
     role_name   = os.environ.get("CUSTOMER_ROLE_NAME", "DnDnOpsAgentRole")
-    external_id = os.environ.get("ASSUME_ROLE_EXTERNAL_ID", "dndn-ops-agent")
+    external_id = _get_external_id(account_id)
     role_arn    = f"arn:aws:iam::{account_id}:role/{role_name}"
 
     try:

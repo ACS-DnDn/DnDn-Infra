@@ -251,6 +251,9 @@ Resources:
             Effect: Allow
             Action: 'sts:AssumeRole'
             Resource: 'arn:aws:iam::*:role/DnDnOpsAgentRole'
+            Condition:
+              ForAnyValue:StringEquals:
+                aws:ResourceAccount: !Ref AllowedAccountIds
 
 Outputs:
   EventBusArn:

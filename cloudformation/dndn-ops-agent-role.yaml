@@ -26,12 +26,15 @@ Parameters:
     ConstraintDescription: 유효한 EventBus ARN 형식이어야 합니다 (포워딩 비활성화 시 빈 문자열 허용)
   EnableEventForwarding:
     Type: String
-    Description: 실시간 이벤트 포워딩 활성화 여부
+    Description: 실시간 이벤트 포워딩 활성화 여부 (DnDnEventBusArn 설정 후 true로 변경)
     AllowedValues: ['true', 'false']
-    Default: 'true'
+    Default: 'false'
 
 Conditions:
-  ShouldForwardEvents: !Equals [!Ref EnableEventForwarding, 'true']
+  HasEventBusArn: !Not [!Equals [!Ref DnDnEventBusArn, '']]
+  ShouldForwardEvents: !And
+    - !Equals [!Ref EnableEventForwarding, 'true']
+    - !Condition HasEventBusArn
 
 Resources:
 
@@ -417,9 +420,6 @@ Outputs:
   RoleName:
     Description: 생성된 역할 이름
     Value: !Ref DnDnOpsAgentRole
-  ExternalId:
-    Description: AssumeRole 시 사용할 External ID
-    Value: !Ref ExternalId
   EventForwardingEnabled:
     Description: 이벤트 포워딩 활성화 여부
     Value: !Ref EnableEventForwarding
