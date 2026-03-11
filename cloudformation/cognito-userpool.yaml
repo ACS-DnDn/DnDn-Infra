@@ -21,7 +21,8 @@ Resources:
       # 로그인 속성: 이메일
       UsernameAttributes:
         - email
-      AutoVerifiedAttributes: []   # 이메일 인증 비활성화
+      AutoVerifiedAttributes:
+        - email   # AdminCreateUser 시 email_verified=true 자동 설정 → 계정 복구에 필요
 
       # 셀프 가입 비활성화 — AdminCreateUser만 허용
       AdminCreateUserConfig:
@@ -127,3 +128,5 @@ Outputs:
   CognitoRegion:
     Description: Cognito Region
     Value: !Ref "AWS::Region"
+    Export:
+      Name: !Sub "${Environment}-DnDn-CognitoRegion"

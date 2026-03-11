@@ -17,8 +17,6 @@ import json
 import logging
 import os
 from datetime import datetime, timezone
-from functools import lru_cache
-
 import boto3
 import pymysql
 
@@ -41,24 +39,29 @@ def _get_conn():
 
 # ── 워크스페이스 조회 ─────────────────────────────────────────────────────
 
-@lru_cache(maxsize=64)
 def get_workspace_id(account_id: str) -> str | None:
     """AWS account_id(12자리) → workspace primary key(id).
-    lru_cache: Lambda 컨테이너 재사용 시 DB 왕복 절감.
+    결과 캐시: Lambda 컨테이너 재사용 시 DB 왕복 절감.
+    DB 오류 시 캐시하지 않고 예외를 전파한다.
     """
-    try:
-        conn = _get_conn()
-        with conn.cursor() as cur:
-            cur.execute(
-                "SELECT id FROM workspaces WHERE acct_id = %s LIMIT 1",
-                (account_id,),
-            )
-            row = cur.fetchone()
-        conn.close()
-        return row["id"] if row else None
-    except Exception:
-        logger.exception("get_workspace_id 실패: account_id=%s", account_id)
-        return None
+    cached = _workspace_cache.get(account_id)
+    if cached is not None:
+        return cached
+
+    conn = _get_conn()
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT id FROM workspaces WHERE acct_id = %s LIMIT 1",
+            (account_id,),
+        )
+        row = cur.fetchone()
+    conn.close()
+    result = row["id"] if row else None
+    _workspace_cache[account_id] = result
+    return result
+
+
+_workspace_cache: dict[str, str | None] = {}
 
 
 # ── 이벤트 토글 확인 ───────────────────────────────────────────────────────
@@ -120,8 +123,7 @@ def trigger_report(
     """
     queue_url = os.environ.get("REPORT_QUEUE_URL")
     if not queue_url:
-        logger.error("REPORT_QUEUE_URL 환경변수 없음")
-        return
+        raise RuntimeError("REPORT_QUEUE_URL 환경변수가 설정되지 않았습니다")
 
     message = {
         "type":         "event_report",
@@ -158,14 +160,14 @@ def trigger_report(
 _sts = boto3.client("sts", region_name=os.environ.get("AWS_REGION", "ap-northeast-2"))
 
 
-def get_customer_session(account_id: str) -> boto3.Session | None:
+def get_customer_session(account_id: str) -> boto3.Session:
     """고객 계정의 DnDnOpsAgentRole을 AssumeRole → boto3 Session 반환.
 
     Lambda가 고객 계정 리소스(EC2, RDS, Health 등)에 접근할 때 사용.
-    AssumeRole 실패 시 None 반환 → 호출측에서 플랫폼 계정 컨텍스트로 fallback.
+    AssumeRole 실패 시 예외를 전파한다 (플랫폼 계정 fallback 방지).
     """
     if not account_id:
-        return None
+        raise ValueError("account_id가 비어있습니다")
 
     role_name   = os.environ.get("CUSTOMER_ROLE_NAME", "DnDnOpsAgentRole")
     external_id = os.environ.get("ASSUME_ROLE_EXTERNAL_ID", "dndn-ops-agent")
@@ -178,12 +180,13 @@ def get_customer_session(account_id: str) -> boto3.Session | None:
             ExternalId=external_id,
             DurationSeconds=900,
         )
-        creds = resp["Credentials"]
-        return boto3.Session(
-            aws_access_key_id=creds["AccessKeyId"],
-            aws_secret_access_key=creds["SecretAccessKey"],
-            aws_session_token=creds["SessionToken"],
-        )
     except Exception:
         logger.exception("AssumeRole 실패: account_id=%s, role=%s", account_id, role_arn)
-        return None
+        raise
+
+    creds = resp["Credentials"]
+    return boto3.Session(
+        aws_access_key_id=creds["AccessKeyId"],
+        aws_secret_access_key=creds["SecretAccessKey"],
+        aws_session_token=creds["SessionToken"],
+    )

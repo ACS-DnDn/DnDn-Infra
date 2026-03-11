@@ -31,6 +31,17 @@ Parameters:
 Conditions:
   ShouldTriggerLambda: !Equals [!Ref EnableLambdaTrigger, 'true']
 
+Rules:
+  ValidateLambdaArns:
+    RuleCondition: !Equals [!Ref EnableLambdaTrigger, 'true']
+    Assertions:
+      - Assert: !Not [!Equals [!Ref WorkerLambdaArn, '']]
+        AssertDescription: EnableLambdaTrigger가 true일 때 WorkerLambdaArn은 필수입니다
+      - Assert: !Not [!Equals [!Ref FindingEnricherLambdaArn, '']]
+        AssertDescription: EnableLambdaTrigger가 true일 때 FindingEnricherLambdaArn은 필수입니다
+      - Assert: !Not [!Equals [!Ref HealthEnricherLambdaArn, '']]
+        AssertDescription: EnableLambdaTrigger가 true일 때 HealthEnricherLambdaArn은 필수입니다
+
 Resources:
 
   # ============================================================
@@ -65,6 +76,17 @@ Resources:
       EventBusName: !Ref DnDnEventBus
       State: ENABLED
       EventPattern:
+        source:
+          - aws.ec2
+          - aws.rds
+          - aws.s3
+          - aws.lambda
+          - aws.ecs
+          - aws.eks
+          - aws.elasticloadbalancing
+          - aws.autoscaling
+          - aws.iam
+          - aws.cloudformation
         detail-type:
           - AWS API Call via CloudTrail
       Targets:
@@ -112,6 +134,9 @@ Resources:
       EventPattern:
         source:
           - aws.config
+        detail-type:
+          - Config Rules Compliance Change
+          - Config Configuration Item Change
       Targets:
         - !If
           - ShouldTriggerLambda

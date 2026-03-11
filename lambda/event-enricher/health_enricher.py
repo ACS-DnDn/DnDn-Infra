@@ -160,7 +160,11 @@ def handler(event: dict, context: Any) -> dict:
     # 토글 확인
     event_key  = _map_health_event_to_key(detail)
     account_id = event.get("account", "")
-    _session   = get_customer_session(account_id) if account_id else None
+    try:
+        _session = get_customer_session(account_id) if account_id else None
+    except Exception:
+        logger.warning("AssumeRole 실패로 고객 계정 Health API 호출 불가: account_id=%s", account_id)
+        _session = None
     if event_key and account_id:
         workspace_id = get_workspace_id(account_id)
         if workspace_id and not is_event_enabled(workspace_id, event_key):
@@ -285,15 +289,25 @@ def _describe_event(event_arn: str) -> tuple[dict, str]:
 
 def _describe_affected_entities(event_arn: str) -> list[dict]:
     """
-    describe_affected_entities 호출.
+    describe_affected_entities 호출 (페이지네이션 처리).
     반환: entities 목록 (entityArn, entityValue, statusCode 포함)
     """
     try:
         health = _client("health", region_name=HEALTH_REGION)
-        resp   = health.describe_affected_entities(
-            filter={"eventArns": [event_arn]}
-        )
-        return resp.get("entities", [])
+        all_entities = []
+        next_token = None
+
+        while True:
+            kwargs = {"filter": {"eventArns": [event_arn]}}
+            if next_token:
+                kwargs["nextToken"] = next_token
+            resp = health.describe_affected_entities(**kwargs)
+            all_entities.extend(resp.get("entities", []))
+            next_token = resp.get("nextToken")
+            if not next_token:
+                break
+
+        return all_entities
     except Exception as e:
         logger.warning("Health DescribeAffectedEntities failed: %s", e)
         return []

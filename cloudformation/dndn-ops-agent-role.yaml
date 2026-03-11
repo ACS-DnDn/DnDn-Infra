@@ -15,13 +15,15 @@ Parameters:
     ConstraintDescription: 12자리 숫자여야 합니다
   ExternalId:
     Type: String
-    Description: Cross-account AssumeRole 보안을 위한 외부 ID (DnDn이 발급)
+    Description: Cross-account AssumeRole 보안을 위한 외부 ID (DnDn이 고객별 발급, 필수)
     MinLength: 8
-    Default: dndn-ops-agent
+    NoEcho: true
   DnDnEventBusArn:
     Type: String
     Description: DnDn 플랫폼 계정의 EventBridge 버스 ARN
     Default: ''
+    AllowedPattern: '^(arn:aws:events:[a-z0-9-]+:\d{12}:event-bus/[a-zA-Z0-9._-]+)?$'
+    ConstraintDescription: 유효한 EventBus ARN 형식이어야 합니다 (포워딩 비활성화 시 빈 문자열 허용)
   EnableEventForwarding:
     Type: String
     Description: 실시간 이벤트 포워딩 활성화 여부

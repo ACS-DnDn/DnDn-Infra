@@ -137,7 +137,7 @@ def _map_finding_to_key(finding: dict) -> str | None:
         logger.warning("GuardDuty finding type 미매핑: %s", types)
         return None
 
-    if product == "Access Analyzer":
+    if product in ("Access Analyzer", "IAM Access Analyzer"):
         if any("External Access" in t for t in types):
             return "sh-external-access"
         if any("Unused" in t for t in types):
@@ -179,7 +179,11 @@ def _process_finding(finding: dict) -> dict:
     global _session
     event_key  = _map_finding_to_key(finding)
     account_id = finding.get("AwsAccountId", "")
-    _session   = get_customer_session(account_id) if account_id else None
+    try:
+        _session = get_customer_session(account_id) if account_id else None
+    except Exception:
+        logger.warning("AssumeRole 실패로 고객 계정 데이터 수집 불가: account_id=%s", account_id)
+        _session = None
 
     workspace_id = get_workspace_id(account_id) if account_id else None
     if event_key and workspace_id:
@@ -586,11 +590,40 @@ def _collect_iam_role(resource: dict, region: str) -> dict:
 
     # trust policy에 외부 계정 또는 * principal 있으면 internet-facing
     exposure = "internal"
+    # role의 account_id 추출 (arn:aws:iam::ACCOUNT:role/NAME)
+    role_arn_str = resource.get("Id", "")
+    role_account = ""
+    arn_parts = role_arn_str.split(":")
+    if len(arn_parts) >= 5:
+        role_account = arn_parts[4]
+
     for stmt in (trust_doc.get("Statement") or []):
         principal = stmt.get("Principal", {})
-        aws_p = principal if isinstance(principal, str) else principal.get("AWS", "")
-        if aws_p == "*" or (isinstance(aws_p, str) and ":root" in aws_p):
+        # Principal이 "*" 문자열일 수 있음
+        if principal == "*":
             exposure = "internet-facing"
+            break
+        aws_p = principal.get("AWS", []) if isinstance(principal, dict) else []
+        # 단일 문자열을 리스트로 정규화
+        if isinstance(aws_p, str):
+            aws_p = [aws_p]
+        for entry in aws_p:
+            if entry == "*":
+                exposure = "internet-facing"
+                break
+            if ":root" in entry:
+                # 다른 계정의 root면 외부 접근
+                if role_account and role_account not in entry:
+                    exposure = "internet-facing"
+                    break
+                # 자기 계정 root는 internal 유지
+            elif entry.startswith("arn:aws:iam::"):
+                # 다른 계정의 role/user
+                entry_parts = entry.split(":")
+                if len(entry_parts) >= 5 and entry_parts[4] != role_account:
+                    exposure = "internet-facing"
+                    break
+        if exposure == "internet-facing":
             break
 
     return {
@@ -737,9 +770,23 @@ def _collect_ecr_image(resource: dict, region: str) -> dict:
     }
 
 
+def _sqs_arn_to_url(arn: str) -> str:
+    """SQS ARN → Queue URL 변환.
+    arn:aws:sqs:region:account:queue-name → https://sqs.region.amazonaws.com/account/queue-name
+    """
+    parts = arn.split(":")
+    if len(parts) >= 6:
+        region_part  = parts[3]
+        account_part = parts[4]
+        queue_name   = parts[5]
+        return f"https://sqs.{region_part}.amazonaws.com/{account_part}/{queue_name}"
+    return arn  # fallback: 원본 반환
+
+
 def _collect_sqs_queue(resource: dict, region: str) -> dict:
     """SQS Queue — 퍼블릭 정책 여부."""
-    queue_url = resource.get("Id", "")
+    raw_id    = resource.get("Id", "")
+    queue_url = _sqs_arn_to_url(raw_id) if raw_id.startswith("arn:") else raw_id
     exposure  = "unknown"
     try:
         attrs    = _client("sqs", region_name=region).get_queue_attributes(
