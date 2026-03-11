@@ -1,0 +1,429 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  DnDn OpsAgent Role — 고객 AWS 계정에 배포하는 템플릿.
+  DnDn 플랫폼이 이 계정의 인프라 변경 이력을 수집·분석하고,
+  실시간 이벤트를 플랫폼으로 전달할 수 있도록 설정합니다.
+
+# ============================================================
+#  사용자(고객)가 입력하는 파라미터
+# ============================================================
+Parameters:
+  DnDnPlatformAccountId:
+    Type: String
+    Description: DnDn 플랫폼이 운영되는 AWS 계정 ID
+    AllowedPattern: '^\d{12}$'
+    ConstraintDescription: 12자리 숫자여야 합니다
+  ExternalId:
+    Type: String
+    Description: Cross-account AssumeRole 보안을 위한 외부 ID (DnDn이 고객별 발급, 필수)
+    MinLength: 8
+    NoEcho: true
+  DnDnEventBusArn:
+    Type: String
+    Description: DnDn 플랫폼 계정의 EventBridge 버스 ARN
+    Default: ''
+    AllowedPattern: '^(arn:aws:events:[a-z0-9-]+:\d{12}:event-bus/[a-zA-Z0-9._-]+)?$'
+    ConstraintDescription: 유효한 EventBus ARN 형식이어야 합니다 (포워딩 비활성화 시 빈 문자열 허용)
+  EnableEventForwarding:
+    Type: String
+    Description: 실시간 이벤트 포워딩 활성화 여부 (DnDnEventBusArn 설정 후 true로 변경)
+    AllowedValues: ['true', 'false']
+    Default: 'false'
+
+Conditions:
+  HasEventBusArn: !Not [!Equals [!Ref DnDnEventBusArn, '']]
+  ShouldForwardEvents: !And
+    - !Equals [!Ref EnableEventForwarding, 'true']
+    - !Condition HasEventBusArn
+
+Resources:
+
+  # ============================================================
+  #  IAM Role — DnDn 플랫폼이 AssumeRole로 접근
+  # ============================================================
+  DnDnOpsAgentRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: DnDnOpsAgentRole
+      Description: DnDn 플랫폼 운영 자동화 에이전트 역할 (읽기 전용)
+      MaxSessionDuration: 3600
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub 'arn:aws:iam::${DnDnPlatformAccountId}:root'
+            Action: 'sts:AssumeRole'
+            Condition:
+              StringEquals:
+                'sts:ExternalId': !Ref ExternalId
+      Tags:
+        - Key: ManagedBy
+          Value: DnDn
+        - Key: Purpose
+          Value: OpsAutomation
+
+  # ============================================================
+  #  정책 1: CloudTrail — 변경 이벤트 수집
+  # ============================================================
+  CloudTrailReadPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: DnDnOpsAgent-CloudTrail
+      Description: CloudTrail 이벤트 조회
+      Roles:
+        - !Ref DnDnOpsAgentRole
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: CloudTrailRead
+            Effect: Allow
+            Action:
+              - cloudtrail:LookupEvents
+              - cloudtrail:GetTrailStatus
+              - cloudtrail:DescribeTrails
+              - cloudtrail:GetEventSelectors
+              - cloudtrail:GetInsightSelectors
+            Resource: '*'
+
+  # ============================================================
+  #  정책 2: AWS Config — Before/After 상태 비교
+  # ============================================================
+  ConfigReadPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: DnDnOpsAgent-Config
+      Description: AWS Config 리소스 구성 조회
+      Roles:
+        - !Ref DnDnOpsAgentRole
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: ConfigRead
+            Effect: Allow
+            Action:
+              - config:GetResourceConfigHistory
+              - config:BatchGetResourceConfig
+              - config:BatchGetAggregateResourceConfig
+              - config:ListDiscoveredResources
+              - config:DescribeConfigRules
+              - config:GetComplianceDetailsByResource
+              - config:DescribeComplianceByResource
+              - config:DescribeConfigurationRecorders
+              - config:DescribeConfigurationRecorderStatus
+            Resource: '*'
+
+  # ============================================================
+  #  정책 3: Security Hub + Access Analyzer — 보안 현황
+  # ============================================================
+  SecurityReadPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: DnDnOpsAgent-Security
+      Description: Security Hub findings 및 Access Analyzer 조회
+      Roles:
+        - !Ref DnDnOpsAgentRole
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: SecurityHubRead
+            Effect: Allow
+            Action:
+              - securityhub:GetFindings
+              - securityhub:BatchGetFindings
+              - securityhub:GetInsights
+              - securityhub:GetInsightResults
+              - securityhub:DescribeHub
+              - securityhub:DescribeStandards
+              - securityhub:GetEnabledStandards
+              - securityhub:DescribeStandardsControls
+              - securityhub:ListSecurityControlDefinitions
+            Resource: '*'
+          - Sid: AccessAnalyzerRead
+            Effect: Allow
+            Action:
+              - access-analyzer:ListFindings
+              - access-analyzer:GetFinding
+              - access-analyzer:ListAnalyzers
+              - access-analyzer:GetAnalyzer
+            Resource: '*'
+
+  # ============================================================
+  #  정책 4: Cost Explorer — 비용 분석
+  # ============================================================
+  CostReadPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: DnDnOpsAgent-Cost
+      Description: Cost Explorer 비용 데이터 조회
+      Roles:
+        - !Ref DnDnOpsAgentRole
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: CostRead
+            Effect: Allow
+            Action:
+              - ce:GetCostAndUsage
+              - ce:GetCostAndUsageWithResources
+              - ce:GetCostForecast
+              - ce:GetReservationUtilization
+              - ce:GetSavingsPlansUtilization
+              - ce:GetRightsizingRecommendation
+              - ce:GetAnomalies
+              - ce:GetAnomalyMonitors
+            Resource: '*'
+
+  # ============================================================
+  #  정책 5: CloudWatch — 메트릭 비교
+  # ============================================================
+  CloudWatchReadPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: DnDnOpsAgent-CloudWatch
+      Description: CloudWatch 메트릭 및 로그 조회
+      Roles:
+        - !Ref DnDnOpsAgentRole
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: CloudWatchRead
+            Effect: Allow
+            Action:
+              - cloudwatch:GetMetricData
+              - cloudwatch:GetMetricStatistics
+              - cloudwatch:ListMetrics
+              - cloudwatch:DescribeAlarms
+              - cloudwatch:DescribeAnomalyDetectors
+            Resource: '*'
+          - Sid: LogsRead
+            Effect: Allow
+            Action:
+              - logs:DescribeLogGroups
+              - logs:FilterLogEvents
+            Resource: '*'
+
+  # ============================================================
+  #  정책 6: 공통 — 리소스 탐색 + 연동 테스트
+  # ============================================================
+  BaseReadPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: DnDnOpsAgent-Base
+      Description: 기본 리소스 조회 및 연동 확인
+      Roles:
+        - !Ref DnDnOpsAgentRole
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: Identity
+            Effect: Allow
+            Action:
+              - sts:GetCallerIdentity
+            Resource: '*'
+          - Sid: ResourceExplorer
+            Effect: Allow
+            Action:
+              - tag:GetResources
+              - tag:GetTagKeys
+              - ec2:DescribeRegions
+              - ec2:DescribeInstances
+              - ec2:DescribeVpcs
+              - ec2:DescribeSecurityGroups
+              - ec2:DescribeSubnets
+              - ec2:DescribeRouteTables
+              - ec2:DescribeNatGateways
+              - ec2:DescribeNetworkInterfaces
+              - ec2:DescribeAddresses
+              - ec2:DescribeVolumes
+              - rds:DescribeDBInstances
+              - rds:DescribeDBClusters
+              - s3:ListAllMyBuckets
+              - s3:GetBucketLocation
+              - s3:GetPublicAccessBlock
+              - lambda:ListFunctions
+              - lambda:GetFunction
+              - ecs:ListClusters
+              - ecs:DescribeClusters
+              - eks:ListClusters
+              - eks:DescribeCluster
+              - elasticloadbalancing:DescribeLoadBalancers
+              - elasticloadbalancing:DescribeTargetGroups
+              - autoscaling:DescribeAutoScalingGroups
+              - iam:ListRoles
+              - iam:ListPolicies
+              - iam:GetAccountSummary
+              - iam:ListAccountAliases
+              - iam:GetRole
+              - iam:ListAccessKeys
+              - iam:GetAccessKeyLastUsed
+              - kms:DescribeKey
+              - sqs:GetQueueAttributes
+            Resource: '*'
+
+  # ============================================================
+  #  정책 7: AWS Health — 이벤트 상세 조회 (Lambda enricher용)
+  # ============================================================
+  HealthReadPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: DnDnOpsAgent-Health
+      Description: AWS Health 이벤트 상세 및 영향 리소스 조회
+      Roles:
+        - !Ref DnDnOpsAgentRole
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: HealthRead
+            Effect: Allow
+            Action:
+              - health:DescribeEventDetails
+              - health:DescribeAffectedEntities
+              - health:DescribeEvents
+            Resource: '*'
+
+  # ============================================================
+  #  EventBridge — 실시간 이벤트 포워딩 (대상계정 → DnDn 플랫폼)
+  # ============================================================
+
+  # CloudTrail 인프라 변경 이벤트 → DnDn 플랫폼으로 전달
+  CloudTrailEventRule:
+    Type: AWS::Events::Rule
+    Condition: ShouldForwardEvents
+    Properties:
+      Name: DnDn-CloudTrail-Changes
+      Description: 인프라 변경 API 호출을 DnDn 플랫폼으로 포워딩
+      State: ENABLED
+      EventPattern:
+        source:
+          - aws.ec2
+          - aws.rds
+          - aws.s3
+          - aws.lambda
+          - aws.ecs
+          - aws.eks
+          - aws.elasticloadbalancing
+          - aws.autoscaling
+          - aws.iam
+          - aws.cloudformation
+        detail-type:
+          - AWS API Call via CloudTrail
+        detail:
+          eventName:
+            - prefix: Create
+            - prefix: Delete
+            - prefix: Modify
+            - prefix: Update
+            - prefix: Put
+            - prefix: Attach
+            - prefix: Detach
+            - prefix: Associate
+            - prefix: Disassociate
+            - RunInstances
+            - TerminateInstances
+            - StopInstances
+            - StartInstances
+      Targets:
+        - Id: DnDnPlatformBus
+          Arn: !Ref DnDnEventBusArn
+          RoleArn: !GetAtt EventBridgeForwardRole.Arn
+
+  # Security Hub 신규 Finding → DnDn 플랫폼으로 전달
+  SecurityHubEventRule:
+    Type: AWS::Events::Rule
+    Condition: ShouldForwardEvents
+    Properties:
+      Name: DnDn-SecurityHub-Findings
+      Description: Security Hub 신규/업데이트 finding을 DnDn 플랫폼으로 포워딩
+      State: ENABLED
+      EventPattern:
+        source:
+          - aws.securityhub
+        detail-type:
+          - Security Hub Findings - Imported
+          - Security Hub Findings - Custom Action
+      Targets:
+        - Id: DnDnPlatformBus
+          Arn: !Ref DnDnEventBusArn
+          RoleArn: !GetAtt EventBridgeForwardRole.Arn
+
+  # Config 규정 준수 변경 → DnDn 플랫폼으로 전달
+  ConfigEventRule:
+    Type: AWS::Events::Rule
+    Condition: ShouldForwardEvents
+    Properties:
+      Name: DnDn-Config-Changes
+      Description: Config 규정 준수 상태 변경을 DnDn 플랫폼으로 포워딩
+      State: ENABLED
+      EventPattern:
+        source:
+          - aws.config
+        detail-type:
+          - Config Rules Compliance Change
+          - Config Configuration Item Change
+      Targets:
+        - Id: DnDnPlatformBus
+          Arn: !Ref DnDnEventBusArn
+          RoleArn: !GetAtt EventBridgeForwardRole.Arn
+
+  # AWS Health 이벤트 → DnDn 플랫폼으로 전달
+  HealthEventRule:
+    Type: AWS::Events::Rule
+    Condition: ShouldForwardEvents
+    Properties:
+      Name: DnDn-Health-Events
+      Description: AWS Health 이벤트(유지보수, 장애, Retirement 등)를 DnDn 플랫폼으로 포워딩
+      State: ENABLED
+      EventPattern:
+        source:
+          - aws.health
+        detail-type:
+          - AWS Health Event
+      Targets:
+        - Id: DnDnPlatformBus
+          Arn: !Ref DnDnEventBusArn
+          RoleArn: !GetAtt EventBridgeForwardRole.Arn
+
+  # EventBridge가 크로스 계정으로 이벤트를 보내기 위한 역할
+  EventBridgeForwardRole:
+    Type: AWS::IAM::Role
+    Condition: ShouldForwardEvents
+    Properties:
+      RoleName: DnDnEventForwardRole
+      Description: EventBridge가 DnDn 플랫폼 계정으로 이벤트를 전달하기 위한 역할
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: events.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: PutEventsToTarget
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: 'events:PutEvents'
+                Resource: !Ref DnDnEventBusArn
+      Tags:
+        - Key: ManagedBy
+          Value: DnDn
+
+# ============================================================
+#  출력값
+# ============================================================
+Outputs:
+  RoleArn:
+    Description: DnDn 플랫폼에서 AssumeRole 할 역할 ARN
+    Value: !GetAtt DnDnOpsAgentRole.Arn
+  RoleName:
+    Description: 생성된 역할 이름
+    Value: !Ref DnDnOpsAgentRole
+  EventForwardingEnabled:
+    Description: 이벤트 포워딩 활성화 여부
+    Value: !Ref EnableEventForwarding
+  EventForwardRoleArn:
+    Condition: ShouldForwardEvents
+    Description: EventBridge 포워딩 역할 ARN
+    Value: !GetAtt EventBridgeForwardRole.Arn
