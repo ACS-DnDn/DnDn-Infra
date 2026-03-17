@@ -29,10 +29,7 @@ Resources:
         AllowAdminCreateUserOnly: true
         InviteMessageTemplate:
           EmailSubject: "[DnDn] 계정이 생성되었습니다"
-          EmailMessage: >
-            안녕하세요, DnDn 플랫폼 계정이 생성되었습니다.
-            임시 비밀번호: {####}
-            첫 로그인 시 비밀번호를 변경해 주세요.
+          EmailMessage: "안녕하세요, DnDn 플랫폼 계정이 생성되었습니다.<br><br>임시 비밀번호: {####}<br><br><a href='https://www.dndn.cloud/login'>로그인 하러 가기</a><br><br>첫 로그인 시 비밀번호를 변경해 주세요."
           SMSMessage: "DnDn 임시 비밀번호: {####}"
 
       # 비밀번호 정책 (프론트 PW_RULES와 일치)
@@ -102,6 +99,34 @@ Resources:
       EnableTokenRevocation: true
 
       PreventUserExistenceErrors: ENABLED   # 사용자 존재 여부 노출 방지
+
+# ---------------------------------------------------------------
+# Cognito 그룹
+# ---------------------------------------------------------------
+
+  # HR 관리자 — dndn-hr 접근, 사원/부서 CRUD
+  GroupHr:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      GroupName: hr
+      UserPoolId: !Ref DnDnUserPool
+      Description: "HR 관리자. dndn-hr 접근 및 사원/부서 관리 권한."
+
+  # 부서장 — 메인 앱 워크스페이스 생성 가능
+  GroupLeader:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      GroupName: leader
+      UserPoolId: !Ref DnDnUserPool
+      Description: "부서장. 메인 앱에서 워크스페이스 생성 권한."
+
+  # 일반 사원 — 메인 앱 소속 워크스페이스 사용
+  GroupMember:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      GroupName: member
+      UserPoolId: !Ref DnDnUserPool
+      Description: "일반 사원. 부서장이 연동한 워크스페이스 접근."
 
 # ---------------------------------------------------------------
 # Outputs — 배포 후 앱 설정에 사용
