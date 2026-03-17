@@ -29,10 +29,7 @@ Resources:
         AllowAdminCreateUserOnly: true
         InviteMessageTemplate:
           EmailSubject: "[DnDn] 계정이 생성되었습니다"
-          EmailMessage: >
-            안녕하세요, DnDn 플랫폼 계정이 생성되었습니다.
-            임시 비밀번호: {####}
-            첫 로그인 시 비밀번호를 변경해 주세요.
+          EmailMessage: "안녕하세요, DnDn 플랫폼 계정이 생성되었습니다.<br><br>임시 비밀번호: {####}<br><br><a href='https://www.dndn.cloud/login'>로그인 하러 가기</a><br><br>첫 로그인 시 비밀번호를 변경해 주세요."
           SMSMessage: "DnDn 임시 비밀번호: {####}"
 
       # 비밀번호 정책 (프론트 PW_RULES와 일치)
