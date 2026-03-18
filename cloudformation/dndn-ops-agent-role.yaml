@@ -69,7 +69,6 @@ Resources:
   CloudTrailReadPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
-      ManagedPolicyName: DnDnOpsAgent-CloudTrail
       Description: Read CloudTrail events
       Roles:
         - !Ref DnDnOpsAgentRole
@@ -92,7 +91,6 @@ Resources:
   ConfigReadPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
-      ManagedPolicyName: DnDnOpsAgent-Config
       Description: Read AWS Config resource configurations
       Roles:
         - !Ref DnDnOpsAgentRole
@@ -119,7 +117,6 @@ Resources:
   SecurityReadPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
-      ManagedPolicyName: DnDnOpsAgent-Security
       Description: Read Security Hub findings and Access Analyzer results
       Roles:
         - !Ref DnDnOpsAgentRole
@@ -154,7 +151,6 @@ Resources:
   CostReadPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
-      ManagedPolicyName: DnDnOpsAgent-Cost
       Description: Read Cost Explorer billing data
       Roles:
         - !Ref DnDnOpsAgentRole
@@ -180,7 +176,6 @@ Resources:
   CloudWatchReadPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
-      ManagedPolicyName: DnDnOpsAgent-CloudWatch
       Description: Read CloudWatch metrics and logs
       Roles:
         - !Ref DnDnOpsAgentRole
@@ -209,7 +204,6 @@ Resources:
   BaseReadPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
-      ManagedPolicyName: DnDnOpsAgent-Base
       Description: Base resource discovery and integration check
       Roles:
         - !Ref DnDnOpsAgentRole
@@ -267,7 +261,7 @@ Resources:
   HealthReadPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
-      ManagedPolicyName: DnDnOpsAgent-Health
+
       Description: Read AWS Health event details and affected resources
       Roles:
         - !Ref DnDnOpsAgentRole
