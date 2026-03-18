@@ -69,26 +69,31 @@ resource "aws_iam_role_policy" "gha_deploy" {
     Version = "2012-10-17"
     Statement = [
       {
+        # GetAuthorizationToken은 서비스 레벨 작업 — Resource = "*" 필수
+        Effect   = "Allow"
+        Action   = "ecr:GetAuthorizationToken"
+        Resource = "*"
+      },
+      {
         Effect = "Allow"
         Action = [
-          "ecr:GetAuthorizationToken",
           "ecr:BatchCheckLayerAvailability",
           "ecr:InitiateLayerUpload",
           "ecr:UploadLayerPart",
           "ecr:CompleteLayerUpload",
           "ecr:PutImage",
         ]
-        Resource = "*"
+        Resource = "arn:aws:ecr:ap-northeast-2:${data.aws_caller_identity.current.account_id}:repository/dndn-prd-ecr-*"
       },
       {
-        Effect = "Allow"
-        Action = ["lambda:UpdateFunctionCode", "lambda:GetFunction"]
+        Effect   = "Allow"
+        Action   = ["lambda:UpdateFunctionCode", "lambda:GetFunction"]
         Resource = "arn:aws:lambda:ap-northeast-2:${data.aws_caller_identity.current.account_id}:function:dndn-prd-lmd-*"
       },
       {
         Effect   = "Allow"
         Action   = "s3:PutObject"
-        Resource = "arn:aws:s3:::dndn-prd-s3/lambda/*"
+        Resource = "arn:aws:s3:::${var.s3_bucket_name}/lambda/*"
       },
       {
         Effect   = "Allow"
@@ -137,7 +142,8 @@ resource "aws_iam_role_policy" "api_scheduler" {
           "scheduler:DeleteSchedule",
           "scheduler:GetSchedule",
         ]
-        Resource = "*"
+        # 스케줄은 API가 런타임에 생성하므로 이름을 사전에 알 수 없음 — 계정/리전으로 범위 제한
+        Resource = "arn:aws:scheduler:ap-northeast-2:${data.aws_caller_identity.current.account_id}:schedule/*"
       },
       {
         Effect   = "Allow"
@@ -208,9 +214,21 @@ resource "aws_iam_role" "reporter" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "reporter_bedrock" {
-  role       = aws_iam_role.reporter.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonBedrockFullAccess"
+resource "aws_iam_role_policy" "reporter_bedrock" {
+  name = "BedrockInvokePolicy"
+  role = aws_iam_role.reporter.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "bedrock:InvokeModel",
+        "bedrock:InvokeModelWithResponseStream",
+      ]
+      Resource = "arn:aws:bedrock:ap-northeast-2::foundation-model/*"
+    }]
+  })
 }
 
 resource "aws_iam_role_policy" "reporter_s3" {

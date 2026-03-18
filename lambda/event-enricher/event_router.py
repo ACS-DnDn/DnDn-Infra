@@ -63,10 +63,10 @@ def get_workspace_id(account_id: str) -> str | None:
     """AWS account_id(12자리) → workspace primary key(id).
     결과 캐시: Lambda 컨테이너 재사용 시 DB 왕복 절감.
     DB 오류 시 캐시하지 않고 예외를 전파한다.
+    workspace가 존재하지 않는 경우(None)도 캐시하므로 재조회하지 않는다.
     """
-    cached = _workspace_cache.get(account_id)
-    if cached is not None:
-        return cached
+    if account_id in _workspace_cache:
+        return _workspace_cache[account_id]
 
     conn = _get_conn()
     try:

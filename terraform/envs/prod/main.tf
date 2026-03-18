@@ -149,8 +149,9 @@ module "route53" {
   project     = var.project
   environment = var.environment
 
-  # ALB 배포 후 alb_dns_name 입력
+  # TODO: ALB Controller 배포 후 아래 주석 해제 + terraform apply 재실행
   # alb_dns_name = "xxx.ap-northeast-2.elb.amazonaws.com"
+  # alb_hosted_zone_id 기본값 ZWKZPGTI48KDX (ap-northeast-2) — 타 리전 배포 시 변경 필요
 }
 
 # ── ACM ───────────────────────────────────────────────────────────────────

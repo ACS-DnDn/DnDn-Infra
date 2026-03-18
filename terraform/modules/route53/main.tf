@@ -9,6 +9,10 @@ resource "aws_route53_zone" "main" {
   }
 }
 
+# ── A 레코드 (단일 ALB 설계) ─────────────────────────────────────────────────
+# web과 api가 동일한 ALB를 공유한다. 트래픽 분기는 Ingress 호스트 기반 라우팅으로 처리.
+# ALB가 분리될 경우 alb_dns_name_web / alb_dns_name_api 변수로 분리 필요.
+
 # ── A 레코드: dndn.cloud → Web ALB ───────────────────────────────────────────
 
 resource "aws_route53_record" "web" {
