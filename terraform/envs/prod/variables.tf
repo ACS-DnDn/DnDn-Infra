@@ -29,9 +29,11 @@ variable "allowed_account_ids" {
 }
 
 variable "api_internal_url" {
-  description = "API 서버 K8s 내부 서비스 URL (scheduler-trigger Lambda 환경변수)"
+  # Lambda는 EKS CoreDNS를 사용하지 않으므로 K8s 서비스 DNS 불가.
+  # Internal ALB 배포 후 DNS 이름으로 설정할 것.
+  # 예: http://internal-xxx.ap-northeast-2.elb.amazonaws.com
+  description = "API 서버 Internal ALB URL (ALB 배포 후 설정, scheduler-trigger Lambda 환경변수)"
   type        = string
-  default     = "http://api-service.dndn-api.svc.cluster.local"
 }
 
 variable "internal_api_key" {
