@@ -89,7 +89,7 @@ module "iam_irsa" {
   oidc_provider_arn        = module.eks.oidc_provider_arn
   oidc_provider_url        = module.eks.oidc_provider_url
   report_request_queue_arn = module.sqs.report_request_queue_arn
-  event_report_queue_arn   = module.sqs.event_report_queue_arn
+  s3_event_queue_arn       = module.sqs.s3_event_queue_arn
   s3_bucket_name           = module.s3.bucket_name
 }
 
@@ -114,10 +114,8 @@ module "lambda" {
 
   private_subnet_ids     = module.vpc.private_subnet_ids
   lambda_sg_id           = module.security_groups.lambda_sg_id
-  s3_bucket_name         = module.s3.bucket_name
-  event_report_queue_arn = module.sqs.event_report_queue_arn
-  event_report_queue_url = module.sqs.event_report_queue_url
-  rds_secret_arn         = module.rds.master_user_secret_arn
+  s3_bucket_name = module.s3.bucket_name
+  rds_secret_arn = module.rds.master_user_secret_arn
 }
 
 # ── Cognito ──────────────────────────────────────────────────────────────

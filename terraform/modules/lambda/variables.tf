@@ -23,16 +23,6 @@ variable "s3_bucket_name" {
   type        = string
 }
 
-variable "event_report_queue_arn" {
-  description = "이벤트보고서 SQS ARN"
-  type        = string
-}
-
-variable "event_report_queue_url" {
-  description = "이벤트보고서 SQS URL"
-  type        = string
-}
-
 variable "rds_secret_arn" {
   description = "RDS 자격증명 Secrets Manager ARN"
   type        = string

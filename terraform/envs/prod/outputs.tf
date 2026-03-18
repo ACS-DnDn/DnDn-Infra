@@ -41,11 +41,6 @@ output "report_request_queue_url" {
   value       = module.sqs.report_request_queue_url
 }
 
-output "event_report_queue_url" {
-  description = "이벤트보고서 요청 큐 URL — Reporter 환경변수에 사용"
-  value       = module.sqs.event_report_queue_url
-}
-
 # ── S3 ───────────────────────────────────────────────────────────────────────
 
 output "s3_bucket_name" {

@@ -36,11 +36,6 @@ resource "aws_iam_role_policy" "lambda_custom" {
       },
       {
         Effect   = "Allow"
-        Action   = "sqs:SendMessage"
-        Resource = var.event_report_queue_arn
-      },
-      {
-        Effect   = "Allow"
         Action   = "sts:AssumeRole"
         Resource = "arn:aws:iam::*:role/DnDnOpsAgentRole"
       },
@@ -78,8 +73,7 @@ resource "aws_lambda_function" "finding_enricher" {
     variables = {
       OUTPUT_BUCKET           = var.s3_bucket_name
       RDS_SECRET_ARN          = var.rds_secret_arn
-      REPORT_QUEUE_URL        = var.event_report_queue_url
-      CUSTOMER_ROLE_NAME      = "DnDnOpsAgentRole"
+CUSTOMER_ROLE_NAME      = "DnDnOpsAgentRole"
       ASSUME_ROLE_EXTERNAL_ID = ""
     }
   }
@@ -111,8 +105,7 @@ resource "aws_lambda_function" "health_enricher" {
     variables = {
       OUTPUT_BUCKET           = var.s3_bucket_name
       RDS_SECRET_ARN          = var.rds_secret_arn
-      REPORT_QUEUE_URL        = var.event_report_queue_url
-      CUSTOMER_ROLE_NAME      = "DnDnOpsAgentRole"
+CUSTOMER_ROLE_NAME      = "DnDnOpsAgentRole"
       ASSUME_ROLE_EXTERNAL_ID = ""
     }
   }

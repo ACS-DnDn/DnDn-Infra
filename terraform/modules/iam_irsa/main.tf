@@ -292,7 +292,7 @@ resource "aws_iam_role_policy" "reporter_sqs" {
         "sqs:DeleteMessage",
         "sqs:GetQueueAttributes",
       ]
-      Resource = var.event_report_queue_arn
+      Resource = var.s3_event_queue_arn
     }]
   })
 }
