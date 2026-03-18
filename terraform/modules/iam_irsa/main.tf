@@ -129,6 +129,15 @@ resource "aws_iam_role" "api" {
   })
 }
 
+resource "aws_scheduler_schedule_group" "dndn_schedules" {
+  name = "dndn-schedules"
+
+  tags = {
+    Project     = var.project
+    Environment = var.environment
+  }
+}
+
 resource "aws_iam_role_policy" "api_scheduler" {
   name = "EventBridgeSchedulerPolicy"
   role = aws_iam_role.api.id
@@ -143,9 +152,15 @@ resource "aws_iam_role_policy" "api_scheduler" {
           "scheduler:UpdateSchedule",
           "scheduler:DeleteSchedule",
           "scheduler:GetSchedule",
+          "scheduler:ListSchedules",
         ]
-        # 스케줄은 API가 런타임에 생성하므로 이름을 사전에 알 수 없음 — 계정/리전으로 범위 제한
-        Resource = "arn:aws:scheduler:${local.region}:${data.aws_caller_identity.current.account_id}:schedule/*"
+        Resource = "${aws_scheduler_schedule_group.dndn_schedules.arn}/*"
+      },
+      {
+        # create_schedule / update_schedule 호출 시 Target.RoleArn 전달 필요
+        Effect   = "Allow"
+        Action   = "iam:PassRole"
+        Resource = aws_iam_role.scheduler.arn
       },
       {
         Effect   = "Allow"
