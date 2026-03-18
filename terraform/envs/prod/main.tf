@@ -89,6 +89,8 @@ module "iam_irsa" {
   oidc_provider_arn        = module.eks.oidc_provider_arn
   oidc_provider_url        = module.eks.oidc_provider_url
   report_request_queue_arn = module.sqs.report_request_queue_arn
+  event_report_queue_arn   = module.sqs.event_report_queue_arn
+  s3_bucket_name           = module.s3.bucket_name
 }
 
 # ── S3 ───────────────────────────────────────────────────────────────────────

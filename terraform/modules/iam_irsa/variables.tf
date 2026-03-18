@@ -34,3 +34,8 @@ variable "report_request_queue_arn" {
   description = "보고서 요청 SQS Queue ARN (dndn-prd-sqs-report-request)"
   type        = string
 }
+
+variable "event_report_queue_arn" {
+  description = "이벤트보고서 요청 SQS Queue ARN (dndn-prd-sqs-event-report)"
+  type        = string
+}

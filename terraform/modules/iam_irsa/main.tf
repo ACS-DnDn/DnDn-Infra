@@ -83,7 +83,7 @@ resource "aws_iam_role_policy" "gha_deploy" {
           "ecr:CompleteLayerUpload",
           "ecr:PutImage",
         ]
-        Resource = "arn:aws:ecr:ap-northeast-2:${data.aws_caller_identity.current.account_id}:repository/dndn-prd-ecr-*"
+        Resource = "arn:aws:ecr:ap-northeast-2:${data.aws_caller_identity.current.account_id}:repository/dndn-prd-*"
       },
       {
         Effect   = "Allow"
@@ -191,6 +191,38 @@ resource "aws_iam_role_policy" "worker_assume" {
   })
 }
 
+resource "aws_iam_role_policy" "worker_sqs" {
+  name = "SQSConsumePolicy"
+  role = aws_iam_role.worker.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "sqs:ReceiveMessage",
+        "sqs:DeleteMessage",
+        "sqs:GetQueueAttributes",
+      ]
+      Resource = var.report_request_queue_arn
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "worker_s3" {
+  name = "S3WorkerPolicy"
+  role = aws_iam_role.worker.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["s3:PutObject", "s3:GetObject"]
+      Resource = "arn:aws:s3:::${var.s3_bucket_name}/reports/*"
+    }]
+  })
+}
+
 # ── Reporter Role (Bedrock + S3) ──────────────────────────────────────────
 
 resource "aws_iam_role" "reporter" {
@@ -241,6 +273,24 @@ resource "aws_iam_role_policy" "reporter_s3" {
       Effect   = "Allow"
       Action   = ["s3:PutObject", "s3:GetObject"]
       Resource = "arn:aws:s3:::${var.s3_bucket_name}/reports/*"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "reporter_sqs" {
+  name = "SQSConsumePolicy"
+  role = aws_iam_role.reporter.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "sqs:ReceiveMessage",
+        "sqs:DeleteMessage",
+        "sqs:GetQueueAttributes",
+      ]
+      Resource = var.event_report_queue_arn
     }]
   })
 }

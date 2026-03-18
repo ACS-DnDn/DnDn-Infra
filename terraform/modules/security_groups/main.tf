@@ -68,7 +68,7 @@ resource "aws_security_group" "alb" {
 
 resource "aws_security_group" "node" {
   name        = "${local.prefix}-SG-NODE"
-  description = "EKS Node - traffic from ALB"
+  description = "EKS Node - traffic from ALB and inter-pod"
   vpc_id      = var.vpc_id
 
   ingress {
@@ -77,6 +77,14 @@ resource "aws_security_group" "node" {
     to_port                  = 32767
     protocol                 = "tcp"
     source_security_group_id = aws_security_group.alb.id
+  }
+
+  ingress {
+    description = "Pod-to-Pod 통신 (동일 SG 노드 간 전체 포트)"
+    from_port   = 0
+    to_port     = 65535
+    protocol    = "tcp"
+    self        = true
   }
 
   egress {
