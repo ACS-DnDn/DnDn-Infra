@@ -372,6 +372,9 @@ MSBuild_Logs/
 # AWS SAM Build and Temporary Artifacts folder
 .aws-sam
 
+# EC2 Key Pair — 절대 커밋 금지
+*.pem
+
 # NVidia Nsight GPU debugger configuration file
 *.nvuser
 

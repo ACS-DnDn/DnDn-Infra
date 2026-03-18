@@ -25,7 +25,7 @@ NOTE:
 
 환경 변수:
   OUTPUT_BUCKET    - enriched 결과를 저장할 S3 버킷 이름 (없으면 S3 저장 생략)
-  DB_HOST / DB_PORT / DB_NAME / DB_USER / DB_PASSWORD  - 이벤트 설정 DB
+  RDS_SECRET_ARN   - Secrets Manager 시크릿 ARN (DB 자격증명, event_router._get_db_credentials 참조)
   REPORT_QUEUE_URL - 보고서 생성 SQS Queue URL
 """
 

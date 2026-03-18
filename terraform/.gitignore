@@ -1,0 +1,21 @@
+# tfstate — 절대 커밋 금지 (S3 backend 사용)
+*.tfstate
+*.tfstate.backup
+
+# Terraform 초기화 디렉토리
+.terraform/
+.terraform.lock.hcl
+
+# 민감값 변수 파일
+*.tfvars
+!*.tfvars.example
+
+# 로컬 override 파일
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# crash log
+crash.log
+crash.*.log
