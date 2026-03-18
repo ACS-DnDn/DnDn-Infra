@@ -17,3 +17,13 @@ output "scheduler_role_arn" {
   description = "EventBridge Scheduler 실행 Role ARN"
   value       = aws_iam_role.scheduler.arn
 }
+
+output "gha_terraform_role_arn" {
+  description = "GitHub Actions Terraform Role ARN"
+  value       = aws_iam_role.gha_terraform.arn
+}
+
+output "gha_deploy_role_arn" {
+  description = "GitHub Actions Deploy Role ARN"
+  value       = aws_iam_role.gha_deploy.arn
+}

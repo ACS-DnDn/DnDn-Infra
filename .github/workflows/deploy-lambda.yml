@@ -1,0 +1,62 @@
+name: Deploy Lambda
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'lambda/event-enricher/**'
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ap-northeast-2
+  S3_BUCKET: dndn-prd-s3
+
+jobs:
+  deploy:
+    name: Deploy Lambda Functions
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::387721658341:role/DnDn-PRD-GHA-Deploy-Role
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        working-directory: lambda/event-enricher
+        run: |
+          pip install -r requirements.txt -t package/
+          cp *.py package/
+
+      # finding-enricher 패키징 및 배포
+      - name: Package & deploy finding-enricher
+        working-directory: lambda/event-enricher
+        run: |
+          cd package && zip -r ../finding-enricher.zip . && cd ..
+          aws s3 cp finding-enricher.zip s3://${{ env.S3_BUCKET }}/lambda/finding-enricher.zip
+          aws lambda update-function-code \
+            --function-name dndn-prd-lmd-finding-enricher \
+            --s3-bucket ${{ env.S3_BUCKET }} \
+            --s3-key lambda/finding-enricher.zip
+
+      # health-enricher 패키징 및 배포
+      - name: Package & deploy health-enricher
+        working-directory: lambda/event-enricher
+        run: |
+          cd package && zip -r ../health-enricher.zip . && cd ..
+          aws s3 cp health-enricher.zip s3://${{ env.S3_BUCKET }}/lambda/health-enricher.zip
+          aws lambda update-function-code \
+            --function-name dndn-prd-lmd-health-enricher \
+            --s3-bucket ${{ env.S3_BUCKET }} \
+            --s3-key lambda/health-enricher.zip

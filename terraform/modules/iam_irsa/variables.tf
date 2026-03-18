@@ -18,10 +18,10 @@ variable "oidc_provider_url" {
   type        = string
 }
 
-variable "namespace" {
-  description = "Kubernetes 네임스페이스"
+variable "github_org" {
+  description = "GitHub 조직명 (OIDC trust 조건에 사용)"
   type        = string
-  default     = "dndn-prd"
+  default     = "ACS-DnDn"
 }
 
 variable "s3_bucket_name" {
