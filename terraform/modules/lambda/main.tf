@@ -73,7 +73,7 @@ resource "aws_lambda_function" "finding_enricher" {
     variables = {
       OUTPUT_BUCKET           = var.s3_bucket_name
       RDS_SECRET_ARN          = var.rds_secret_arn
-CUSTOMER_ROLE_NAME      = "DnDnOpsAgentRole"
+      CUSTOMER_ROLE_NAME      = "DnDnOpsAgentRole"
       ASSUME_ROLE_EXTERNAL_ID = ""
     }
   }
@@ -105,7 +105,7 @@ resource "aws_lambda_function" "health_enricher" {
     variables = {
       OUTPUT_BUCKET           = var.s3_bucket_name
       RDS_SECRET_ARN          = var.rds_secret_arn
-CUSTOMER_ROLE_NAME      = "DnDnOpsAgentRole"
+      CUSTOMER_ROLE_NAME      = "DnDnOpsAgentRole"
       ASSUME_ROLE_EXTERNAL_ID = ""
     }
   }
