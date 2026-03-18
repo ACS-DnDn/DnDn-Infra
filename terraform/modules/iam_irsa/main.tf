@@ -1,9 +1,11 @@
 locals {
   prefix   = "${var.project}-${var.environment}"
   oidc_url = replace(var.oidc_provider_url, "https://", "")
+  region   = data.aws_region.current.name
 }
 
 data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
 
 # ── GitHub Actions OIDC Provider ──────────────────────────────────────────
 
@@ -83,12 +85,12 @@ resource "aws_iam_role_policy" "gha_deploy" {
           "ecr:CompleteLayerUpload",
           "ecr:PutImage",
         ]
-        Resource = "arn:aws:ecr:ap-northeast-2:${data.aws_caller_identity.current.account_id}:repository/dndn-prd-*"
+        Resource = "arn:aws:ecr:${local.region}:${data.aws_caller_identity.current.account_id}:repository/${local.prefix}-*"
       },
       {
         Effect   = "Allow"
         Action   = ["lambda:UpdateFunctionCode", "lambda:GetFunction"]
-        Resource = "arn:aws:lambda:ap-northeast-2:${data.aws_caller_identity.current.account_id}:function:dndn-prd-lmd-*"
+        Resource = "arn:aws:lambda:${local.region}:${data.aws_caller_identity.current.account_id}:function:${local.prefix}-lmd-*"
       },
       {
         Effect   = "Allow"
@@ -143,7 +145,7 @@ resource "aws_iam_role_policy" "api_scheduler" {
           "scheduler:GetSchedule",
         ]
         # 스케줄은 API가 런타임에 생성하므로 이름을 사전에 알 수 없음 — 계정/리전으로 범위 제한
-        Resource = "arn:aws:scheduler:ap-northeast-2:${data.aws_caller_identity.current.account_id}:schedule/*"
+        Resource = "arn:aws:scheduler:${local.region}:${data.aws_caller_identity.current.account_id}:schedule/*"
       },
       {
         Effect   = "Allow"
@@ -258,7 +260,7 @@ resource "aws_iam_role_policy" "reporter_bedrock" {
         "bedrock:InvokeModel",
         "bedrock:InvokeModelWithResponseStream",
       ]
-      Resource = "arn:aws:bedrock:ap-northeast-2::foundation-model/*"
+      Resource = "arn:aws:bedrock:${local.region}::foundation-model/*"
     }]
   })
 }
@@ -306,6 +308,11 @@ resource "aws_iam_role" "scheduler" {
       Effect    = "Allow"
       Principal = { Service = "scheduler.amazonaws.com" }
       Action    = "sts:AssumeRole"
+      Condition = {
+        StringEquals = {
+          "aws:SourceAccount" = data.aws_caller_identity.current.account_id
+        }
+      }
     }]
   })
 }
