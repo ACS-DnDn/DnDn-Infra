@@ -1,147 +1,153 @@
 # DnDn-Infra
 
-DnDn 플랫폼의 AWS 연동용 인프라 자산을 관리하는 저장소입니다.
+DnDn 플랫폼의 AWS 인프라와 배포 기반을 관리하는 저장소입니다.
 
-현재 이 레포의 범위는 크게 두 가지입니다.
+현재 이 레포는 두 레인을 함께 다룹니다.
 
-1. 고객 AWS 계정과 DnDn 플랫폼 계정의 연결
-2. 수신 이벤트를 정규화하고 보고서 생성을 트리거하는 Lambda 코드
+1. 고객 AWS 계정 온보딩
+2. 플랫폼 공통 인프라와 애플리케이션 런타임 기반
 
-`terraform/`, `docs/`, `scripts/`, `.github/` 같은 런타임/운영 보강 영역은 아직 이 저장소에 포함되어 있지 않습니다.
+즉, 지금은 초기 CloudFormation만 있는 레포가 아니라, `CloudFormation + Terraform`이 함께 존재하는 전환기 구조입니다.
+
+플랫폼 애플리케이션 관점에서는 현재 최소 아래 레포들을 함께 봐야 합니다.
+
+- `DnDn-App`
+  - 메인 DnDn 서비스
+  - `web`, `api`, `worker`, `report`, `contracts`
+- `DnDn-HR`
+  - 인사/조직/계정 관리용 별도 포털
+  - 별도 프론트엔드 앱으로 배포
+  - 백엔드는 메인 서비스와 연동
+  - DnDn 서비스 접근 계정과 부서/사용자 관리 성격으로 이해하는 것이 자연스럽습니다
 
 ## Current Scope
 
-현재 포함된 자산은 아래 두 디렉터리가 전부입니다.
+현재 실제 포함된 디렉터리는 아래와 같습니다.
 
 ```text
 DnDn-Infra/
 ├─ README.md
-├─ .gitignore
 ├─ cloudformation/
-│  ├─ cognito-userpool.yaml
-│  ├─ dndn-ops-agent-role.yaml
-│  └─ dndn-platform-eventbus.yaml
-└─ lambda/
-   └─ event-enricher/
-      ├─ event_router.py
-      ├─ finding_enricher.py
-      ├─ health_enricher.py
-      └─ requirements.txt
+│  └─ dndn-ops-agent-role.yaml
+├─ lambda/
+│  └─ event-enricher/
+│     ├─ event_router.py
+│     ├─ finding_enricher.py
+│     ├─ health_enricher.py
+│     └─ requirements.txt
+├─ terraform/
+│  ├─ envs/
+│  │  └─ prod/
+│  └─ modules/
+│     ├─ acm/
+│     ├─ bastion/
+│     ├─ cognito/
+│     ├─ ecr/
+│     ├─ eks/
+│     ├─ eventbridge/
+│     ├─ iam_irsa/
+│     ├─ lambda/
+│     ├─ rds/
+│     ├─ route53/
+│     ├─ s3/
+│     ├─ security_groups/
+│     ├─ sqs/
+│     └─ vpc/
+└─ docs/
+   ├─ architecture.md
+   ├─ deploy-order.md
+   └─ repo-boundaries.md
 ```
+
+아직 없는 영역:
+
+- `gitops/`
+- `terraform/envs/dev`, `terraform/envs/staging`
+- CI/CD 워크플로우
+- 배포 스크립트
 
 ## What This Repo Does
 
-### 1. Customer Account Integration
+### 1. Customer Account Onboarding
 
-고객 계정에는 `cloudformation/dndn-ops-agent-role.yaml`을 배포합니다.
+`cloudformation/dndn-ops-agent-role.yaml`은 고객 AWS 계정에 배포하는 스택입니다.
 
 - `DnDnOpsAgentRole` 생성
-- 플랫폼 계정이 `sts:AssumeRole`로 접근 가능하도록 설정
-- CloudTrail, Config, Security Hub, Cost Explorer, CloudWatch, 기본 리소스 조회 권한 부여
-- 선택적으로 EventBridge 규칙을 통해 고객 계정 이벤트를 플랫폼 EventBus로 전달
+- 플랫폼 계정이 `sts:AssumeRole` 할 수 있도록 설정
+- 고객 이벤트를 플랫폼 EventBridge로 포워딩할 규칙 생성 가능
 
-### 2. Platform Event Ingestion
+### 2. Platform Runtime Infrastructure
 
-플랫폼 계정에는 `cloudformation/dndn-platform-eventbus.yaml`을 배포합니다.
+`terraform/envs/prod/`는 현재 플랫폼 공통 인프라의 실제 배포 엔트리입니다.
 
-- 크로스 계정 수신용 EventBridge Bus 생성
-- 고객 계정 ID 허용 정책 설정
-- CloudTrail, Config, Security Hub, AWS Health 이벤트 수신 규칙 생성
-- Lambda가 아직 없을 때는 CloudWatch Logs로 기록
-- Lambda 배포 후에는 각 이벤트를 Worker/Finding/Health Lambda로 전달
+현재 `prod`에서 조합되는 주요 모듈:
 
-### 3. Cognito Bootstrap
+- `vpc`
+- `security_groups`
+- `bastion`
+- `ecr`
+- `rds`
+- `eks`
+- `sqs`
+- `s3`
+- `lambda`
+- `cognito`
+- `eventbridge`
+- `route53`
+- `acm`
+- `iam_irsa`
 
-`cloudformation/cognito-userpool.yaml`은 앱 인증 초기 구성을 담당합니다.
+즉, 플랫폼 계정의 공통 AWS 자원은 이미 Terraform 중심으로 넘어온 상태입니다.
 
-- 이메일 기반 Cognito User Pool
-- AdminCreateUser 전용 사용자 생성
-- Secret 없는 App Client
-- `hr`, `leader`, `member` 그룹 생성
+이 인프라는 장기적으로 `DnDn-App`과 `DnDn-HR` 둘 다 올라갈 공통 런타임 기반으로 보는 것이 맞습니다.
 
-### 4. Event Enrichment
+### 3. Event Enricher Lambda Source
 
-`lambda/event-enricher/`는 수신 이벤트를 정규화하고 보고서 생성을 트리거합니다.
+`lambda/event-enricher/`는 EventBridge에 연결되는 Lambda 소스 코드입니다.
 
-- `event_router.py`
-  - MariaDB에서 `workspace_id`, `event_settings`, `external_id` 조회
-  - 고객 계정 `AssumeRole` 세션 생성
-  - SQS로 보고서 생성 요청 전달
 - `finding_enricher.py`
-  - Security Hub finding을 `event_key`로 매핑
-  - 리소스별 추가 정보 수집
-  - canonical JSON 생성 후 S3 저장
-  - SQS로 보고서 생성 트리거
 - `health_enricher.py`
-  - AWS Health 이벤트를 `event_key`로 매핑
-  - Health API 상세/영향 리소스 조회
-  - canonical JSON 생성 후 S3 저장
-  - SQS로 보고서 생성 트리거
+- `event_router.py`
+
+이 코드는 아래 리소스에 의존합니다.
+
+- RDS / MariaDB
+- SQS
+- S3
+- IAM / STS
+
+Terraform의 `lambda` 모듈이 이 함수들의 런타임 자리를 만들고, 코드 배포 패키지는 별도 업로드 흐름을 전제로 합니다.
 
 ## Deployment Shape
 
-현재 코드 기준 배포 흐름은 아래 순서입니다.
+현재 기준 배포 흐름은 아래 순서로 보는 것이 맞습니다.
 
-1. 플랫폼 계정에 `dndn-platform-eventbus.yaml` 배포
-2. 생성된 `EventBusArn`을 고객 계정 배포 파라미터로 사용
-3. 고객 계정에 `dndn-ops-agent-role.yaml` 배포
-4. Lambda, S3, SQS, DB 연결 환경변수 등 런타임 자산 배포
-5. 플랫폼 EventBus 스택에서 `EnableLambdaTrigger=true`로 갱신
-6. 고객 계정 스택에서 `EnableEventForwarding=true`로 갱신
+1. 플랫폼 계정에 `terraform/envs/prod` 적용
+2. Terraform으로 EventBridge, Lambda, Cognito, EKS, RDS, S3, SQS 같은 공통 자원 생성
+3. 필요한 출력값을 기준으로 고객 계정에 `cloudformation/dndn-ops-agent-role.yaml` 배포
+4. Lambda zip / 앱 이미지 / EKS 워크로드를 별도 배포 파이프라인으로 반영
+5. 추후 GitOps가 들어오면 EKS 앱 배포는 Argo CD로 이전
 
-즉, 현재 CloudFormation 템플릿은 "계정 연결"과 "이벤트 라우팅"의 골격을 제공하고, Lambda 실행 인프라 자체는 아직 이 레포에 정의되어 있지 않습니다.
+여기서 앱 워크로드는 현재 기준으로 아래를 포함할 수 있습니다.
 
-## Runtime Dependencies
+- `DnDn-App`의 `web`, `api`, `worker`, `report`
+- `DnDn-HR` 프론트엔드
 
-Lambda 코드는 아래 외부 리소스에 의존합니다.
-
-- MariaDB
-  - `workspaces.acct_id`
-  - `workspaces.external_id`
-  - `report_settings.event_settings`
-- SQS
-  - 보고서 생성 요청 전달용 큐
-- S3
-  - raw/enriched 이벤트 JSON 저장 버킷
-- IAM / STS
-  - 고객 계정 `DnDnOpsAgentRole` AssumeRole
-
-필수 환경변수 예시는 아래와 같습니다.
-
-- `DB_HOST`
-- `DB_PORT`
-- `DB_NAME`
-- `DB_USER`
-- `DB_PASSWORD`
-- `REPORT_QUEUE_URL`
-- `OUTPUT_BUCKET`
-- `CUSTOMER_ROLE_NAME`
-- `ASSUME_ROLE_EXTERNAL_ID`
+즉, 현재는 고객 온보딩만 CloudFormation이고, 플랫폼 인프라는 Terraform이 중심입니다.
 
 ## Current Gaps
 
-이 레포에는 아직 아래 항목이 없습니다.
+아직 비어 있거나 정리가 필요한 항목은 아래와 같습니다.
 
-- Lambda 배포용 CloudFormation/SAM/Terraform
-- Lambda 실행 IAM Role 정의
-- S3 버킷, SQS 큐 생성 템플릿
-- CI/CD 워크플로우
-- 운영 문서와 배포 스크립트
-- Worker Lambda 소스 코드
+- `gitops/` 디렉터리와 Argo CD 선언
+- `dev`, `staging` Terraform 환경
+- Lambda / App 배포용 CI/CD
+- `DnDn-HR`까지 포함한 앱 배포 구조 정리
+- Worker Lambda 또는 CloudTrail / Config 처리 전략 확정
+- 고객 CFN 배포에 필요한 EventBridge 출력값 노출 방식 정리
 
-따라서 현재 상태는 "완성된 전체 인프라 레포"라기보다, DnDn의 AWS 계정 연동 파이프라인을 먼저 분리해 둔 초기 인프라 레포로 보는 게 맞습니다.
+## Related Docs
 
-## Next Recommended Structure
-
-추후 이 레포를 확장한다면, 현재 코드와 가장 직접적으로 이어지는 영역은 아래 정도입니다.
-
-- `docs/`
-  - 배포 순서
-  - 계정 연동 가이드
-  - 이벤트 처리 아키텍처
-- `terraform/`
-  - Lambda, S3, SQS 같은 런타임 자산
-- `scripts/`
-  - 패키징 및 배포 보조 스크립트
-- `.github/workflows/`
-  - lint, package, deploy 자동화
+- [docs/architecture.md](docs/architecture.md)
+- [docs/repo-boundaries.md](docs/repo-boundaries.md)
+- [docs/deploy-order.md](docs/deploy-order.md)
