@@ -332,16 +332,16 @@ resource "aws_iam_role" "scheduler" {
   })
 }
 
-resource "aws_iam_role_policy" "scheduler_sqs" {
-  name = "SQSSendMessagePolicy"
+resource "aws_iam_role_policy" "scheduler_lambda" {
+  name = "LambdaInvokePolicy"
   role = aws_iam_role.scheduler.id
 
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
       Effect   = "Allow"
-      Action   = "sqs:SendMessage"
-      Resource = var.report_request_queue_arn
+      Action   = "lambda:InvokeFunction"
+      Resource = "arn:aws:lambda:${local.region}:${data.aws_caller_identity.current.account_id}:function:${local.prefix}-lmd-scheduler-trigger"
     }]
   })
 }

@@ -60,6 +60,11 @@ output "scheduler_group_name" {
   value       = module.iam_irsa.scheduler_group_name
 }
 
+output "scheduler_trigger_lambda_arn" {
+  description = "scheduler-trigger Lambda ARN — API 환경변수 SCHEDULER_TARGET_ARN에 사용"
+  value       = module.lambda.scheduler_trigger_arn
+}
+
 # ── IRSA Role ARNs ────────────────────────────────────────────────────────────
 
 output "irsa_api_role_arn" {
