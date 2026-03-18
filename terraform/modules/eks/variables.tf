@@ -35,7 +35,7 @@ variable "node_desired" {
 variable "node_max" {
   description = "노드 최대 수"
   type        = number
-  default     = 2
+  default     = 4
 }
 
 variable "public_subnet_ids" {

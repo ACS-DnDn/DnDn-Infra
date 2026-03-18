@@ -69,6 +69,15 @@ module "eks" {
   node_sg_id         = module.security_groups.node_sg_id
 }
 
+# ── SQS ──────────────────────────────────────────────────────────────────────
+
+module "sqs" {
+  source = "../../modules/sqs"
+
+  project     = var.project
+  environment = var.environment
+}
+
 # ── IAM / IRSA ───────────────────────────────────────────────────────────────
 
 module "iam_irsa" {
@@ -80,15 +89,6 @@ module "iam_irsa" {
   oidc_provider_arn        = module.eks.oidc_provider_arn
   oidc_provider_url        = module.eks.oidc_provider_url
   report_request_queue_arn = module.sqs.report_request_queue_arn
-}
-
-# ── SQS ──────────────────────────────────────────────────────────────────────
-
-module "sqs" {
-  source = "../../modules/sqs"
-
-  project     = var.project
-  environment = var.environment
 }
 
 # ── S3 ───────────────────────────────────────────────────────────────────────
@@ -139,6 +139,29 @@ module "eventbridge" {
   finding_enricher_arn = module.lambda.finding_enricher_arn
   health_enricher_arn  = module.lambda.health_enricher_arn
   # worker_lambda_arn: Worker Lambda 배포 후 추가
+}
+
+# ── Route53 ──────────────────────────────────────────────────────────────
+
+module "route53" {
+  source = "../../modules/route53"
+
+  project     = var.project
+  environment = var.environment
+
+  # ALB 배포 후 alb_dns_name 입력
+  # alb_dns_name = "xxx.ap-northeast-2.elb.amazonaws.com"
+}
+
+# ── ACM ───────────────────────────────────────────────────────────────────
+
+module "acm" {
+  source = "../../modules/acm"
+
+  project     = var.project
+  environment = var.environment
+
+  route53_zone_id = module.route53.zone_id
 }
 
 # ── 추후 추가 예정 ────────────────────────────────────────────────────────

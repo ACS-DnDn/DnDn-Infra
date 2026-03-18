@@ -56,6 +56,9 @@ def _get_conn():
 
 # ── 워크스페이스 조회 ─────────────────────────────────────────────────────
 
+_workspace_cache: dict[str, str | None] = {}
+
+
 def get_workspace_id(account_id: str) -> str | None:
     """AWS account_id(12자리) → workspace primary key(id).
     결과 캐시: Lambda 컨테이너 재사용 시 DB 왕복 절감.
@@ -78,9 +81,6 @@ def get_workspace_id(account_id: str) -> str | None:
         conn.close()
     _workspace_cache[account_id] = result
     return result
-
-
-_workspace_cache: dict[str, str | None] = {}
 
 
 # ── 이벤트 토글 확인 ───────────────────────────────────────────────────────
