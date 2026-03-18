@@ -15,6 +15,17 @@ variable "domain" {
 }
 
 variable "route53_zone_id" {
-  description = "DNS 검증 레코드를 생성할 Route53 Hosted Zone ID"
+  description = "dndn.cloud DNS 검증 레코드를 생성할 Route53 Hosted Zone ID"
+  type        = string
+}
+
+variable "hr_domain" {
+  description = "HR 앱 인증서 도메인 (예: dndnhr.cloud)"
+  type        = string
+  default     = "dndnhr.cloud"
+}
+
+variable "hr_route53_zone_id" {
+  description = "dndnhr.cloud DNS 검증 레코드를 생성할 Route53 Hosted Zone ID"
   type        = string
 }

@@ -164,7 +164,8 @@ module "acm" {
   project     = var.project
   environment = var.environment
 
-  route53_zone_id = module.route53.zone_id
+  route53_zone_id    = module.route53.zone_id
+  hr_route53_zone_id = module.route53.hr_zone_id
 }
 
 # ── 추후 추가 예정 ────────────────────────────────────────────────────────

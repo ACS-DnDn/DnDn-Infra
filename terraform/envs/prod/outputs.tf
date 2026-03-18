@@ -85,13 +85,23 @@ output "irsa_reporter_role_arn" {
 # ── ACM ───────────────────────────────────────────────────────────────────────
 
 output "acm_certificate_arn" {
-  description = "ACM 인증서 ARN — ALB Ingress annotation alb.ingress.kubernetes.io/certificate-arn에 사용"
+  description = "dndn.cloud ACM 인증서 ARN — ALB Ingress annotation에 사용"
   value       = module.acm.certificate_arn
+}
+
+output "acm_hr_certificate_arn" {
+  description = "dndnhr.cloud ACM 인증서 ARN — ALB Ingress annotation에 사용"
+  value       = module.acm.hr_certificate_arn
 }
 
 # ── Route53 ───────────────────────────────────────────────────────────────────
 
 output "route53_name_servers" {
-  description = "Route53 NS 레코드 — 도메인 등록기관에 입력 필요"
+  description = "dndn.cloud NS 레코드 — 도메인 등록기관에 입력 필요"
   value       = module.route53.name_servers
+}
+
+output "route53_hr_name_servers" {
+  description = "dndnhr.cloud NS 레코드 — 도메인 등록기관에 입력 필요"
+  value       = module.route53.hr_name_servers
 }
