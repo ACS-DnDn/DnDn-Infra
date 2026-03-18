@@ -94,6 +94,18 @@ output "acm_hr_certificate_arn" {
   value       = module.acm.hr_certificate_arn
 }
 
+# ── S3 Public ─────────────────────────────────────────────────────────────────
+
+output "s3_public_bucket_name" {
+  description = "퍼블릭 자산 버킷 이름 — CFN 템플릿 업로드 대상"
+  value       = data.aws_s3_bucket.public.id
+}
+
+output "s3_public_cfn_base_url" {
+  description = "고객 배포용 CFN base URL — 온보딩 플로우에서 Launch Stack URL 생성에 사용"
+  value       = "https://${data.aws_s3_bucket.public.bucket}.s3.${data.aws_s3_bucket.public.region}.amazonaws.com/cfn"
+}
+
 # ── Route53 ───────────────────────────────────────────────────────────────────
 
 output "route53_name_servers" {

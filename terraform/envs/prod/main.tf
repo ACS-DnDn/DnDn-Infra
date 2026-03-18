@@ -168,5 +168,13 @@ module "acm" {
   hr_route53_zone_id = module.route53.hr_zone_id
 }
 
+# ── S3 Public (고객 배포용 CFN 템플릿) ───────────────────────────────────────
+# dndn-public 버킷은 DEV/PRD 공유 — 수동 생성 후 data 소스로 참조
+# aws s3api create-bucket --bucket dndn-public --region ap-northeast-2 --create-bucket-configuration LocationConstraint=ap-northeast-2
+
+data "aws_s3_bucket" "public" {
+  bucket = "dndn-public"
+}
+
 # ── 추후 추가 예정 ────────────────────────────────────────────────────────
 # module "alb_controller"  { ... }

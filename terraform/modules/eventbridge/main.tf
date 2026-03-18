@@ -15,8 +15,10 @@ resource "aws_cloudwatch_event_bus" "main" {
   }
 }
 
-# 크로스 계정 수신 허용 정책
+# 크로스 계정 수신 허용 정책 (고객 계정 ID 있을 때만 생성)
 resource "aws_cloudwatch_event_bus_policy" "cross_account" {
+  count = length(var.allowed_account_ids) > 0 ? 1 : 0
+
   event_bus_name = aws_cloudwatch_event_bus.main.name
 
   policy = jsonencode({

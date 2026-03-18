@@ -1,6 +1,14 @@
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
+# ── S3 Public (DEV/PRD 공유 — dndn-public) ────────────────────────────────
+# tfstate 버킷처럼 수동 생성 후 참조
+# aws s3api create-bucket --bucket dndn-public --region ap-northeast-2 --create-bucket-configuration LocationConstraint=ap-northeast-2
+
+data "aws_s3_bucket" "public" {
+  bucket = "dndn-public"
+}
+
 # ── VPC ───────────────────────────────────────────────────────────────────
 
 module "vpc" {
@@ -143,6 +151,15 @@ resource "aws_iam_role_policy" "scheduler_lambda" {
   })
 }
 
+# ── Cognito ───────────────────────────────────────────────────────────────
+
+module "cognito" {
+  source = "../../modules/cognito"
+
+  project     = var.project
+  environment = var.environment
+}
+
 # ── EC2 (앱 서버 + MariaDB) ───────────────────────────────────────────────
 
 module "ec2" {
@@ -156,6 +173,7 @@ module "ec2" {
   private_ip       = var.ec2_private_ip
   lambda_sg_id     = module.security_groups.lambda_sg_id
   instance_type    = "t3.large"
+  key_name         = "DnDn-PRD-KeyPair"
 
   s3_bucket_name           = module.s3.bucket_name
   report_request_queue_arn = module.sqs.report_request_queue_arn

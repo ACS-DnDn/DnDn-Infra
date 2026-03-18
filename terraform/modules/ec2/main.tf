@@ -26,7 +26,7 @@ data "aws_ami" "amazon_linux_2023" {
 
 resource "aws_security_group" "ec2" {
   name        = "${local.prefix}-ec2-sg"
-  description = "DEV EC2 앱 서버 (API/Worker/Reporter/Web + MariaDB)"
+  description = "DEV EC2 app server (API/Worker/Reporter/Web + MariaDB)"
   vpc_id      = var.vpc_id
 
   # SSH (SSM 우선, SSH는 백업용)
@@ -61,7 +61,7 @@ resource "aws_security_group" "ec2" {
     to_port         = 8000
     protocol        = "tcp"
     security_groups = [var.lambda_sg_id]
-    description     = "API (Lambda scheduler-trigger 내부 호출)"
+    description     = "API from Lambda scheduler-trigger"
   }
 
   # MariaDB (Lambda enricher → EC2 MariaDB)
@@ -70,7 +70,7 @@ resource "aws_security_group" "ec2" {
     to_port         = 3306
     protocol        = "tcp"
     security_groups = [var.lambda_sg_id]
-    description     = "MariaDB (Lambda enricher DB 조회)"
+    description     = "MariaDB from Lambda enricher"
   }
 
   egress {
@@ -199,6 +199,7 @@ resource "aws_instance" "app" {
   associate_public_ip_address = true
   iam_instance_profile        = aws_iam_instance_profile.ec2.name
   vpc_security_group_ids      = [aws_security_group.ec2.id]
+  key_name                    = var.key_name != "" ? var.key_name : null
 
   user_data = templatefile("${path.module}/user_data.sh.tpl", {
     db_name     = var.db_name
@@ -207,7 +208,7 @@ resource "aws_instance" "app" {
   })
 
   root_block_device {
-    volume_size = 20
+    volume_size = 30
     volume_type = "gp3"
   }
 

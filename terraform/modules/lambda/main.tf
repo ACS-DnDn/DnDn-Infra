@@ -2,6 +2,19 @@ locals {
   prefix = "${lower(var.project)}-${lower(var.environment)}"
 }
 
+# ── 더미 배포 패키지 (초기 인프라 생성용) ─────────────────────────────────────
+# CI/CD가 실제 코드를 aws lambda update-function-code로 교체함
+
+data "archive_file" "dummy" {
+  type        = "zip"
+  output_path = "${path.module}/dummy.zip"
+
+  source {
+    content  = "def handler(event, context): return {'statusCode': 200}"
+    filename = "index.py"
+  }
+}
+
 # ── Lambda IAM Role ───────────────────────────────────────────────────────
 
 resource "aws_iam_role" "lambda" {
@@ -41,9 +54,7 @@ resource "aws_iam_role_policy" "lambda_custom" {
       },
       {
         Effect = "Allow"
-        Action = [
-          "secretsmanager:GetSecretValue"
-        ]
+        Action = ["secretsmanager:GetSecretValue"]
         Resource = var.rds_secret_arn
       }
     ]
@@ -53,16 +64,14 @@ resource "aws_iam_role_policy" "lambda_custom" {
 # ── finding-enricher ──────────────────────────────────────────────────────
 
 resource "aws_lambda_function" "finding_enricher" {
-  function_name = "${local.prefix}-lmd-finding-enricher"
-  role          = aws_iam_role.lambda.arn
-  runtime       = "python3.12"
-  handler       = "finding_enricher.handler"
-  timeout       = 30
-  memory_size   = 256
-
-  # 배포 패키지는 CI/CD에서 S3에 업로드 후 갱신
-  s3_bucket = var.lambda_code_bucket
-  s3_key    = "lambda/finding-enricher.zip"
+  function_name    = "${local.prefix}-lmd-finding-enricher"
+  role             = aws_iam_role.lambda.arn
+  runtime          = "python3.12"
+  handler          = "finding_enricher.handler"
+  timeout          = 30
+  memory_size      = 256
+  filename         = data.archive_file.dummy.output_path
+  source_code_hash = data.archive_file.dummy.output_base64sha256
 
   vpc_config {
     subnet_ids         = var.private_subnet_ids
@@ -81,20 +90,23 @@ resource "aws_lambda_function" "finding_enricher" {
   tags = {
     Name = "${local.prefix}-lmd-finding-enricher"
   }
+
+  lifecycle {
+    ignore_changes = [filename, source_code_hash]
+  }
 }
 
 # ── health-enricher ───────────────────────────────────────────────────────
 
 resource "aws_lambda_function" "health_enricher" {
-  function_name = "${local.prefix}-lmd-health-enricher"
-  role          = aws_iam_role.lambda.arn
-  runtime       = "python3.12"
-  handler       = "health_enricher.handler"
-  timeout       = 30
-  memory_size   = 256
-
-  s3_bucket = var.lambda_code_bucket
-  s3_key    = "lambda/health-enricher.zip"
+  function_name    = "${local.prefix}-lmd-health-enricher"
+  role             = aws_iam_role.lambda.arn
+  runtime          = "python3.12"
+  handler          = "health_enricher.handler"
+  timeout          = 30
+  memory_size      = 256
+  filename         = data.archive_file.dummy.output_path
+  source_code_hash = data.archive_file.dummy.output_base64sha256
 
   vpc_config {
     subnet_ids         = var.private_subnet_ids
@@ -113,20 +125,23 @@ resource "aws_lambda_function" "health_enricher" {
   tags = {
     Name = "${local.prefix}-lmd-health-enricher"
   }
+
+  lifecycle {
+    ignore_changes = [filename, source_code_hash]
+  }
 }
 
 # ── scheduler-trigger ─────────────────────────────────────────────────────
 
 resource "aws_lambda_function" "scheduler_trigger" {
-  function_name = "${local.prefix}-lmd-scheduler-trigger"
-  role          = aws_iam_role.lambda.arn
-  runtime       = "python3.12"
-  handler       = "handler.handler"
-  timeout       = 30
-  memory_size   = 128
-
-  s3_bucket = var.lambda_code_bucket
-  s3_key    = "lambda/scheduler-trigger.zip"
+  function_name    = "${local.prefix}-lmd-scheduler-trigger"
+  role             = aws_iam_role.lambda.arn
+  runtime          = "python3.12"
+  handler          = "handler.handler"
+  timeout          = 30
+  memory_size      = 128
+  filename         = data.archive_file.dummy.output_path
+  source_code_hash = data.archive_file.dummy.output_base64sha256
 
   vpc_config {
     subnet_ids         = var.private_subnet_ids
@@ -142,6 +157,10 @@ resource "aws_lambda_function" "scheduler_trigger" {
 
   tags = {
     Name = "${local.prefix}-lmd-scheduler-trigger"
+  }
+
+  lifecycle {
+    ignore_changes = [filename, source_code_hash]
   }
 }
 

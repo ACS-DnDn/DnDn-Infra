@@ -10,7 +10,7 @@ resource "aws_security_group" "bastion" {
   vpc_id      = var.vpc_id
 
   ingress {
-    description = "SSH from anywhere (유동 IP)"
+    description = "SSH from anywhere"
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
@@ -72,15 +72,15 @@ resource "aws_security_group" "node" {
   vpc_id      = var.vpc_id
 
   ingress {
-    description              = "NodePort traffic from ALB"
-    from_port                = 30000
-    to_port                  = 32767
-    protocol                 = "tcp"
-    source_security_group_id = aws_security_group.alb.id
+    description     = "NodePort traffic from ALB"
+    from_port       = 30000
+    to_port         = 32767
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id]
   }
 
   ingress {
-    description = "Pod-to-Pod 통신 (동일 SG 노드 간 전체 포트)"
+    description = "Pod-to-Pod (same SG)"
     from_port   = 0
     to_port     = 65535
     protocol    = "tcp"
@@ -126,19 +126,19 @@ resource "aws_security_group" "rds" {
   vpc_id      = var.vpc_id
 
   ingress {
-    description              = "MySQL from Lambda"
-    from_port                = 3306
-    to_port                  = 3306
-    protocol                 = "tcp"
-    source_security_group_id = aws_security_group.lambda.id
+    description     = "MySQL from Lambda"
+    from_port       = 3306
+    to_port         = 3306
+    protocol        = "tcp"
+    security_groups = [aws_security_group.lambda.id]
   }
 
   ingress {
-    description              = "MySQL from EKS Node"
-    from_port                = 3306
-    to_port                  = 3306
-    protocol                 = "tcp"
-    source_security_group_id = aws_security_group.node.id
+    description     = "MySQL from EKS Node"
+    from_port       = 3306
+    to_port         = 3306
+    protocol        = "tcp"
+    security_groups = [aws_security_group.node.id]
   }
 
   egress {

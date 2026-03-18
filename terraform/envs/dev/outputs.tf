@@ -1,3 +1,15 @@
+# ── Cognito ──────────────────────────────────────────────────────────────
+
+output "cognito_user_pool_id" {
+  description = "Cognito User Pool ID — API 환경변수 COGNITO_USER_POOL_ID에 사용"
+  value       = module.cognito.user_pool_id
+}
+
+output "cognito_app_client_id" {
+  description = "Cognito App Client ID — API 환경변수 COGNITO_CLIENT_ID에 사용"
+  value       = module.cognito.app_client_id
+}
+
 # ── EC2 ──────────────────────────────────────────────────────────────────
 
 output "ec2_instance_id" {
@@ -23,6 +35,16 @@ output "report_request_queue_url" {
 }
 
 # ── S3 ───────────────────────────────────────────────────────────────────
+
+output "s3_public_bucket_name" {
+  description = "퍼블릭 자산 버킷 이름 (DEV/PRD 공유) — CFN 템플릿 업로드 대상"
+  value       = data.aws_s3_bucket.public.id
+}
+
+output "s3_public_cfn_base_url" {
+  description = "고객 배포용 CFN base URL (DEV/PRD 공유)"
+  value       = "https://${data.aws_s3_bucket.public.bucket}.s3.${data.aws_s3_bucket.public.region}.amazonaws.com/cfn"
+}
 
 output "s3_bucket_name" {
   description = "S3 버킷 이름 — Lambda 환경변수 OUTPUT_BUCKET에 사용"

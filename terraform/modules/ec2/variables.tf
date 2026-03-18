@@ -35,6 +35,12 @@ variable "instance_type" {
   default     = "t3.large"
 }
 
+variable "key_name" {
+  description = "EC2 Key Pair 이름 (SSH 접속용)"
+  type        = string
+  default     = ""
+}
+
 variable "s3_bucket_name" {
   description = "S3 버킷 이름"
   type        = string
