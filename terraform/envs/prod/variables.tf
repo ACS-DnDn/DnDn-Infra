@@ -27,3 +27,15 @@ variable "allowed_account_ids" {
   type        = list(string)
   default     = []
 }
+
+variable "api_internal_url" {
+  description = "API 서버 K8s 내부 서비스 URL (scheduler-trigger Lambda 환경변수)"
+  type        = string
+  default     = "http://api-service.dndn-api.svc.cluster.local"
+}
+
+variable "internal_api_key" {
+  description = "Lambda → API 서버 내부 인증 공유 시크릿 (X-Internal-Key 헤더)"
+  type        = string
+  sensitive   = true
+}

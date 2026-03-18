@@ -33,3 +33,15 @@ variable "lambda_code_bucket" {
   type        = string
   default     = "dndn-prd-s3"
 }
+
+variable "api_internal_url" {
+  description = "API 서버 K8s 내부 서비스 URL (scheduler-trigger Lambda → API 호출)"
+  type        = string
+  default     = "http://api-service.dndn-api.svc.cluster.local"
+}
+
+variable "internal_api_key" {
+  description = "Lambda → API 서버 내부 인증 공유 시크릿 (X-Internal-Key 헤더)"
+  type        = string
+  sensitive   = true
+}
