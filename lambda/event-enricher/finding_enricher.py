@@ -10,8 +10,8 @@ SecurityHub Finding Enricher Lambda
   3. 워크스페이스 이벤트 설정 조회 → 토글 OFF면 스킵
   4. 리소스 타입별 데이터 수집 (13개 타입 대응)
   5. FSBP/CIS에 한해 CloudTrail 취약 이벤트 조회
-  6. canonical_model.schema.json 포맷 변환 → S3 저장
-  7. 보고서 생성 SQS 트리거
+  6. canonical_model.schema.json 포맷 변환 → S3(canonical/) 저장
+     S3 PutObject 이벤트 → SQS(s3-event) → Reporter 자동 트리거
 
 수집 전략:
   - ASFF Details 필드 우선 사용 (추가 API 호출 없음)
@@ -20,9 +20,7 @@ SecurityHub Finding Enricher Lambda
   - FSBP/CIS: 컨트롤별 CloudTrail 취약 이벤트 조회 (best-effort)
 
 환경 변수:
-  OUTPUT_BUCKET    - S3 버킷 이름 (없으면 S3 저장 생략)
-  DB_HOST / DB_PORT / DB_NAME / DB_USER / DB_PASSWORD
-  REPORT_QUEUE_URL - 보고서 생성 SQS Queue URL
+  OUTPUT_BUCKET  - S3 버킷 이름 (없으면 S3 저장 생략)
 """
 
 import json
@@ -34,7 +32,7 @@ from typing import Any
 
 import boto3
 
-from event_router import get_workspace_id, is_event_enabled, trigger_report, get_customer_session
+from event_router import get_workspace_id, is_event_enabled, get_customer_session
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -198,8 +196,8 @@ def _process_finding(finding: dict) -> dict:
     finding_id     = finding.get("Id", "unknown").split("/")[-1]
     date_prefix    = now.strftime("%Y/%m/%d")
     bucket         = os.environ.get("OUTPUT_BUCKET", "")
-    raw_uri        = f"s3://{bucket}/raw-findings/{date_prefix}/{finding_id}.json"      if bucket else "s3://not-configured/raw/"
-    normalized_uri = f"s3://{bucket}/enriched-findings/{date_prefix}/{finding_id}.json" if bucket else "s3://not-configured/normalized/"
+    raw_uri        = f"s3://{bucket}/raw-findings/{date_prefix}/{finding_id}.json"    if bucket else "s3://not-configured/raw/"
+    normalized_uri = f"s3://{bucket}/canonical/findings/{date_prefix}/{finding_id}.json" if bucket else "s3://not-configured/canonical/"
 
     # 공통 수집 (계정 별칭, display name)
     common = _collect_common(finding)
@@ -219,25 +217,9 @@ def _process_finding(finding: dict) -> dict:
     canonical = _build_canonical(finding, common, run_id, now, raw_uri, normalized_uri)
 
     if bucket:
-        _save_to_s3(finding,   bucket, f"raw-findings/{date_prefix}/{finding_id}.json",      "raw finding")
-        _save_to_s3(canonical, bucket, f"enriched-findings/{date_prefix}/{finding_id}.json", "canonical")
-
-    if event_key and workspace_id:
-        trigger_report(
-            workspace_id=workspace_id,
-            event_key=event_key,
-            source="securityhub",
-            payload={
-                "finding_id":    finding.get("Id"),
-                "title":         finding.get("Title"),
-                "severity":      finding.get("Severity", {}).get("Label"),
-                "product":       finding.get("ProductName"),
-                "account_id":    account_id,
-                "region":        region,
-                "resource_ids":  [r.get("Id") for r in finding.get("Resources", [])],
-                "canonical_uri": normalized_uri,
-            },
-        )
+        _save_to_s3(finding,   bucket, f"raw-findings/{date_prefix}/{finding_id}.json",        "raw finding")
+        _save_to_s3(canonical, bucket, f"canonical/findings/{date_prefix}/{finding_id}.json",  "canonical")
+        # S3 PutObject → s3-event SQS → Reporter 자동 트리거
 
     logger.info("완료: key=%s, run_id=%s", event_key, run_id)
     return {"result": "ok", "key": event_key, "run_id": run_id}

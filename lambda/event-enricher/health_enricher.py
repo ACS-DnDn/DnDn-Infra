@@ -10,8 +10,8 @@ AWS Health Event Enricher Lambda
   3. 워크스페이스 이벤트 설정 조회 → 토글 OFF면 조기 종료
   4. describe_event_details → 이벤트 상세 설명(latestDescription) 조회
   5. describe_affected_entities → 영향받는 리소스 목록 조회
-  6. contracts/canonical_model.schema.json 포맷으로 변환 → S3 저장
-  7. 보고서 생성 SQS 트리거
+  6. contracts/canonical_model.schema.json 포맷으로 변환 → S3(canonical/) 저장
+     S3 PutObject 이벤트 → SQS(s3-event) → Reporter 자동 트리거
 
 출력:
   - meta              : run_id, account_id, regions, time_range, collector, evidence, trigger
@@ -24,9 +24,8 @@ NOTE:
   - Lambda 배포 리전도 us-east-1 권장.
 
 환경 변수:
-  OUTPUT_BUCKET    - enriched 결과를 저장할 S3 버킷 이름 (없으면 S3 저장 생략)
-  RDS_SECRET_ARN   - Secrets Manager 시크릿 ARN (DB 자격증명, event_router._get_db_credentials 참조)
-  REPORT_QUEUE_URL - 보고서 생성 SQS Queue URL
+  OUTPUT_BUCKET  - enriched 결과를 저장할 S3 버킷 이름 (없으면 S3 저장 생략)
+  RDS_SECRET_ARN - Secrets Manager 시크릿 ARN (DB 자격증명, event_router._get_db_credentials 참조)
 """
 
 import json
@@ -39,7 +38,7 @@ from typing import Any
 
 import boto3
 
-from event_router import get_workspace_id, is_event_enabled, trigger_report, get_customer_session
+from event_router import get_workspace_id, is_event_enabled, get_customer_session
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -192,8 +191,8 @@ def handler(event: dict, context: Any) -> dict:
     event_id_short = event_arn.split("/")[-1]
     date_prefix    = now.strftime("%Y/%m/%d")
     bucket         = os.environ.get("OUTPUT_BUCKET", "")
-    raw_uri        = f"s3://{bucket}/raw-health-events/{date_prefix}/{event_id_short}.json"      if bucket else "s3://not-configured/raw/"
-    normalized_uri = f"s3://{bucket}/enriched-health-events/{date_prefix}/{event_id_short}.json" if bucket else "s3://not-configured/normalized/"
+    raw_uri        = f"s3://{bucket}/raw-health-events/{date_prefix}/{event_id_short}.json"    if bucket else "s3://not-configured/raw/"
+    normalized_uri = f"s3://{bucket}/canonical/health/{date_prefix}/{event_id_short}.json" if bucket else "s3://not-configured/canonical/"
 
     # canonical model 조립
     canonical = _build_canonical(
@@ -208,36 +207,15 @@ def handler(event: dict, context: Any) -> dict:
         normalized_uri=normalized_uri,
     )
 
-    # S3 저장
+    # S3 저장 — PutObject 이벤트 → s3-event SQS → Reporter 자동 트리거
     if bucket:
         raw_payload = {
             "eventbridge_event": event,
             "event_detail":      event_detail,
             "entities":          entities,
         }
-        _save_to_s3(raw_payload, bucket, f"raw-health-events/{date_prefix}/{event_id_short}.json",      "raw health event")
-        _save_to_s3(canonical,   bucket, f"enriched-health-events/{date_prefix}/{event_id_short}.json", "canonical model")
-
-    # 보고서 생성 트리거
-    if event_key and workspace_id:
-        affected = [e.get("entityValue") for e in entities]
-        trigger_report(
-            workspace_id=workspace_id,
-            event_key=event_key,
-            source="health",
-            payload={
-                "event_type_code":   detail.get("eventTypeCode"),
-                "service":           detail.get("service"),
-                "event_category":    detail.get("eventTypeCategory"),
-                "status_code":       detail.get("statusCode"),
-                "event_region":      detail.get("eventRegion"),
-                "start_time":        detail.get("startTime"),
-                "end_time":          detail.get("endTime"),
-                "affected_entities": affected,
-                "account_id":        account_id,
-                "canonical_uri":     normalized_uri,
-            },
-        )
+        _save_to_s3(raw_payload, bucket, f"raw-health-events/{date_prefix}/{event_id_short}.json",   "raw health event")
+        _save_to_s3(canonical,   bucket, f"canonical/health/{date_prefix}/{event_id_short}.json",    "canonical model")
 
     return {
         "statusCode": 200,
