@@ -158,7 +158,7 @@ Terraform의 `lambda` 모듈이 이 함수들의 런타임 자리를 만들고, 
 
 아직 비어 있거나 정리가 필요한 항목은 아래와 같습니다.
 
-- `gitops/` 디렉터리와 Argo CD 선언
+- `prod`용 Argo CD root app, 실제 워크로드 매니페스트, Argo CD 설치 부트스트랩 정리
 - `dev`, `staging` Terraform 환경
 - 앱 이미지 배포와 GitOps 태그 반영을 포함한 전체 CI/CD 정리
 - `DnDn-HR`까지 포함한 앱 배포 구조 정리
