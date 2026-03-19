@@ -6,28 +6,29 @@
 
 ## 1. Boundary Summary
 
-한 줄로 정리하면 아래와 같습니다.
+현재 기준 한 줄 요약은 아래와 같습니다.
 
-- `DnDn-Infra`는 배포 환경과 AWS 자원을 관리한다
-- `DnDn-App`은 메인 제품 코드와 실행 로직을 관리한다
-- `DnDn-HR`은 조직/계정 관리 포털 코드를 관리한다
-- Argo CD 기반 GitOps 선언은 `DnDn-Infra`가 관리한다
+- `DnDn-Infra`는 where / how to run 을 관리한다
+- `DnDn-App`, `DnDn-HR`는 what to run 을 관리한다
 
-즉:
+좀 더 풀면 아래와 같습니다.
 
-- Infra = where / how to run
-- App / HR = what to run
+| Repo | Owns | Does Not Own |
+| --- | --- | --- |
+| `DnDn-Infra` | AWS 자원, 배포 환경, GitOps 선언, 환경별 값 | 제품 기능 로직, 화면 로직 |
+| `DnDn-App` | 메인 제품 코드, API, worker, contracts, 이미지 산출물 | AWS 자원 생성, Argo CD 선언 |
+| `DnDn-HR` | 관리자 포털 UI, HR 전용 프론트엔드 산출물 | 플랫폼 공통 인프라, 메인 API 배포 |
 
-## 2. DnDn-Infra Owns
+## 2. Repository Ownership
+
+### `DnDn-Infra`
 
 `DnDn-Infra`가 책임져야 하는 영역입니다.
 
 - AWS 계정 연동용 CloudFormation
-- IAM / STS 연동용 인프라 자원
-- EventBridge / Cognito 같은 플랫폼 공통 자원
+- IAM / STS / EventBridge / Cognito 같은 플랫폼 공통 자원
 - Terraform 기반 VPC / EKS / RDS / S3 / SQS / IAM
-- 향후 Argo CD 부트스트랩
-- 향후 GitOps 배포 선언
+- Argo CD 부트스트랩과 GitOps 배포 선언
 - 환경별 설정값과 배포 순서 문서
 
 구체 예시:
@@ -38,7 +39,7 @@
 - `gitops/*`
 - `docs/*`
 
-## 3. DnDn-App Owns
+### `DnDn-App`
 
 `DnDn-App`이 책임져야 하는 영역입니다.
 
@@ -58,7 +59,7 @@
 - `apps/report`
 - `contracts`
 
-## 4. DnDn-HR Owns
+### `DnDn-HR`
 
 `DnDn-HR`이 책임져야 하는 영역입니다.
 
@@ -68,131 +69,50 @@
 - HR 포털 전용 라우팅 / 화면 / 클라이언트 로직
 - 별도 프론트엔드 앱 빌드 산출물
 
-현재 기준으로는 “별도 프론트엔드 앱”으로 보고, 백엔드는 메인 서비스와 연동하는 구조로 이해하는 것이 맞습니다.
+현재 기준으로는 별도 프론트엔드 앱으로 보고, 백엔드는 메인 서비스와 연동하는 구조로 이해하는 것이 맞습니다.
 
-## 5. Shared Interfaces
+## 3. Shared Interfaces
 
-세 레포가 연결되는 인터페이스는 아래입니다.
+세 레포가 연결되는 주요 인터페이스는 아래와 같습니다.
 
-### 1. AWS IAM / Onboarding
+| Interface | Infra | App / HR |
+| --- | --- | --- |
+| AWS IAM / Onboarding | 고객 계정 온보딩 스택 제공 | 연동 링크 생성, 상태 확인 |
+| Cognito | User Pool / Client 생성 | 로그인, 토큰, 사용자 정보 처리 |
+| SQS / S3 / RDS | 자원 생성 | 런타임에서 사용 |
+| Organization / Account Management | 인증/배포 기반 제공 | HR UI와 메인 API 연동 |
+| Contracts | 인프라 연동 코드가 계약을 따라야 함 | `contracts/`가 payload 기준이 됨 |
 
-- Infra는 고객 계정 온보딩 스택을 제공
-- App API는 CloudFormation quick-create 링크를 생성하거나 STS 연동 상태를 확인
+특히 `contracts`는 `DnDn-App`이 기준을 잡고, `DnDn-Infra`의 event enricher도 가능한 한 이를 따라야 합니다.
 
-### 2. Cognito
+## 4. Blurry Areas And Current Decisions
 
-- Infra는 User Pool과 Client를 생성
-- App과 HR은 로그인 / 토큰 / 사용자 정보 처리를 담당
+지금 당장 경계가 애매한 부분은 아래처럼 정리합니다.
 
-### 3. SQS / S3 / RDS
+| Area | Why It Is Blurry | Current Decision |
+| --- | --- | --- |
+| Event enricher Lambda | EventBridge에 붙지만 DB와 queue도 사용 | 현재는 `Infra`에 두되 `contracts` 기준 준수 |
+| Worker | 앱 코드이지만 운영 수집 엔진 성격도 강함 | 코드 소유는 `App`, 배포 소유는 `Infra` |
+| IAM naming | 역할 이름과 ExternalId 규칙이 완전히 통일되지 않음 | 빠르게 표준화 필요 |
+| HR backend ownership | HR이 별도 프론트엔드인지, 일부 API도 갖는지 아직 미확정 | 현재는 메인 백엔드 연동형으로 가정 |
 
-- Infra는 자원을 만든다
-- App과 Lambda는 그 자원을 사용한다
-
-### 4. Organization / Account Management
-
-- HR은 사용자, 부서, 접근 계정 관리 UI를 제공
-- App은 메인 백엔드/API를 제공하고, HR은 그 백엔드와 연동한다
-- Infra는 이 둘이 공통으로 사용하는 인증/배포 기반을 제공
-
-### 5. Contracts
-
-- App의 `contracts/`가 payload / canonical / event JSON 구조의 기준이다
-- Infra의 event enricher도 가능하면 이 계약을 따라야 한다
-
-## 6. Areas That Are Currently Blurry
-
-지금 당장 경계가 애매한 부분도 있습니다.
-
-### A. Event Enricher Lambda
-
-현재 `DnDn-Infra`에는 Security Hub / AWS Health용 event enricher Lambda 코드가 있습니다.
-
-이 코드는 성격상 중간쯤에 있습니다.
-
-- 인프라에 가까운 이유
-  - EventBridge에 직접 붙음
-  - 플랫폼 수집 입구에 위치함
-- 앱에 가까운 이유
-  - DB 조회
-  - 보고서 큐 전송
-  - canonical/event 구조와 연결됨
-
-현재는 `Infra`에 두는 것이 자연스럽지만, 반드시 `contracts` 기준과 맞춰야 합니다.
-
-### B. Worker
-
-`apps/worker`는 앱 레포에 있지만, 사실상 “운영 수집 엔진”입니다.
-
-이 컴포넌트는 코드는 App이 소유하되, 배포는 Infra가 소유하는 구조가 가장 적절합니다.
-
-즉:
-
-- 코드 소유 = `DnDn-App`
-- 배포 소유 = `DnDn-Infra`
-
-### C. IAM Naming
-
-현재 고객 계정 역할 이름과 온보딩 방식이 문서/코드 간 완전히 하나로 정리되어 있지 않습니다.
-
-정리해야 할 것:
+남은 확인 포인트:
 
 - 고객 계정 역할 이름
 - ExternalId 발급/저장 방식
 - Worker / event enricher가 같은 역할을 쓸지 여부
+- HR 전용 API를 메인 백엔드 안에 둘지 여부
 
-이건 빠르게 표준화해야 합니다.
+## 5. Practical Rules
 
-### D. HR Backend Ownership
-
-현재 확인한 `DnDn-HR`는 프론트엔드 구조가 중심입니다.
-
-현재 이해 기준:
-
-- HR 포털은 별도 프론트엔드 앱
-- 메인 서비스 백엔드와 연동
-
-남은 확인 포인트:
-
-- `DnDn-App/api`를 그대로 공유하는지
-- 일부 HR 전용 API를 메인 백엔드 안에 둘지
-- 권한 모델을 어디서 관리할지
-
-## 7. Recommended Ownership Model
-
-앞으로는 아래 모델로 가는 것이 좋습니다.
-
-### Infra owns deployment
-
-- 어떤 AWS 자원을 만들지
-- 어느 환경에 배포할지
-- 어떤 값을 주입할지
-- 어떤 Kubernetes manifest와 Argo CD Application을 적용할지
-
-### App owns executable artifacts
-
-- 어떤 코드가 실행될지
-- 어떤 API를 제공할지
-- 어떤 payload / result schema를 따를지
-- 어떤 컨테이너 이미지를 만들지
-
-### HR owns admin portal artifacts
-
-- 어떤 조직/계정 관리 화면을 제공할지
-- 어떤 관리자용 라우팅과 인증 흐름을 쓸지
-- 어떤 프론트엔드 빌드 산출물을 만들지
-- 메인 백엔드와 어떻게 연동할지에 대한 프론트엔드 계약
-
-## 8. Practical Rules
-
-실무에서 헷갈리지 않으려면 아래 기준을 쓰면 됩니다.
+실무에서 헷갈리지 않으려면 아래 기준을 우선 적용합니다.
 
 ### `DnDn-Infra`에 둬야 하는 것
 
 - AWS 자원 생성 정의
-- Helm / Kustomize / Argo CD Application
+- Helm / Kustomize / Argo CD `Application`
 - 환경별 values
-- Secret 주입 구조
+- secret 주입 구조
 - 네트워크 / IAM / cluster 구성
 
 ### `DnDn-App`에 둬야 하는 것
@@ -211,16 +131,14 @@
 - HR 포털 전용 프론트엔드 빌드 설정
 - 메인 API 호출 클라이언트 로직
 
-### 경계에 걸릴 때 판단 기준
-
-질문:
+경계에 걸릴 때 판단 기준은 아래 질문 하나면 충분합니다.
 
 "이 파일이 없어도 AWS 자원 배포는 가능한가?"
 
-- 가능하면 App 쪽일 가능성이 큼
-- 불가능하면 Infra 쪽일 가능성이 큼
+- 가능하면 App / HR 쪽일 가능성이 큽니다
+- 불가능하면 Infra 쪽일 가능성이 큽니다
 
-## 9. Recommended Next Work
+## 6. Recommended Next Work
 
 지금 기준으로는 아래 순서가 좋습니다.
 
@@ -228,10 +146,8 @@
 2. `architecture.md`와 `deploy-order.md`를 함께 유지
 3. Terraform 디렉터리 골격 추가
 4. GitOps 디렉터리 골격 추가
-5. `DnDn-App`과 `DnDn-HR` 워크로드의 배포 단위 정의
+5. `DnDn-App`, `DnDn-HR` 워크로드의 배포 단위 정의
 
-## 10. One-Line Conclusion
-
-앞으로의 기준은 아래 한 줄이면 충분합니다.
+## 7. One-Line Conclusion
 
 `DnDn-App`은 메인 서비스, `DnDn-HR`은 관리자 포털, `DnDn-Infra`는 그 둘을 AWS와 Kubernetes 위에 배포하고 운영하는 레포입니다.
