@@ -27,6 +27,10 @@ DnDn 플랫폼의 AWS 인프라와 배포 기반을 관리하는 저장소입니
 ```text
 DnDn-Infra/
 ├─ README.md
+├─ .github/
+│  └─ workflows/
+│     ├─ deploy-lambda.yml
+│     └─ terraform.yml
 ├─ cloudformation/
 │  └─ dndn-ops-agent-role.yaml
 ├─ lambda/
@@ -53,18 +57,31 @@ DnDn-Infra/
 │     ├─ security_groups/
 │     ├─ sqs/
 │     └─ vpc/
-└─ docs/
-   ├─ architecture.md
-   ├─ deploy-order.md
-   └─ repo-boundaries.md
+├─ docs/
+│  ├─ architecture.md
+│  ├─ deploy-order.md
+│  ├─ repo-boundaries.md
+│  └─ workload-mapping.md
+└─ gitops/
+   ├─ README.md
+   ├─ apps/
+   ├─ bootstrap/
+   ├─ environments/
+   │  ├─ dev/
+   │  └─ prod/
+   └─ projects/
 ```
 
 아직 없는 영역:
 
-- `gitops/`
 - `terraform/envs/dev`, `terraform/envs/staging`
-- CI/CD 워크플로우
-- 배포 스크립트
+- Argo CD 실제 bootstrap 매니페스트
+- 환경별 앱 values / overlay 본문
+
+현재 이미 포함된 자동화:
+
+- `.github/workflows/terraform.yml`
+- `.github/workflows/deploy-lambda.yml`
 
 ## What This Repo Does
 
@@ -126,7 +143,8 @@ Terraform의 `lambda` 모듈이 이 함수들의 런타임 자리를 만들고, 
 2. Terraform으로 EventBridge, Lambda, Cognito, EKS, RDS, S3, SQS 같은 공통 자원 생성
 3. 필요한 출력값을 기준으로 고객 계정에 `cloudformation/dndn-ops-agent-role.yaml` 배포
 4. Lambda zip / 앱 이미지 / EKS 워크로드를 별도 배포 파이프라인으로 반영
-5. 추후 GitOps가 들어오면 EKS 앱 배포는 Argo CD로 이전
+5. GitHub Actions는 이미지 빌드와 푸시를 담당
+6. Argo CD가 GitOps 선언을 기준으로 EKS 앱 배포를 반영
 
 여기서 앱 워크로드는 현재 기준으로 아래를 포함할 수 있습니다.
 
@@ -134,6 +152,7 @@ Terraform의 `lambda` 모듈이 이 함수들의 런타임 자리를 만들고, 
 - `DnDn-HR` 프론트엔드
 
 즉, 현재는 고객 온보딩만 CloudFormation이고, 플랫폼 인프라는 Terraform이 중심입니다.
+앱 CD의 목표 구조는 `helm 직접 배포`가 아니라 `Argo CD + Helm/Kustomize 기반 GitOps`입니다.
 
 ## Current Gaps
 
@@ -141,7 +160,7 @@ Terraform의 `lambda` 모듈이 이 함수들의 런타임 자리를 만들고, 
 
 - `gitops/` 디렉터리와 Argo CD 선언
 - `dev`, `staging` Terraform 환경
-- Lambda / App 배포용 CI/CD
+- 앱 이미지 배포와 GitOps 태그 반영을 포함한 전체 CI/CD 정리
 - `DnDn-HR`까지 포함한 앱 배포 구조 정리
 - Worker Lambda 또는 CloudTrail / Config 처리 전략 확정
 - 고객 CFN 배포에 필요한 EventBridge 출력값 노출 방식 정리
@@ -151,3 +170,5 @@ Terraform의 `lambda` 모듈이 이 함수들의 런타임 자리를 만들고, 
 - [docs/architecture.md](docs/architecture.md)
 - [docs/repo-boundaries.md](docs/repo-boundaries.md)
 - [docs/deploy-order.md](docs/deploy-order.md)
+- [docs/workload-mapping.md](docs/workload-mapping.md)
+- [gitops/README.md](gitops/README.md)

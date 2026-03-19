@@ -11,6 +11,7 @@
 - `DnDn-Infra`는 배포 환경과 AWS 자원을 관리한다
 - `DnDn-App`은 메인 제품 코드와 실행 로직을 관리한다
 - `DnDn-HR`은 조직/계정 관리 포털 코드를 관리한다
+- Argo CD 기반 GitOps 선언은 `DnDn-Infra`가 관리한다
 
 즉:
 
@@ -34,7 +35,7 @@
 - `cloudformation/dndn-ops-agent-role.yaml`
 - `terraform/envs/*`
 - `terraform/modules/*`
-- `gitops/*` (planned)
+- `gitops/*`
 - `docs/*`
 
 ## 3. DnDn-App Owns
@@ -166,7 +167,7 @@
 - 어떤 AWS 자원을 만들지
 - 어느 환경에 배포할지
 - 어떤 값을 주입할지
-- 어떤 Kubernetes manifest를 적용할지
+- 어떤 Kubernetes manifest와 Argo CD Application을 적용할지
 
 ### App owns executable artifacts
 
