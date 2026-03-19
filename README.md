@@ -7,7 +7,7 @@ DnDn 플랫폼의 AWS 인프라와 배포 기반을 관리하는 저장소입니
 1. 고객 AWS 계정 온보딩
 2. 플랫폼 공통 인프라와 애플리케이션 런타임 기반
 
-즉, 지금은 초기 CloudFormation만 있는 레포가 아니라, `CloudFormation + Terraform`이 함께 존재하는 전환기 구조입니다.
+즉, 지금은 초기 CloudFormation만 있는 레포가 아니라, `CloudFormation + Terraform + GitOps foundation`이 함께 존재하는 전환기 구조입니다.
 
 플랫폼 애플리케이션 관점에서는 현재 최소 아래 레포들을 함께 봐야 합니다.
 
@@ -22,7 +22,7 @@ DnDn 플랫폼의 AWS 인프라와 배포 기반을 관리하는 저장소입니
 
 ## Current Scope
 
-현재 실제 포함된 디렉터리는 아래와 같습니다.
+현재 실제 포함된 주요 구조는 아래와 같습니다.
 
 ```text
 DnDn-Infra/
@@ -60,23 +60,35 @@ DnDn-Infra/
 ├─ docs/
 │  ├─ architecture.md
 │  ├─ deploy-order.md
+│  ├─ deployment-requirements.md
+│  ├─ gitops-flow.md
 │  ├─ repo-boundaries.md
 │  └─ workload-mapping.md
 └─ gitops/
    ├─ README.md
-   ├─ apps/
+   ├─ projects/
+   │  └─ platform.yaml
    ├─ bootstrap/
-   ├─ environments/
-   │  ├─ dev/
-   │  └─ prod/
-   └─ projects/
+   │  └─ root-app-dev.yaml
+   ├─ apps/
+   │  ├─ dndn-api.yaml
+   │  ├─ dndn-hr.yaml
+   │  ├─ dndn-report.yaml
+   │  ├─ dndn-web.yaml
+   │  └─ dndn-worker.yaml
+   └─ environments/
+      ├─ dev/
+      │  └─ apps/ ... placeholder manifests
+      └─ prod/
+         └─ README.md
 ```
 
 아직 없는 영역:
 
 - `terraform/envs/dev`, `terraform/envs/staging`
-- Argo CD 실제 bootstrap 매니페스트
+- Argo CD 실제 bootstrap 설치 매니페스트
 - 환경별 앱 values / overlay 본문
+- 실제 앱 `Deployment/Service/Ingress` 매니페스트
 
 현재 이미 포함된 자동화:
 
@@ -135,6 +147,24 @@ DnDn-Infra/
 
 Terraform의 `lambda` 모듈이 이 함수들의 런타임 자리를 만들고, 코드 배포 패키지는 별도 업로드 흐름을 전제로 합니다.
 
+### 4. GitOps Foundation
+
+`gitops/`는 Argo CD 기반 GitOps 도입을 위한 초기 골격입니다.
+
+현재 포함된 것:
+
+- `AppProject`
+- `dev` 환경 root application
+- 앱별 child application
+- `dev` placeholder manifest 경로
+- `prod` 환경 골격
+
+현재 포함되지 않은 것:
+
+- 실제 앱 워크로드 매니페스트
+- `prod` root application
+- 앱별 values / overlay 본문
+
 ## Deployment Shape
 
 현재 기준 배포 흐름은 아래 순서로 보는 것이 맞습니다.
@@ -158,7 +188,8 @@ Terraform의 `lambda` 모듈이 이 함수들의 런타임 자리를 만들고, 
 
 아직 비어 있거나 정리가 필요한 항목은 아래와 같습니다.
 
-- `prod`용 Argo CD root app, 실제 워크로드 매니페스트, Argo CD 설치 부트스트랩 정리
+- `prod`용 Argo CD root app 정리
+- 실제 워크로드 매니페스트 또는 Helm chart 정리
 - `dev`, `staging` Terraform 환경
 - 앱 이미지 배포와 GitOps 태그 반영을 포함한 전체 CI/CD 정리
 - `DnDn-HR`까지 포함한 앱 배포 구조 정리
@@ -170,5 +201,7 @@ Terraform의 `lambda` 모듈이 이 함수들의 런타임 자리를 만들고, 
 - [docs/architecture.md](docs/architecture.md)
 - [docs/repo-boundaries.md](docs/repo-boundaries.md)
 - [docs/deploy-order.md](docs/deploy-order.md)
+- [docs/gitops-flow.md](docs/gitops-flow.md)
+- [docs/deployment-requirements.md](docs/deployment-requirements.md)
 - [docs/workload-mapping.md](docs/workload-mapping.md)
 - [gitops/README.md](gitops/README.md)
