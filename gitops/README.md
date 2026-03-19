@@ -28,9 +28,22 @@ gitops/
 - `projects/`
   - Argo CD AppProject 정의
 - `apps/`
-  - 앱별 Application 또는 Helm/Kustomize 배포 정의
+  - 앱별 Application 정의
 - `environments/`
   - 환경별 values, 공통 설정, 환경 차이점
+
+## Current Files
+
+- `projects/platform.yaml`
+  - 공통 AppProject
+- `bootstrap/root-app-dev.yaml`
+  - dev 환경 root application
+- `apps/*.yaml`
+  - 앱별 child application
+- `environments/dev/apps/*`
+  - 앱별 placeholder manifest
+- `environments/dev/root/kustomization.yaml`
+  - dev root app entrypoint
 
 ## Recommended Flow
 
@@ -39,3 +52,8 @@ gitops/
 3. `apps/`와 `environments/`를 기준으로 앱 배포 관리
 4. 앱 레포 이미지 태그 변경을 Git에 반영
 5. Argo CD가 자동 동기화
+
+## Notes
+
+현재 `dev` 환경에는 placeholder `ConfigMap`만 들어 있습니다.
+실제 배포 시에는 각 앱 경로를 Helm chart 또는 실제 manifest로 교체하면 됩니다.

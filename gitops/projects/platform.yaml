@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: platform
+  namespace: argocd
+spec:
+  description: DnDn platform workloads managed by Argo CD
+  sourceRepos:
+    - https://github.com/ACS-DnDn/DnDn-Infra.git
+  destinations:
+    - namespace: dndn
+      server: https://kubernetes.default.svc
+    - namespace: dndn-hr
+      server: https://kubernetes.default.svc
+    - namespace: argocd
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: "*"
+      kind: "*"
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"
