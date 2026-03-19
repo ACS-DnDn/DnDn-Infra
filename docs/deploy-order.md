@@ -24,7 +24,7 @@ main 기준 현재 구조는 아래처럼 바뀌었습니다.
 - 먼저 플랫폼 계정 공통 자원을 Terraform으로 만든다
 - 그 다음 고객 계정이 플랫폼 EventBridge로 보낼 수 있게 연결한다
 - Lambda 코드는 자원 생성과 별개로 배포해야 한다
-- EKS 앱 배포는 현재 별도 단계이며, 추후 GitOps로 표준화한다
+- EKS 앱 배포는 Argo CD 기반 GitOps로 표준화한다
 
 ## Step 1. Platform Terraform Apply
 
@@ -124,14 +124,25 @@ Terraform이 자리를 만들더라도, 실제 코드와 앱은 별도 배포가
 - health enricher Lambda zip
 - `DnDn-App` 이미지 빌드 및 푸시
 - `DnDn-HR` 프론트엔드 이미지 또는 정적 배포 산출물 반영
-- EKS 위 앱 배포 방식
+- GitOps 설정 변경 반영
 
 현재 상태:
 
 - Lambda 런타임 자원은 Terraform에 있음
-- Lambda 코드 반영 파이프라인은 아직 없음
-- GitOps / Argo CD 디렉터리는 아직 없음
+- Lambda 코드 반영 파이프라인은 별도 유지
+- GitOps Application 리소스는 추가되었으나, 실제 워크로드(Deployment/Service 등)는 placeholder만 존재
 - Worker Lambda는 여전히 별도 구현 또는 전략 결정이 필요함
+
+### Recommended CD Model
+
+앱 배포 기준 권장 모델은 아래와 같습니다.
+
+1. GitHub Actions가 이미지 빌드
+2. ECR에 이미지 푸시
+3. GitOps 선언의 이미지 태그 또는 values 갱신
+4. Argo CD가 변경을 감지해 EKS에 반영
+
+즉, 장기 기준 CD는 `helm 직접 배포`보다 `Argo CD 동기화`가 중심입니다.
 
 ### Required Environment Variables
 
@@ -169,8 +180,8 @@ Terraform이 자리를 만들더라도, 실제 코드와 앱은 별도 배포가
 현재 레포 기준으로 가장 큰 공백은 여기입니다.
 
 - Lambda 패키징 / 배포 파이프라인 부재
-- EKS 앱 배포 선언 부재
-- GitOps 구조 부재
+- EKS 앱 배포 구조는 추가되었으나 실제 워크로드 매니페스트는 아직 미구현
+- 앱별 Argo CD Application은 있으나 실제 워크로드 매니페스트는 placeholder 상태
 - Worker Lambda 부재
 
 즉, 이제는 런타임 "자원 정의"보다 "배포 자동화와 운영 레인 정리"가 더 큰 과제입니다.
@@ -249,7 +260,7 @@ Terraform이 자리를 만들더라도, 실제 코드와 앱은 별도 배포가
 
 - `gitops/bootstrap`
 - `gitops/apps`
-- `gitops/overlays`
+- `gitops/environments`
 
 ### Priority 3. Worker Strategy
 
@@ -261,7 +272,7 @@ Terraform이 자리를 만들더라도, 실제 코드와 앱은 별도 배포가
 
 현재는 Worker가 빠져 있어서 전체 플로우가 완전히 닫히지 않습니다.
 
-### Priority 3. CI/CD and Ops Docs
+### Priority 4. CI/CD and Ops Docs
 
 추가 문서 후보:
 
