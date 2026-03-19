@@ -205,3 +205,4 @@ Terraform의 `lambda` 모듈이 이 함수들의 런타임 자리를 만들고, 
 - [docs/deployment-requirements.md](docs/deployment-requirements.md)
 - [docs/workload-mapping.md](docs/workload-mapping.md)
 - [gitops/README.md](gitops/README.md)
+- [docs/monitoring-plan.md](docs/monitoring-plan.md)
