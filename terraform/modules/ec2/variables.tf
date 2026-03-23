@@ -87,3 +87,9 @@ variable "scheduler_group_name" {
   description = "EventBridge Scheduler 스케줄 그룹 이름"
   type        = string
 }
+
+variable "allowed_ssh_cidrs" {
+  description = "SSH 접근을 허용할 CIDR 목록 (기본: 모든 IP — 프로덕션에서는 반드시 제한할 것)"
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+}

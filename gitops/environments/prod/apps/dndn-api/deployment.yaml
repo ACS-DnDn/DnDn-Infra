@@ -15,10 +15,16 @@ spec:
       labels:
         app: dndn-api
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
       serviceAccountName: dndn-api-sa
       containers:
         - name: api
           image: 387721658341.dkr.ecr.ap-northeast-2.amazonaws.com/dndn-prd-api:latest
+          securityContext:
+            allowPrivilegeEscalation: false
           ports:
             - containerPort: 8000
           envFrom:

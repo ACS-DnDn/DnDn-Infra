@@ -15,10 +15,16 @@ spec:
       labels:
         app: dndn-report
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
       serviceAccountName: dndn-reporter-sa
       containers:
         - name: report
           image: 387721658341.dkr.ecr.ap-northeast-2.amazonaws.com/dndn-prd-report:latest
+          securityContext:
+            allowPrivilegeEscalation: false
           ports:
             - containerPort: 8000
           envFrom:
