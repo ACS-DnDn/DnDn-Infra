@@ -33,3 +33,9 @@ variable "aws_region" {
   type        = string
   default     = "ap-northeast-2"
 }
+
+variable "install_helm" {
+  description = "Helm release 설치 여부 (private endpoint만 사용 시 false → Bastion에서 수동 설치)"
+  type        = bool
+  default     = true
+}

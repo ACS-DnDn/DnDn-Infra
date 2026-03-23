@@ -83,17 +83,16 @@ output "irsa_reporter_role_arn" {
 }
 
 # ── ACM ───────────────────────────────────────────────────────────────────────
-# 2차 apply 시 주석 해제
 
-# output "acm_certificate_arn" {
-#   description = "dndn.cloud ACM 인증서 ARN — ALB Ingress annotation에 사용"
-#   value       = module.acm.certificate_arn
-# }
+output "acm_certificate_arn" {
+  description = "dndn.cloud ACM 인증서 ARN — ALB Ingress annotation에 사용"
+  value       = module.acm.certificate_arn
+}
 
-# output "acm_hr_certificate_arn" {
-#   description = "dndnhr.cloud ACM 인증서 ARN — ALB Ingress annotation에 사용"
-#   value       = module.acm.hr_certificate_arn
-# }
+output "acm_hr_certificate_arn" {
+  description = "dndnhr.cloud ACM 인증서 ARN — ALB Ingress annotation에 사용"
+  value       = module.acm.hr_certificate_arn
+}
 
 # ── S3 Public ─────────────────────────────────────────────────────────────────
 

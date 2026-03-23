@@ -281,6 +281,7 @@ resource "aws_iam_role_policy" "alb_controller" {
 # ── Helm Release — AWS Load Balancer Controller ──────────────────────────
 
 resource "helm_release" "alb_controller" {
+  count      = var.install_helm ? 1 : 0
   name       = "aws-load-balancer-controller"
   repository = "https://aws.github.io/eks-charts"
   chart      = "aws-load-balancer-controller"

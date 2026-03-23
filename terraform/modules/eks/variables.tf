@@ -58,3 +58,9 @@ variable "admin_role_arns" {
   type        = list(string)
   default     = []
 }
+
+variable "bastion_sg_id" {
+  description = "Bastion SG ID — EKS API 접근 허용"
+  type        = string
+  default     = ""
+}

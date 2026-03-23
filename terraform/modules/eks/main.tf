@@ -151,3 +151,17 @@ resource "aws_eks_access_policy_association" "admin" {
 
   depends_on = [aws_eks_access_entry.admin]
 }
+
+# ── Bastion → EKS API 접근 허용 ────────────────────────────────────────
+
+resource "aws_security_group_rule" "bastion_to_eks_api" {
+  count = var.bastion_sg_id != "" ? 1 : 0
+
+  type                     = "ingress"
+  from_port                = 443
+  to_port                  = 443
+  protocol                 = "tcp"
+  security_group_id        = aws_eks_cluster.main.vpc_config[0].cluster_security_group_id
+  source_security_group_id = var.bastion_sg_id
+  description              = "Bastion to EKS API"
+}
