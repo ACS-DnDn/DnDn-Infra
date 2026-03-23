@@ -416,6 +416,7 @@ resource "aws_iam_role" "scheduler" {
       Condition = {
         StringEquals = {
           "aws:SourceAccount" = data.aws_caller_identity.current.account_id
+          "aws:SourceArn"     = "arn:aws:scheduler:${local.region}:${data.aws_caller_identity.current.account_id}:schedule/${aws_scheduler_schedule_group.dndn_schedules.name}/*"
         }
         ArnLike = {
           "aws:SourceArn" = "arn:aws:scheduler:${local.region}:${data.aws_caller_identity.current.account_id}:schedule/${aws_scheduler_schedule_group.dndn_schedules.name}/*"

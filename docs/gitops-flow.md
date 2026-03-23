@@ -13,6 +13,11 @@
 - CI는 실행 산출물을 만든다
 - CD는 Git 선언 상태를 클러스터에 반영한다
 
+현재 기준으로는 아래처럼 책임을 더 명확히 나눕니다.
+
+- `DnDn-App`, `DnDn-HR`의 GitHub Actions는 Docker image 빌드와 ECR 푸시까지만 담당한다
+- 실제 Helm/Kustomize values, Argo CD `Application`, EKS 반영은 `DnDn-Infra`가 담당한다
+
 즉, 운영 기준점은 `kubectl`이 아니라 Git 상태입니다.
 
 ## 2. Ownership In The Flow
@@ -30,6 +35,7 @@
 - 애플리케이션 코드는 `DnDn-App`, `DnDn-HR`가 관리한다
 - CI는 이미지 빌드와 푸시를 담당한다
 - CD는 Argo CD가 Git 선언을 기준으로 수행한다
+- 앱 레포 workflow는 `aws eks update-kubeconfig` 또는 `helm upgrade --install`을 직접 수행하지 않는다
 
 ## 3. Promotion Model
 
@@ -40,6 +46,11 @@
 3. `DnDn-Infra`에서 GitOps 이미지 태그 또는 환경 값을 갱신
 4. `dev`에서 배포 확인
 5. 승인된 변경만 `prod`에 반영
+
+예시:
+
+- `DnDn-App/apps/report`는 하나의 이미지 태그를 발행한다
+- `DnDn-Infra`는 그 태그를 `dndn-report-api`, `dndn-report-worker` 두 런타임에 함께 반영한다
 
 장기 기준 운영 브랜치는 `main`입니다.
 

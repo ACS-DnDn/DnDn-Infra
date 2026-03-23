@@ -11,15 +11,18 @@
 
 ## 1. Recommended Deployment Units
 
-현재 기준 권장 배포 단위는 아래 5개입니다.
+현재 기준 권장 배포 단위는 아래 6개입니다.
 
 | Workload | Source Repo | Runtime | Exposure | Primary Role |
 | --- | --- | --- | --- | --- |
 | `dndn-web` | `DnDn-App/apps/web` | `Deployment` | `Ingress` | 메인 사용자 웹 |
 | `dndn-api` | `DnDn-App/apps/api` | `Deployment` | `ClusterIP` + `Ingress` | 메인 백엔드 API |
 | `dndn-worker` | `DnDn-App/apps/worker` | `Deployment` | internal only | 비동기 작업 처리 |
-| `dndn-report` | `DnDn-App/apps/report` | `Deployment` | internal only | 보고서 생성 서비스 |
+| `dndn-report-api` | `DnDn-App/apps/report` | `Deployment` | internal only | 보고서 API |
+| `dndn-report-worker` | `DnDn-App/apps/report` | `Deployment` | internal only | 보고서 생성 worker |
 | `dndn-hr` | `DnDn-HR` | `Deployment` | `Ingress` | 관리자 포털 |
+
+`dndn-report-api`와 `dndn-report-worker`는 배포 단위는 분리하지만, 동일한 `DnDn-App/apps/report` 이미지 태그를 공유하는 구조를 권장합니다.
 
 ## 2. Ownership Model
 
@@ -44,9 +47,12 @@
 - `dndn-worker`
   - 외부 노출 없음
   - 큐, DB, S3 같은 내부 자원 사용
-- `dndn-report`
+- `dndn-report-api`
   - 외부 노출이 꼭 필요하지 않으면 내부 서비스로 유지
   - 필요 시 `dndn-api` 뒤에서 호출
+- `dndn-report-worker`
+  - 외부 노출 없음
+  - SQS를 소비하고 S3/DB 같은 내부 자원 사용
 
 ## 4. Argo CD Shape
 
@@ -62,7 +68,8 @@
 - `apps/dndn-web`
 - `apps/dndn-api`
 - `apps/dndn-worker`
-- `apps/dndn-report`
+- `apps/dndn-report-api`
+- `apps/dndn-report-worker`
 - `apps/dndn-hr`
 - `environments/dev`
 - `environments/prod`
@@ -71,7 +78,6 @@
 
 아직 결정이 필요한 항목은 아래와 같습니다.
 
-- `dndn-report`를 독립 서비스로 둘지, API 내부 기능으로 흡수할지
 - `dndn-worker`를 장기적으로 EKS 상시 워커로 둘지, 일부를 Lambda로 유지할지
 - `dndn-hr`를 컨테이너로 배포할지, 정적 사이트 배포로 둘지
 - 환경별 도메인과 `Ingress` 정책

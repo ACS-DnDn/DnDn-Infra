@@ -16,8 +16,8 @@
 | Repo | Owns | Does Not Own |
 | --- | --- | --- |
 | `DnDn-Infra` | AWS 자원, 배포 환경, GitOps 선언, 환경별 값 | 제품 기능 로직, 화면 로직 |
-| `DnDn-App` | 메인 제품 코드, API, worker, contracts, 이미지 산출물 | AWS 자원 생성, Argo CD 선언 |
-| `DnDn-HR` | 관리자 포털 UI, HR 전용 프론트엔드 산출물 | 플랫폼 공통 인프라, 메인 API 배포 |
+| `DnDn-App` | 메인 제품 코드, API, worker, contracts, 이미지 산출물 | AWS 자원 생성, Argo CD 선언, EKS 직접 배포 |
+| `DnDn-HR` | 관리자 포털 UI, HR 전용 프론트엔드 산출물 | 플랫폼 공통 인프라, 메인 API 배포, EKS 직접 배포 |
 
 ## 2. Repository Ownership
 
@@ -45,6 +45,7 @@
 
 - `web`, `api`, `worker`, `report` 애플리케이션 코드
 - Docker image 빌드 대상
+- GitHub Actions 기반 image push
 - 비즈니스 로직
 - 보고서 생성 로직
 - worker 실행 로직
