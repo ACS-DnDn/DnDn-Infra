@@ -56,6 +56,10 @@ resource "aws_cognito_user_pool" "main" {
     Project     = var.project
     Environment = var.environment
   }
+
+  lifecycle {
+    ignore_changes = [schema]
+  }
 }
 
 # ── App Client ────────────────────────────────────────────────────────────

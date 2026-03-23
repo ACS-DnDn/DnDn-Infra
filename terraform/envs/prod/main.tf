@@ -164,16 +164,17 @@ module "route53" {
 }
 
 # ── ACM ───────────────────────────────────────────────────────────────────
+# 1차 apply 후 주석 해제 (Route53 zone이 존재해야 DNS 검증 가능)
 
-module "acm" {
-  source = "../../modules/acm"
-
-  project     = var.project
-  environment = var.environment
-
-  route53_zone_id    = module.route53.zone_id
-  hr_route53_zone_id = module.route53.hr_zone_id
-}
+# module "acm" {
+#   source = "../../modules/acm"
+#
+#   project     = var.project
+#   environment = var.environment
+#
+#   route53_zone_id    = module.route53.zone_id
+#   hr_route53_zone_id = module.route53.hr_zone_id
+# }
 
 # ── S3 Public (고객 배포용 CFN 템플릿) ───────────────────────────────────────
 # dndn-public 버킷은 DEV/PRD 공유 — 수동 생성 후 data 소스로 참조
@@ -184,15 +185,17 @@ data "aws_s3_bucket" "public" {
 }
 
 # ── ALB Controller (Helm) ────────────────────────────────────────────────
+# 1차 apply(EKS 생성) 후 주석 해제하여 2차 apply
+# Helm provider가 EKS endpoint에 의존하므로 EKS 없이는 init 불가
 
-module "alb_controller" {
-  source = "../../modules/alb_controller"
-
-  project     = var.project
-  environment = var.environment
-
-  cluster_name      = module.eks.cluster_name
-  oidc_provider_arn = module.eks.oidc_provider_arn
-  oidc_provider_url = module.eks.oidc_provider_url
-  vpc_id            = module.vpc.vpc_id
-}
+# module "alb_controller" {
+#   source = "../../modules/alb_controller"
+#
+#   project     = var.project
+#   environment = var.environment
+#
+#   cluster_name      = module.eks.cluster_name
+#   oidc_provider_arn = module.eks.oidc_provider_arn
+#   oidc_provider_url = module.eks.oidc_provider_url
+#   vpc_id            = module.vpc.vpc_id
+# }

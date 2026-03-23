@@ -10,14 +10,15 @@ terraform {
       source  = "hashicorp/archive"
       version = "~> 2.0"
     }
-    helm = {
-      source  = "hashicorp/helm"
-      version = "~> 2.17"
-    }
-    kubernetes = {
-      source  = "hashicorp/kubernetes"
-      version = "~> 2.36"
-    }
+    # helm과 kubernetes provider는 EKS 생성 후 2차 apply 시 활성화
+    # helm = {
+    #   source  = "hashicorp/helm"
+    #   version = "~> 2.17"
+    # }
+    # kubernetes = {
+    #   source  = "hashicorp/kubernetes"
+    #   version = "~> 2.36"
+    # }
   }
 }
 
@@ -34,20 +35,22 @@ provider "aws" {
 }
 
 # ── EKS 인증 데이터 (Helm / Kubernetes provider 공통) ─────────────────────
-data "aws_eks_cluster_auth" "main" {
-  name = module.eks.cluster_name
-}
+# 1차 apply 후 아래 주석 해제 (EKS 생성 완료 후)
 
-provider "helm" {
-  kubernetes {
-    host                   = module.eks.cluster_endpoint
-    cluster_ca_certificate = base64decode(module.eks.cluster_ca_certificate)
-    token                  = data.aws_eks_cluster_auth.main.token
-  }
-}
+# data "aws_eks_cluster_auth" "main" {
+#   name = module.eks.cluster_name
+# }
 
-provider "kubernetes" {
-  host                   = module.eks.cluster_endpoint
-  cluster_ca_certificate = base64decode(module.eks.cluster_ca_certificate)
-  token                  = data.aws_eks_cluster_auth.main.token
-}
+# provider "helm" {
+#   kubernetes {
+#     host                   = module.eks.cluster_endpoint
+#     cluster_ca_certificate = base64decode(module.eks.cluster_ca_certificate)
+#     token                  = data.aws_eks_cluster_auth.main.token
+#   }
+# }
+
+# provider "kubernetes" {
+#   host                   = module.eks.cluster_endpoint
+#   cluster_ca_certificate = base64decode(module.eks.cluster_ca_certificate)
+#   token                  = data.aws_eks_cluster_auth.main.token
+# }

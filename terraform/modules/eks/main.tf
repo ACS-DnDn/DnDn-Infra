@@ -36,6 +36,11 @@ resource "aws_eks_cluster" "main" {
     endpoint_public_access  = false
   }
 
+  access_config {
+    authentication_mode                         = "API_AND_CONFIG_MAP"
+    bootstrap_cluster_creator_admin_permissions = true
+  }
+
   depends_on = [aws_iam_role_policy_attachment.cluster_policy]
 }
 
@@ -123,20 +128,21 @@ resource "aws_launch_template" "node" {
 }
 
 # ── EKS Access Entry — 관리자 Role ───────────────────────────────────────
+# admin_role_arns는 다른 모듈 output에 의존하므로 count 사용
 
 resource "aws_eks_access_entry" "admin" {
-  for_each = toset(var.admin_role_arns)
+  count = length(var.admin_role_arns)
 
   cluster_name  = aws_eks_cluster.main.name
-  principal_arn = each.value
+  principal_arn = var.admin_role_arns[count.index]
   type          = "STANDARD"
 }
 
 resource "aws_eks_access_policy_association" "admin" {
-  for_each = toset(var.admin_role_arns)
+  count = length(var.admin_role_arns)
 
   cluster_name  = aws_eks_cluster.main.name
-  principal_arn = each.value
+  principal_arn = var.admin_role_arns[count.index]
   policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
 
   access_scope {

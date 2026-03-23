@@ -27,11 +27,12 @@ resource "aws_route53_record" "acm_validation" {
     }
   }
 
-  zone_id = var.route53_zone_id
-  name    = each.value.name
-  type    = each.value.type
-  records = [each.value.record]
-  ttl     = 60
+  allow_overwrite = true
+  zone_id         = var.route53_zone_id
+  name            = each.value.name
+  type            = each.value.type
+  records         = [each.value.record]
+  ttl             = 60
 }
 
 # ── 검증 완료 대기 ────────────────────────────────────────────────────────────
@@ -68,11 +69,12 @@ resource "aws_route53_record" "acm_validation_hr" {
     }
   }
 
-  zone_id = var.hr_route53_zone_id
-  name    = each.value.name
-  type    = each.value.type
-  records = [each.value.record]
-  ttl     = 60
+  allow_overwrite = true
+  zone_id         = var.hr_route53_zone_id
+  name            = each.value.name
+  type            = each.value.type
+  records         = [each.value.record]
+  ttl             = 60
 }
 
 resource "aws_acm_certificate_validation" "hr" {

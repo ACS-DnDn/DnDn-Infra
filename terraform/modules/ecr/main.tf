@@ -28,8 +28,8 @@ resource "aws_ecr_repository" "this" {
 # ── 이미지 수명 주기 정책 (최근 30개만 보관) ─────────────────────────────
 
 resource "aws_ecr_lifecycle_policy" "this" {
-  for_each   = aws_ecr_repository.this
-  repository = each.value.name
+  for_each   = toset(local.repositories)
+  repository = aws_ecr_repository.this[each.key].name
 
   policy = jsonencode({
     rules = [{
