@@ -1,7 +1,8 @@
 locals {
-  prefix   = "${var.project}-${var.environment}"
-  oidc_url = replace(var.oidc_provider_url, "https://", "")
-  region   = data.aws_region.current.name
+  prefix       = "${var.project}-${var.environment}"
+  prefix_lower = "${lower(var.project)}-${lower(var.environment)}"
+  oidc_url     = replace(var.oidc_provider_url, "https://", "")
+  region       = data.aws_region.current.name
 }
 
 data "aws_caller_identity" "current" {}
@@ -56,7 +57,10 @@ resource "aws_iam_role" "gha_deploy" {
           "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
         }
         StringLike = {
-          "token.actions.githubusercontent.com:sub" = "repo:${var.github_org}/DnDn-App:*"
+          "token.actions.githubusercontent.com:sub" = [
+            "repo:${var.github_org}/DnDn-App:*",
+            "repo:${var.github_org}/DnDn-HR:*",
+          ]
         }
       }
     }]
@@ -85,12 +89,12 @@ resource "aws_iam_role_policy" "gha_deploy" {
           "ecr:CompleteLayerUpload",
           "ecr:PutImage",
         ]
-        Resource = "arn:aws:ecr:${local.region}:${data.aws_caller_identity.current.account_id}:repository/${local.prefix}-*"
+        Resource = "arn:aws:ecr:${local.region}:${data.aws_caller_identity.current.account_id}:repository/${local.prefix_lower}-*"
       },
       {
         Effect   = "Allow"
         Action   = ["lambda:UpdateFunctionCode", "lambda:GetFunction"]
-        Resource = "arn:aws:lambda:${local.region}:${data.aws_caller_identity.current.account_id}:function:${local.prefix}-lmd-*"
+        Resource = "arn:aws:lambda:${local.region}:${data.aws_caller_identity.current.account_id}:function:${local.prefix_lower}-lmd-*"
       },
       {
         Effect = "Allow"
@@ -435,7 +439,7 @@ resource "aws_iam_role_policy" "scheduler_lambda" {
     Statement = [{
       Effect   = "Allow"
       Action   = "lambda:InvokeFunction"
-      Resource = "arn:aws:lambda:${local.region}:${data.aws_caller_identity.current.account_id}:function:${local.prefix}-lmd-scheduler-trigger"
+      Resource = "arn:aws:lambda:${local.region}:${data.aws_caller_identity.current.account_id}:function:${local.prefix_lower}-lmd-scheduler-trigger"
     }]
   })
 }
