@@ -1,0 +1,37 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dndn-report-ingress
+  namespace: dndn-report
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80,"HTTPS":443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+    alb.ingress.kubernetes.io/certificate-arn: ""   # acm_certificate_arn
+    alb.ingress.kubernetes.io/group.name: dndn-public
+    alb.ingress.kubernetes.io/group.order: "20"
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+spec:
+  rules:
+    - host: www.dndn.cloud
+      http:
+        paths:
+          - path: /report-api
+            pathType: Prefix
+            backend:
+              service:
+                name: dndn-report
+                port:
+                  number: 8000
+    - host: dndn.cloud
+      http:
+        paths:
+          - path: /report-api
+            pathType: Prefix
+            backend:
+              service:
+                name: dndn-report
+                port:
+                  number: 8000

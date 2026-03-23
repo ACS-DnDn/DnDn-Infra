@@ -45,7 +45,7 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       RoleName: DnDnOpsAgentRole
-      Description: DnDn 플랫폼 운영 자동화 에이전트 역할 (읽기 전용)
+      Description: DnDn platform ops automation agent role (read-only)
       MaxSessionDuration: 3600
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
@@ -69,8 +69,7 @@ Resources:
   CloudTrailReadPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
-      ManagedPolicyName: DnDnOpsAgent-CloudTrail
-      Description: CloudTrail 이벤트 조회
+      Description: Read CloudTrail events
       Roles:
         - !Ref DnDnOpsAgentRole
       PolicyDocument:
@@ -92,8 +91,7 @@ Resources:
   ConfigReadPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
-      ManagedPolicyName: DnDnOpsAgent-Config
-      Description: AWS Config 리소스 구성 조회
+      Description: Read AWS Config resource configurations
       Roles:
         - !Ref DnDnOpsAgentRole
       PolicyDocument:
@@ -119,8 +117,7 @@ Resources:
   SecurityReadPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
-      ManagedPolicyName: DnDnOpsAgent-Security
-      Description: Security Hub findings 및 Access Analyzer 조회
+      Description: Read Security Hub findings and Access Analyzer results
       Roles:
         - !Ref DnDnOpsAgentRole
       PolicyDocument:
@@ -154,8 +151,7 @@ Resources:
   CostReadPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
-      ManagedPolicyName: DnDnOpsAgent-Cost
-      Description: Cost Explorer 비용 데이터 조회
+      Description: Read Cost Explorer billing data
       Roles:
         - !Ref DnDnOpsAgentRole
       PolicyDocument:
@@ -180,8 +176,7 @@ Resources:
   CloudWatchReadPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
-      ManagedPolicyName: DnDnOpsAgent-CloudWatch
-      Description: CloudWatch 메트릭 및 로그 조회
+      Description: Read CloudWatch metrics and logs
       Roles:
         - !Ref DnDnOpsAgentRole
       PolicyDocument:
@@ -209,8 +204,7 @@ Resources:
   BaseReadPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
-      ManagedPolicyName: DnDnOpsAgent-Base
-      Description: 기본 리소스 조회 및 연동 확인
+      Description: Base resource discovery and integration check
       Roles:
         - !Ref DnDnOpsAgentRole
       PolicyDocument:
@@ -267,8 +261,8 @@ Resources:
   HealthReadPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
-      ManagedPolicyName: DnDnOpsAgent-Health
-      Description: AWS Health 이벤트 상세 및 영향 리소스 조회
+
+      Description: Read AWS Health event details and affected resources
       Roles:
         - !Ref DnDnOpsAgentRole
       PolicyDocument:
@@ -390,7 +384,7 @@ Resources:
     Condition: ShouldForwardEvents
     Properties:
       RoleName: DnDnEventForwardRole
-      Description: EventBridge가 DnDn 플랫폼 계정으로 이벤트를 전달하기 위한 역할
+      Description: Role for EventBridge to forward events to DnDn platform account
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:

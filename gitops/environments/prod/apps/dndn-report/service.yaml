@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: dndn-report
+  namespace: dndn-report
+  labels:
+    app: dndn-report
+spec:
+  type: ClusterIP
+  selector:
+    app: dndn-report
+  ports:
+    - port: 8000
+      targetPort: 8000
+      protocol: TCP

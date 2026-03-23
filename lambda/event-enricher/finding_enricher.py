@@ -196,8 +196,9 @@ def _process_finding(finding: dict) -> dict:
     finding_id     = finding.get("Id", "unknown").split("/")[-1]
     date_prefix    = now.strftime("%Y/%m/%d")
     bucket         = os.environ.get("OUTPUT_BUCKET", "")
-    raw_uri        = f"s3://{bucket}/raw-findings/{date_prefix}/{finding_id}.json"    if bucket else "s3://not-configured/raw/"
-    normalized_uri = f"s3://{bucket}/canonical/findings/{date_prefix}/{finding_id}.json" if bucket else "s3://not-configured/canonical/"
+    ws_prefix      = workspace_id or "unknown"
+    raw_uri        = f"s3://{bucket}/raw/{ws_prefix}/findings/{date_prefix}/{finding_id}.json"       if bucket else "s3://not-configured/raw/"
+    normalized_uri = f"s3://{bucket}/canonical/{ws_prefix}/findings/{date_prefix}/{finding_id}.json"  if bucket else "s3://not-configured/canonical/"
 
     # 공통 수집 (계정 별칭, display name)
     common = _collect_common(finding)
@@ -217,9 +218,9 @@ def _process_finding(finding: dict) -> dict:
     canonical = _build_canonical(finding, common, run_id, now, raw_uri, normalized_uri)
 
     if bucket:
-        _save_to_s3(finding,   bucket, f"raw-findings/{date_prefix}/{finding_id}.json",        "raw finding")
-        _save_to_s3(canonical, bucket, f"canonical/findings/{date_prefix}/{finding_id}.json",  "canonical")
-        # S3 PutObject → s3-event SQS → Reporter 자동 트리거
+        _save_to_s3(finding,   bucket, f"raw/{ws_prefix}/findings/{date_prefix}/{finding_id}.json",       "raw finding")
+        _save_to_s3(canonical, bucket, f"canonical/{ws_prefix}/findings/{date_prefix}/{finding_id}.json",  "canonical")
+        # S3 PutObject (canonical/) → s3-event SQS → Reporter 자동 트리거
 
     logger.info("완료: key=%s, run_id=%s", event_key, run_id)
     return {"result": "ok", "key": event_key, "run_id": run_id}

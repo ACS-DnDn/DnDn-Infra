@@ -1,7 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: dndn-report-placeholder
-data:
-  owner: DnDn-App/apps/report
-  next_step: Replace this placeholder with Helm chart or manifests

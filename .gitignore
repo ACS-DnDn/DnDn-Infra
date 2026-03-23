@@ -419,3 +419,16 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# ── Terraform ──────────────────────────────────────────────
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfplan
+tfplan
+*.tfvars
+**/dummy.zip
+
+# ── Lambda 빌드 아티팩트 ───────────────────────────────────
+lambda/**/package/
+lambda/**/*.zip

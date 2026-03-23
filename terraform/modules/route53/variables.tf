@@ -14,6 +14,12 @@ variable "domain" {
   default     = "dndn.cloud"
 }
 
+variable "hr_domain" {
+  description = "HR 앱 Route53 호스팅 존 도메인 (예: dndnhr.cloud)"
+  type        = string
+  default     = "dndnhr.cloud"
+}
+
 variable "alb_dns_name" {
   description = "ALB DNS 이름 (EKS ALB Controller 배포 후 입력)"
   type        = string

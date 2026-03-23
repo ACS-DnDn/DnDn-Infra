@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dndn-api
+  namespace: dndn-api
+  labels:
+    app: dndn-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: dndn-api
+  template:
+    metadata:
+      labels:
+        app: dndn-api
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      serviceAccountName: dndn-api-sa
+      containers:
+        - name: api
+          image: 387721658341.dkr.ecr.ap-northeast-2.amazonaws.com/dndn-prd-api:latest
+          securityContext:
+            allowPrivilegeEscalation: false
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: dndn-api-config
+            - secretRef:
+                name: dndn-api-secret
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi

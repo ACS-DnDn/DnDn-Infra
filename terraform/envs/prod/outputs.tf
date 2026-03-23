@@ -85,13 +85,35 @@ output "irsa_reporter_role_arn" {
 # ── ACM ───────────────────────────────────────────────────────────────────────
 
 output "acm_certificate_arn" {
-  description = "ACM 인증서 ARN — ALB Ingress annotation alb.ingress.kubernetes.io/certificate-arn에 사용"
+  description = "dndn.cloud ACM 인증서 ARN — ALB Ingress annotation에 사용"
   value       = module.acm.certificate_arn
+}
+
+output "acm_hr_certificate_arn" {
+  description = "dndnhr.cloud ACM 인증서 ARN — ALB Ingress annotation에 사용"
+  value       = module.acm.hr_certificate_arn
+}
+
+# ── S3 Public ─────────────────────────────────────────────────────────────────
+
+output "s3_public_bucket_name" {
+  description = "퍼블릭 자산 버킷 이름 — CFN 템플릿 업로드 대상"
+  value       = data.aws_s3_bucket.public.id
+}
+
+output "s3_public_cfn_base_url" {
+  description = "고객 배포용 CFN base URL — 온보딩 플로우에서 Launch Stack URL 생성에 사용"
+  value       = "https://${data.aws_s3_bucket.public.bucket}.s3.${data.aws_s3_bucket.public.region}.amazonaws.com/cfn"
 }
 
 # ── Route53 ───────────────────────────────────────────────────────────────────
 
 output "route53_name_servers" {
-  description = "Route53 NS 레코드 — 도메인 등록기관에 입력 필요"
+  description = "dndn.cloud NS 레코드 — 도메인 등록기관에 입력 필요"
   value       = module.route53.name_servers
+}
+
+output "route53_hr_name_servers" {
+  description = "dndnhr.cloud NS 레코드 — 도메인 등록기관에 입력 필요"
+  value       = module.route53.hr_name_servers
 }

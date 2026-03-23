@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dndn-api-config
+  namespace: dndn-api
+data:
+  AWS_REGION: "ap-northeast-2"
+  COGNITO_USER_POOL_ID: "ap-northeast-2_5yinXWGsX"
+  COGNITO_CLIENT_ID: "79v4ip7hgjqfo7jqupb9e55hnf"
+  PLATFORM_ACCOUNT_ID: "387721658341"
+  STS_ROLE_NAME: "DnDnOpsAgentRole"
+  CFN_TEMPLATE_URL: "https://dndn-public.s3.ap-northeast-2.amazonaws.com/dndn-ops-agent-role.yaml"
+  EVENT_BUS_ARN: ""                 # terraform output → eventbridge_bus_arn
+  S3_BUCKET: ""                     # terraform output → s3_bucket_name
+  S3_PRESIGNED_EXPIRES: "3600"
+  MAX_UPLOAD_SIZE_MB: "100"
+  SCHEDULER_GROUP_NAME: "dndn-schedules"
+  SCHEDULER_ROLE_ARN: ""            # terraform output → irsa_scheduler_role_arn
+  SCHEDULER_TARGET_ARN: ""          # terraform output → scheduler_trigger_lambda_arn
+  REPORT_REQUEST_QUEUE_URL: ""      # terraform output → report_request_queue_url
+  GITHUB_REDIRECT_URI: "https://www.dndn.cloud/auth/github/callback"
+  SLACK_REDIRECT_URI: "https://www.dndn.cloud/auth/slack/callback"

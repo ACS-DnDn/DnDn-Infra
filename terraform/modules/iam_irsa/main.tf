@@ -93,9 +93,17 @@ resource "aws_iam_role_policy" "gha_deploy" {
         Resource = "arn:aws:lambda:${local.region}:${data.aws_caller_identity.current.account_id}:function:${local.prefix}-lmd-*"
       },
       {
+        Effect = "Allow"
+        Action = "s3:PutObject"
+        Resource = [
+          "arn:aws:s3:::${var.s3_bucket_name}/lambda/*",
+          "arn:aws:s3:::dndn-public/cfn/*",
+        ]
+      },
+      {
         Effect   = "Allow"
-        Action   = "s3:PutObject"
-        Resource = "arn:aws:s3:::${var.s3_bucket_name}/lambda/*"
+        Action   = "s3:DeleteObject"
+        Resource = "arn:aws:s3:::dndn-public/cfn/*"
       },
       {
         Effect   = "Allow"
@@ -154,7 +162,7 @@ resource "aws_iam_role_policy" "api_scheduler" {
           "scheduler:GetSchedule",
           "scheduler:ListSchedules",
         ]
-        Resource = "${aws_scheduler_schedule_group.dndn_schedules.arn}/*"
+        Resource = "arn:aws:scheduler:${local.region}:${data.aws_caller_identity.current.account_id}:schedule/${aws_scheduler_schedule_group.dndn_schedules.name}/*"
       },
       {
         # create_schedule / update_schedule 호출 시 Target.RoleArn 전달 필요
@@ -166,6 +174,61 @@ resource "aws_iam_role_policy" "api_scheduler" {
         Effect   = "Allow"
         Action   = "sqs:SendMessage"
         Resource = var.report_request_queue_arn
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "api_s3" {
+  name = "S3ApiPolicy"
+  role = aws_iam_role.api.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:DeleteObject",
+        ]
+        Resource = "arn:aws:s3:::${var.s3_bucket_name}/*"
+      },
+      {
+        Effect   = "Allow"
+        Action   = "s3:ListBucket"
+        Resource = "arn:aws:s3:::${var.s3_bucket_name}"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "api_cognito" {
+  name = "CognitoApiPolicy"
+  role = aws_iam_role.api.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "cognito-idp:InitiateAuth",
+          "cognito-idp:RespondToAuthChallenge",
+          "cognito-idp:ForgotPassword",
+          "cognito-idp:ConfirmForgotPassword",
+          "cognito-idp:GlobalSignOut",
+          "cognito-idp:GetUser",
+          "cognito-idp:AdminCreateUser",
+          "cognito-idp:AdminDeleteUser",
+          "cognito-idp:AdminResetUserPassword",
+          "cognito-idp:AdminAddUserToGroup",
+          "cognito-idp:AdminRemoveUserFromGroup",
+          "cognito-idp:AdminListGroupsForUser",
+          "cognito-idp:AdminGetUser",
+        ]
+        Resource = var.cognito_user_pool_arn
       }
     ]
   })
@@ -219,6 +282,7 @@ resource "aws_iam_role_policy" "worker_sqs" {
       Action = [
         "sqs:ReceiveMessage",
         "sqs:DeleteMessage",
+        "sqs:ChangeMessageVisibility",
         "sqs:GetQueueAttributes",
       ]
       Resource = var.report_request_queue_arn
@@ -232,11 +296,21 @@ resource "aws_iam_role_policy" "worker_s3" {
 
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [{
-      Effect   = "Allow"
-      Action   = ["s3:PutObject", "s3:GetObject"]
-      Resource = "arn:aws:s3:::${var.s3_bucket_name}/reports/*"
-    }]
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["s3:PutObject", "s3:GetObject"]
+        Resource = [
+          "arn:aws:s3:::${var.s3_bucket_name}/reports/*",
+          "arn:aws:s3:::${var.s3_bucket_name}/canonical/*",
+        ]
+      },
+      {
+        Effect   = "Allow"
+        Action   = "s3:ListBucket"
+        Resource = "arn:aws:s3:::${var.s3_bucket_name}"
+      }
+    ]
   })
 }
 
@@ -286,11 +360,26 @@ resource "aws_iam_role_policy" "reporter_s3" {
 
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [{
-      Effect   = "Allow"
-      Action   = ["s3:PutObject", "s3:GetObject"]
-      Resource = "arn:aws:s3:::${var.s3_bucket_name}/reports/*"
-    }]
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = ["s3:PutObject", "s3:GetObject"]
+        Resource = [
+          "arn:aws:s3:::${var.s3_bucket_name}/*/reports/*",
+          "arn:aws:s3:::${var.s3_bucket_name}/*/workplan/*",
+        ]
+      },
+      {
+        Effect   = "Allow"
+        Action   = "s3:GetObject"
+        Resource = "arn:aws:s3:::${var.s3_bucket_name}/canonical/*"
+      },
+      {
+        Effect   = "Allow"
+        Action   = "s3:ListBucket"
+        Resource = "arn:aws:s3:::${var.s3_bucket_name}"
+      }
+    ]
   })
 }
 
@@ -305,6 +394,7 @@ resource "aws_iam_role_policy" "reporter_sqs" {
       Action = [
         "sqs:ReceiveMessage",
         "sqs:DeleteMessage",
+        "sqs:ChangeMessageVisibility",
         "sqs:GetQueueAttributes",
       ]
       Resource = var.s3_event_queue_arn
@@ -327,6 +417,9 @@ resource "aws_iam_role" "scheduler" {
         StringEquals = {
           "aws:SourceAccount" = data.aws_caller_identity.current.account_id
           "aws:SourceArn"     = "arn:aws:scheduler:${local.region}:${data.aws_caller_identity.current.account_id}:schedule/${aws_scheduler_schedule_group.dndn_schedules.name}/*"
+        }
+        ArnLike = {
+          "aws:SourceArn" = "arn:aws:scheduler:${local.region}:${data.aws_caller_identity.current.account_id}:schedule/${aws_scheduler_schedule_group.dndn_schedules.name}/*"
         }
       }
     }]

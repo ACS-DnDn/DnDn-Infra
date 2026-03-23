@@ -191,8 +191,9 @@ def handler(event: dict, context: Any) -> dict:
     event_id_short = event_arn.split("/")[-1]
     date_prefix    = now.strftime("%Y/%m/%d")
     bucket         = os.environ.get("OUTPUT_BUCKET", "")
-    raw_uri        = f"s3://{bucket}/raw-health-events/{date_prefix}/{event_id_short}.json"    if bucket else "s3://not-configured/raw/"
-    normalized_uri = f"s3://{bucket}/canonical/health/{date_prefix}/{event_id_short}.json" if bucket else "s3://not-configured/canonical/"
+    ws_prefix      = workspace_id or "unknown"
+    raw_uri        = f"s3://{bucket}/raw/{ws_prefix}/health/{date_prefix}/{event_id_short}.json"       if bucket else "s3://not-configured/raw/"
+    normalized_uri = f"s3://{bucket}/canonical/{ws_prefix}/health/{date_prefix}/{event_id_short}.json"  if bucket else "s3://not-configured/canonical/"
 
     # canonical model 조립
     canonical = _build_canonical(
@@ -214,8 +215,8 @@ def handler(event: dict, context: Any) -> dict:
             "event_detail":      event_detail,
             "entities":          entities,
         }
-        _save_to_s3(raw_payload, bucket, f"raw-health-events/{date_prefix}/{event_id_short}.json",   "raw health event")
-        _save_to_s3(canonical,   bucket, f"canonical/health/{date_prefix}/{event_id_short}.json",    "canonical model")
+        _save_to_s3(raw_payload, bucket, f"raw/{ws_prefix}/health/{date_prefix}/{event_id_short}.json",   "raw health event")
+        _save_to_s3(canonical,   bucket, f"canonical/{ws_prefix}/health/{date_prefix}/{event_id_short}.json",    "canonical model")
 
     return {
         "statusCode": 200,

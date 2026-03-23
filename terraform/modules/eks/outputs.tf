@@ -17,3 +17,8 @@ output "oidc_provider_url" {
   description = "IRSA용 OIDC Provider URL"
   value       = aws_iam_openid_connect_provider.eks.url
 }
+
+output "cluster_ca_certificate" {
+  description = "EKS 클러스터 CA 인증서 (base64)"
+  value       = aws_eks_cluster.main.certificate_authority[0].data
+}

@@ -4,7 +4,7 @@ EventBridge Scheduler가 스케줄 시각에 이 Lambda를 호출.
 VPC 내부 API 서버에 POST /reports/summary 를 전달하여 보고서 생성 payload를 만들게 함.
 
 환경변수:
-    API_INTERNAL_URL   : API 서버 K8s 서비스 URL (예: http://api-service.dndn-api.svc.cluster.local)
+    API_INTERNAL_URL   : API 서버 Internal ALB URL (예: http://internal-xxx.ap-northeast-2.elb.amazonaws.com)
     INTERNAL_API_KEY   : 내부 인증 공유 시크릿 (API 서버의 X-Internal-Key 헤더 검증용)
 """
 

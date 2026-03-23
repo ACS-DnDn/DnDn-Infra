@@ -52,3 +52,9 @@ variable "node_sg_id" {
   description = "EKS 노드 추가 SG ID"
   type        = string
 }
+
+variable "admin_role_arns" {
+  description = "EKS 클러스터 관리자 IAM Role ARN 목록 (Bastion, 개인 등)"
+  type        = list(string)
+  default     = []
+}
