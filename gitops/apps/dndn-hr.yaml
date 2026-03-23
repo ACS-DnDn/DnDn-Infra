@@ -1,14 +1,14 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: dndn-hr-dev
+  name: dndn-hr
   namespace: argocd
 spec:
   project: platform
   source:
     repoURL: https://github.com/ACS-DnDn/DnDn-Infra.git
     targetRevision: main
-    path: gitops/environments/dev/apps/dndn-hr
+    path: gitops/environments/prod/apps/dndn-hr
   destination:
     server: https://kubernetes.default.svc
     namespace: dndn-hr

@@ -1,17 +1,17 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: dndn-web-dev
+  name: dndn-web
   namespace: argocd
 spec:
   project: platform
   source:
     repoURL: https://github.com/ACS-DnDn/DnDn-Infra.git
     targetRevision: main
-    path: gitops/environments/dev/apps/dndn-web
+    path: gitops/environments/prod/apps/dndn-web
   destination:
     server: https://kubernetes.default.svc
-    namespace: dndn
+    namespace: dndn-web
   syncPolicy:
     automated:
       prune: true

@@ -1,17 +1,17 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: dndn-report-dev
+  name: dndn-report
   namespace: argocd
 spec:
   project: platform
   source:
     repoURL: https://github.com/ACS-DnDn/DnDn-Infra.git
     targetRevision: main
-    path: gitops/environments/dev/apps/dndn-report
+    path: gitops/environments/prod/apps/dndn-report
   destination:
     server: https://kubernetes.default.svc
-    namespace: dndn
+    namespace: dndn-report
   syncPolicy:
     automated:
       prune: true

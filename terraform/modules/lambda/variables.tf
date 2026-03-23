@@ -47,17 +47,3 @@ variable "internal_api_key" {
   type        = string
   sensitive   = true
 }
-
-variable "api_internal_url" {
-  # Lambda는 VPC DNS를 쓰지만 EKS CoreDNS를 거치지 않으므로 K8s 서비스 DNS 사용 불가.
-  # Internal ALB 배포 후 DNS 이름으로 설정할 것.
-  # 예: http://internal-xxx.ap-northeast-2.elb.amazonaws.com
-  description = "API 서버 Internal ALB URL (scheduler-trigger Lambda → API 호출, ALB 배포 후 설정)"
-  type        = string
-}
-
-variable "internal_api_key" {
-  description = "Lambda → API 서버 내부 인증 공유 시크릿 (X-Internal-Key 헤더)"
-  type        = string
-  sensitive   = true
-}
