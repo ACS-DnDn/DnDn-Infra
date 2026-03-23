@@ -7,5 +7,5 @@ data:
   AWS_REGION: "ap-northeast-2"
   ALLOWED_ORIGINS: "https://www.dndn.cloud,https://dndn.cloud"
   BEDROCK_MODEL_ID: "apac.anthropic.claude-3-5-sonnet-20241022-v2:0"
-  S3_BUCKET: ""                     # terraform output → s3_bucket_name
+  S3_BUCKET: "dndn-prd-s3"
   S3_PRESIGNED_EXPIRES: "3600"

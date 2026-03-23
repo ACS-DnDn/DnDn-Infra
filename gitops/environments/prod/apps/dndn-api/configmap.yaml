@@ -6,17 +6,17 @@ metadata:
 data:
   AWS_REGION: "ap-northeast-2"
   COGNITO_USER_POOL_ID: "ap-northeast-2_5yinXWGsX"
-  COGNITO_CLIENT_ID: "79v4ip7hgjqfo7jqupb9e55hnf"
+  COGNITO_CLIENT_ID: "6dhqeet71emeuj4d8c80cttpsd"
   PLATFORM_ACCOUNT_ID: "387721658341"
   STS_ROLE_NAME: "DnDnOpsAgentRole"
-  CFN_TEMPLATE_URL: "https://dndn-public.s3.ap-northeast-2.amazonaws.com/dndn-ops-agent-role.yaml"
-  EVENT_BUS_ARN: ""                 # terraform output → eventbridge_bus_arn
-  S3_BUCKET: ""                     # terraform output → s3_bucket_name
+  CFN_TEMPLATE_URL: "https://dndn-public.s3.ap-northeast-2.amazonaws.com/cfn/dndn-ops-agent-role.yaml"
+  EVENT_BUS_ARN: "arn:aws:events:ap-northeast-2:387721658341:event-bus/dndn-ops-events"
+  S3_BUCKET: "dndn-prd-s3"
   S3_PRESIGNED_EXPIRES: "3600"
   MAX_UPLOAD_SIZE_MB: "100"
   SCHEDULER_GROUP_NAME: "dndn-schedules"
-  SCHEDULER_ROLE_ARN: ""            # terraform output → irsa_scheduler_role_arn
-  SCHEDULER_TARGET_ARN: ""          # terraform output → scheduler_trigger_lambda_arn
-  REPORT_REQUEST_QUEUE_URL: ""      # terraform output → report_request_queue_url
+  SCHEDULER_ROLE_ARN: "arn:aws:iam::387721658341:role/DnDn-PRD-EBS-SchedulerRole"
+  SCHEDULER_TARGET_ARN: "arn:aws:lambda:ap-northeast-2:387721658341:function:dndn-prd-lmd-scheduler-trigger"
+  REPORT_REQUEST_QUEUE_URL: "https://sqs.ap-northeast-2.amazonaws.com/387721658341/dndn-prd-sqs-report-request"
   GITHUB_REDIRECT_URI: "https://www.dndn.cloud/auth/github/callback"
   SLACK_REDIRECT_URI: "https://www.dndn.cloud/auth/slack/callback"

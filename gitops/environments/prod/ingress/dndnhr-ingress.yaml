@@ -13,7 +13,7 @@ metadata:
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
     alb.ingress.kubernetes.io/ssl-redirect: "443"
-    alb.ingress.kubernetes.io/certificate-arn: ""   # acm_hr_certificate_arn
+    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:ap-northeast-2:387721658341:certificate/b6a8f0ad-0472-4ec4-ad6f-92473a2adba2"
     alb.ingress.kubernetes.io/group.name: dndn-public
     alb.ingress.kubernetes.io/group.order: "50"
     alb.ingress.kubernetes.io/healthcheck-path: /
