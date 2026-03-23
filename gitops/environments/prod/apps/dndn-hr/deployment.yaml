@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dndn-hr
+  namespace: dndn-hr
+  labels:
+    app: dndn-hr
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dndn-hr
+  template:
+    metadata:
+      labels:
+        app: dndn-hr
+    spec:
+      containers:
+        - name: hr
+          image: 387721658341.dkr.ecr.ap-northeast-2.amazonaws.com/dndn-prd-hr:latest
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: nginx-conf
+              mountPath: /etc/nginx/conf.d
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+      volumes:
+        - name: nginx-conf
+          configMap:
+            name: dndn-hr-nginx

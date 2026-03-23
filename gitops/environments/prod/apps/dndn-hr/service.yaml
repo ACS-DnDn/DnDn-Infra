@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: dndn-hr
+  namespace: dndn-hr
+  labels:
+    app: dndn-hr
+spec:
+  type: ClusterIP
+  selector:
+    app: dndn-hr
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP

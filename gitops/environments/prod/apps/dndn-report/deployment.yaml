@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dndn-report
+  namespace: dndn-report
+  labels:
+    app: dndn-report
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dndn-report
+  template:
+    metadata:
+      labels:
+        app: dndn-report
+    spec:
+      serviceAccountName: dndn-reporter-sa
+      containers:
+        - name: report
+          image: 387721658341.dkr.ecr.ap-northeast-2.amazonaws.com/dndn-prd-report:latest
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: dndn-report-config
+            - secretRef:
+                name: dndn-report-secret
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi

@@ -2,6 +2,9 @@ locals {
   prefix = "${lower(var.project)}-${lower(var.environment)}"
 }
 
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+
 # ── 더미 배포 패키지 (초기 인프라 생성용) ─────────────────────────────────────
 # CI/CD가 실제 코드를 aws lambda update-function-code로 교체함
 
@@ -170,4 +173,5 @@ resource "aws_lambda_permission" "scheduler_trigger" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.scheduler_trigger.function_name
   principal     = "scheduler.amazonaws.com"
+  source_arn    = "arn:aws:scheduler:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:schedule/${var.scheduler_group_name}/*"
 }

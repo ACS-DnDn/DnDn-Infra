@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dndn-worker-config
+  namespace: dndn-worker
+data:
+  DNDN_WORKER_QUEUE_URL: ""          # terraform output → report_request_queue_url
+  DNDN_WORKER_MAX_EVENTS: "500"
+  DNDN_WORKER_WAIT_TIME_SECONDS: "20"
+  DNDN_WORKER_MAX_MESSAGES: "1"
+  AWS_REGION: "ap-northeast-2"

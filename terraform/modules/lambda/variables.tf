@@ -28,10 +28,10 @@ variable "rds_secret_arn" {
   type        = string
 }
 
-variable "lambda_code_bucket" {
-  description = "Lambda 배포 코드가 업로드되는 S3 버킷 이름"
+variable "scheduler_group_name" {
+  description = "EventBridge Scheduler 그룹 이름 (Lambda permission source_arn 제한용)"
   type        = string
-  default     = "dndn-prd-s3"
+  default     = "dndn-schedules"
 }
 
 variable "api_internal_url" {

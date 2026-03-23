@@ -1,0 +1,12 @@
+# terraform apply 전에 이 파일을 terraform.tfvars로 복사하고 값을 채우세요.
+# terraform.tfvars는 .gitignore에 포함되어 커밋되지 않습니다.
+
+# Lambda → API 내부 인증 키 (랜덤 문자열)
+internal_api_key = "CHANGE_ME_random_secret_key"
+
+# API Internal URL (ALB 배포 후 DNS로 변경)
+# 초기에는 빈 값 또는 placeholder — scheduler-trigger Lambda가 사용
+api_internal_url = "http://placeholder.local"
+
+# 이벤트를 전송할 수 있는 고객 계정 ID 목록 (없으면 빈 배열)
+# allowed_account_ids = ["123456789012"]

@@ -1,7 +1,7 @@
 # ── Cognito User Pool ─────────────────────────────────────────────────────
 
 resource "aws_cognito_user_pool" "main" {
-  name = "DnDn_UserPool_${var.environment}"
+  name = var.user_pool_name != "" ? var.user_pool_name : "DnDn_UserPool_${var.environment}"
 
   # 로그인: 이메일, AdminCreateUser 전용
   username_attributes      = ["email"]
@@ -61,7 +61,7 @@ resource "aws_cognito_user_pool" "main" {
 # ── App Client ────────────────────────────────────────────────────────────
 
 resource "aws_cognito_user_pool_client" "main" {
-  name         = "DnDn_AppClient_${var.environment}"
+  name         = var.app_client_name != "" ? var.app_client_name : "DnDn_AppClient_${var.environment}"
   user_pool_id = aws_cognito_user_pool.main.id
 
   generate_secret = false

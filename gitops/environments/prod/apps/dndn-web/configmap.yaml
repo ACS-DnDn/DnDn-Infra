@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dndn-web-nginx
+  namespace: dndn-web
+data:
+  default.conf: |
+    server {
+      listen 80;
+      server_name _;
+
+      root /usr/share/nginx/html;
+      index index.html;
+
+      # SPA fallback — React Router 지원
+      location / {
+        try_files $uri $uri/ /index.html;
+      }
+
+      # API 프록시 — ALB Ingress가 /api를 직접 라우팅하므로 보통 불필요
+      # 필요 시 활성화
+      # location /api/ {
+      #   proxy_pass http://dndn-api.dndn-api.svc.cluster.local:8000/;
+      # }
+
+      # 캐시 설정
+      location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff2?)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+      }
+    }

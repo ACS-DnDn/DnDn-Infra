@@ -1,0 +1,37 @@
+name: Upload CFN Templates
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'cloudformation/**'
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ap-northeast-2
+  S3_BUCKET: dndn-public
+
+jobs:
+  upload:
+    name: Upload CFN templates to S3
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::387721658341:role/DnDn-PRD-GHA-Deploy-Role
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Sync CFN templates to S3
+        run: |
+          aws s3 sync cloudformation/ s3://${{ env.S3_BUCKET }}/cfn/ \
+            --delete \
+            --content-type "application/x-yaml"
+          echo "Uploaded CFN templates:" >> "$GITHUB_STEP_SUMMARY"
+          ls -1 cloudformation/ >> "$GITHUB_STEP_SUMMARY"

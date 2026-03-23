@@ -426,6 +426,7 @@ FodyWeavers.xsd
 *.tfstate.backup
 *.tfplan
 tfplan
+*.tfvars
 **/dummy.zip
 
 # ── Lambda 빌드 아티팩트 ───────────────────────────────────

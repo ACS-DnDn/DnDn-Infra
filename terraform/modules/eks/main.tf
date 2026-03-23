@@ -121,3 +121,27 @@ resource "aws_launch_template" "node" {
 
   vpc_security_group_ids = [var.node_sg_id]
 }
+
+# ── EKS Access Entry — 관리자 Role ───────────────────────────────────────
+
+resource "aws_eks_access_entry" "admin" {
+  for_each = toset(var.admin_role_arns)
+
+  cluster_name  = aws_eks_cluster.main.name
+  principal_arn = each.value
+  type          = "STANDARD"
+}
+
+resource "aws_eks_access_policy_association" "admin" {
+  for_each = toset(var.admin_role_arns)
+
+  cluster_name  = aws_eks_cluster.main.name
+  principal_arn = each.value
+  policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+
+  access_scope {
+    type = "cluster"
+  }
+
+  depends_on = [aws_eks_access_entry.admin]
+}

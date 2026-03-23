@@ -67,6 +67,8 @@ module "eks" {
   public_subnet_ids  = module.vpc.public_subnet_ids
   private_subnet_ids = module.vpc.private_subnet_ids
   node_sg_id         = module.security_groups.node_sg_id
+
+  admin_role_arns = [module.bastion.role_arn]
 }
 
 # ── SQS ──────────────────────────────────────────────────────────────────────
@@ -128,6 +130,10 @@ module "cognito" {
 
   project     = var.project
   environment = var.environment
+
+  # 기존 DEV Pool 재사용 (import 후 이름 drift 방지)
+  user_pool_name  = "DnDn_UserPool_DEV"
+  app_client_name = "DnDn_AppClient_DEV"
 }
 
 # ── EventBridge ───────────────────────────────────────────────────────────
@@ -177,5 +183,16 @@ data "aws_s3_bucket" "public" {
   bucket = "dndn-public"
 }
 
-# ── 추후 추가 예정 ────────────────────────────────────────────────────────
-# module "alb_controller"  { ... }
+# ── ALB Controller (Helm) ────────────────────────────────────────────────
+
+module "alb_controller" {
+  source = "../../modules/alb_controller"
+
+  project     = var.project
+  environment = var.environment
+
+  cluster_name      = module.eks.cluster_name
+  oidc_provider_arn = module.eks.oidc_provider_arn
+  oidc_provider_url = module.eks.oidc_provider_url
+  vpc_id            = module.vpc.vpc_id
+}

@@ -93,9 +93,17 @@ resource "aws_iam_role_policy" "gha_deploy" {
         Resource = "arn:aws:lambda:${local.region}:${data.aws_caller_identity.current.account_id}:function:${local.prefix}-lmd-*"
       },
       {
+        Effect = "Allow"
+        Action = "s3:PutObject"
+        Resource = [
+          "arn:aws:s3:::${var.s3_bucket_name}/lambda/*",
+          "arn:aws:s3:::dndn-public/cfn/*",
+        ]
+      },
+      {
         Effect   = "Allow"
-        Action   = "s3:PutObject"
-        Resource = "arn:aws:s3:::${var.s3_bucket_name}/lambda/*"
+        Action   = "s3:DeleteObject"
+        Resource = "arn:aws:s3:::dndn-public/cfn/*"
       },
       {
         Effect   = "Allow"
@@ -154,7 +162,7 @@ resource "aws_iam_role_policy" "api_scheduler" {
           "scheduler:GetSchedule",
           "scheduler:ListSchedules",
         ]
-        Resource = "${aws_scheduler_schedule_group.dndn_schedules.arn}/*"
+        Resource = "arn:aws:scheduler:${local.region}:${data.aws_caller_identity.current.account_id}:schedule/${aws_scheduler_schedule_group.dndn_schedules.name}/*"
       },
       {
         # create_schedule / update_schedule 호출 시 Target.RoleArn 전달 필요
@@ -368,7 +376,7 @@ resource "aws_iam_role_policy" "reporter_s3" {
       },
       {
         Effect   = "Allow"
-        Action   = ["s3:ListBucket", "s3:HeadObject"]
+        Action   = "s3:ListBucket"
         Resource = "arn:aws:s3:::${var.s3_bucket_name}"
       }
     ]
@@ -408,7 +416,9 @@ resource "aws_iam_role" "scheduler" {
       Condition = {
         StringEquals = {
           "aws:SourceAccount" = data.aws_caller_identity.current.account_id
-          "aws:SourceArn"     = "arn:aws:scheduler:${local.region}:${data.aws_caller_identity.current.account_id}:schedule/${aws_scheduler_schedule_group.dndn_schedules.name}/*"
+        }
+        ArnLike = {
+          "aws:SourceArn" = "arn:aws:scheduler:${local.region}:${data.aws_caller_identity.current.account_id}:schedule/${aws_scheduler_schedule_group.dndn_schedules.name}/*"
         }
       }
     }]
