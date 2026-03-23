@@ -27,11 +27,12 @@
 
 | Workload | Repo Path | Runtime Type | Service | Ingress | Secret | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| `dndn-web` | `DnDn-App/apps/web` | Deployment | needed | likely needed | maybe | pending app finalization |
-| `dndn-api` | `DnDn-App/apps/api` | Deployment | needed | likely needed | yes | pending app finalization |
+| `dndn-web` | `DnDn-App/apps/web` | Deployment | needed | likely needed | maybe | Dockerfile / serving strategy pending |
+| `dndn-api` | `DnDn-App/apps/api` | Deployment | needed | likely needed | yes | Dockerfile / runtime hardening pending |
 | `dndn-worker` | `DnDn-App/apps/worker` | Deployment | maybe no | no | yes | pending app finalization |
-| `dndn-report` | `DnDn-App/apps/report` | Deployment | maybe internal | no or internal | yes | pending app finalization |
-| `dndn-hr` | `DnDn-HR` | Deployment | needed | needed | maybe | pending app finalization |
+| `dndn-report-api` | `DnDn-App/apps/report` | Deployment | needed | no or internal | yes | same image as report-worker, runtime split pending infra reflect |
+| `dndn-report-worker` | `DnDn-App/apps/report` | Deployment | no | no | yes | same image as report-api, command confirmed |
+| `dndn-hr` | `DnDn-HR` | Deployment | needed | needed | maybe | image publish flow ready, final runtime values pending |
 
 ## 3. Expected Inputs By App
 
@@ -39,20 +40,25 @@
 
 정리 필요:
 
+- Dockerfile 위치
 - web 앱 포트
 - API base URL
 - build output 방식
+- 정적 빌드 후 어떤 웹서버로 서빙할지
 - ingress 경로 또는 도메인
 
 ### `dndn-api`
 
 정리 필요:
 
+- Dockerfile 위치
 - API 포트
 - DB 연결 값
 - Cognito 연동 값
 - S3 / SQS / EventBridge 연동 값
 - 내부 서비스 연결 값
+- CORS 허용 도메인 방식
+- 운영에서 `create_all`을 대체할 migration 전략
 
 ### `dndn-worker`
 
@@ -63,14 +69,23 @@
 - DB / S3 접근값
 - scale 기준
 
-### `dndn-report`
+### `dndn-report-api`
 
 정리 필요:
 
 - 내부 서비스 포트
 - API와의 호출 경로
-- S3 / DB / queue 의존성
-- 독립 서비스 유지 여부
+- S3 / DB 의존성
+- `apps/report` 공용 이미지의 기본 command 유지 여부
+
+### `dndn-report-worker`
+
+정리 필요:
+
+- `apps/report` 공용 이미지에서 worker command 고정
+- SQS queue URL
+- S3 / DB 의존성
+- replica / retry 정책
 
 ### `dndn-hr`
 
@@ -100,9 +115,11 @@
 
 - 배포 정의는 `DnDn-Infra`가 소유
 - 앱 코드는 `DnDn-App`, `DnDn-HR`가 소유
+- `DnDn-App`, `DnDn-HR`의 GitHub Actions는 이미지 빌드와 푸시까지만 담당
 - CD는 Argo CD 기준
 - `dev` 먼저 구성
 - 실제 앱 manifest 작업은 앱 PR 안정화 이후 진행
+- `dndn-report-api`, `dndn-report-worker`는 동일 이미지 태그를 공유한다
 
 ## 6. Immediate Next Step
 
@@ -111,4 +128,4 @@
 1. 이 문서의 `pending` 항목 채우기
 2. `dndn-web` placeholder 제거
 3. `Deployment + Service + Ingress` 추가
-4. 동일 패턴을 `api`, `hr`, `worker`, `report`로 확장
+4. 동일 패턴을 `api`, `hr`, `worker`, `report-api`, `report-worker`로 확장

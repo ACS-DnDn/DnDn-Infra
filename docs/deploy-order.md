@@ -123,7 +123,7 @@ Terraform이 자리를 만들더라도, 실제 코드와 앱은 별도 배포가
 - finding enricher Lambda zip
 - health enricher Lambda zip
 - `DnDn-App` 이미지 빌드 및 푸시
-- `DnDn-HR` 프론트엔드 이미지 또는 정적 배포 산출물 반영
+- `DnDn-HR` 이미지 빌드 및 푸시
 - GitOps 설정 변경 반영
 
 현재 상태:
@@ -132,6 +132,7 @@ Terraform이 자리를 만들더라도, 실제 코드와 앱은 별도 배포가
 - Lambda 코드 반영 파이프라인은 별도 유지
 - GitOps Application 리소스는 추가되었으나, 실제 워크로드(Deployment/Service 등)는 placeholder만 존재
 - Worker Lambda는 여전히 별도 구현 또는 전략 결정이 필요함
+- `DnDn-App`, `DnDn-HR` GitHub Actions는 장기적으로 image build / push까지만 담당
 
 ### Recommended CD Model
 
@@ -143,6 +144,20 @@ Terraform이 자리를 만들더라도, 실제 코드와 앱은 별도 배포가
 4. Argo CD가 변경을 감지해 EKS에 반영
 
 즉, 장기 기준 CD는 `helm 직접 배포`보다 `Argo CD 동기화`가 중심입니다.
+
+현재 배포 단위는 아래처럼 보는 것이 자연스럽습니다.
+
+- `dndn-web`
+- `dndn-api`
+- `dndn-worker`
+- `dndn-report-api`
+- `dndn-report-worker`
+- `dndn-hr`
+
+참고:
+
+- `dndn-report-api`와 `dndn-report-worker`는 동일한 `DnDn-App/apps/report` 이미지 태그를 공유합니다
+- 앱 레포 workflow는 `aws eks update-kubeconfig` 또는 `helm upgrade --install`을 직접 수행하지 않는 방향이 권장됩니다
 
 ### Required Environment Variables
 
@@ -179,9 +194,10 @@ Terraform이 자리를 만들더라도, 실제 코드와 앱은 별도 배포가
 
 현재 레포 기준으로 가장 큰 공백은 여기입니다.
 
-- Lambda 패키징 / 배포 파이프라인 부재
+- 고객 CFN에 필요한 EventBridge ARN env 출력 부재
 - EKS 앱 배포 구조는 추가되었으나 실제 워크로드 매니페스트는 아직 미구현
 - 앱별 Argo CD Application은 있으나 실제 워크로드 매니페스트는 placeholder 상태
+- `dndn-report-api`, `dndn-report-worker`를 반영한 GitOps 구조 미반영
 - Worker Lambda 부재
 
 즉, 이제는 런타임 "자원 정의"보다 "배포 자동화와 운영 레인 정리"가 더 큰 과제입니다.

@@ -20,6 +20,15 @@ DnDn 플랫폼의 AWS 인프라와 배포 기반을 관리하는 저장소입니
   - 백엔드는 메인 서비스와 연동
   - DnDn 서비스 접근 계정과 부서/사용자 관리 성격으로 이해하는 것이 자연스럽습니다
 
+현재 기준 책임 분리는 아래처럼 보는 것이 맞습니다.
+
+- `DnDn-App`, `DnDn-HR`
+  - 애플리케이션 코드 소유
+  - Docker image 빌드 및 ECR 푸시
+- `DnDn-Infra`
+  - Terraform, Helm/Kustomize, GitOps, Argo CD 배포 선언 소유
+  - 환경별 values / secret / ingress / runtime 설정 소유
+
 ## Current Scope
 
 현재 실제 포함된 주요 구조는 아래와 같습니다.
@@ -178,8 +187,14 @@ Terraform의 `lambda` 모듈이 이 함수들의 런타임 자리를 만들고, 
 
 여기서 앱 워크로드는 현재 기준으로 아래를 포함할 수 있습니다.
 
-- `DnDn-App`의 `web`, `api`, `worker`, `report`
+- `DnDn-App`의 `web`, `api`, `worker`, `report-api`, `report-worker`
 - `DnDn-HR` 프론트엔드
+
+참고:
+
+- `report-api`와 `report-worker`는 동일한 `DnDn-App/apps/report` 이미지 태그를 공유합니다
+- `DnDn-App`, `DnDn-HR`의 GitHub Actions는 이미지 빌드와 푸시까지만 담당합니다
+- 실제 EKS 반영은 `DnDn-Infra`의 GitOps 선언과 Argo CD가 담당합니다
 
 즉, 현재는 고객 온보딩만 CloudFormation이고, 플랫폼 인프라는 Terraform이 중심입니다.
 앱 CD의 목표 구조는 `helm 직접 배포`가 아니라 `Argo CD + Helm/Kustomize 기반 GitOps`입니다.
@@ -191,7 +206,7 @@ Terraform의 `lambda` 모듈이 이 함수들의 런타임 자리를 만들고, 
 - `prod`용 Argo CD root app 정리
 - 실제 워크로드 매니페스트 또는 Helm chart 정리
 - `dev`, `staging` Terraform 환경
-- 앱 이미지 배포와 GitOps 태그 반영을 포함한 전체 CI/CD 정리
+- 이미지 태그를 GitOps에 반영하는 전체 CD 흐름 정리
 - `DnDn-HR`까지 포함한 앱 배포 구조 정리
 - Worker Lambda 또는 CloudTrail / Config 처리 전략 확정
 - 고객 CFN 배포에 필요한 EventBridge 출력값 노출 방식 정리

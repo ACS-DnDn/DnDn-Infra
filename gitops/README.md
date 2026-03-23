@@ -45,6 +45,19 @@ gitops/
 - `environments/dev/root/kustomization.yaml`
   - dev root app entrypoint
 
+현재 워크로드 기준 참고:
+
+- `DnDn-App`
+  - `dndn-web`
+  - `dndn-api`
+  - `dndn-worker`
+  - `dndn-report-api`
+  - `dndn-report-worker`
+- `DnDn-HR`
+  - `dndn-hr`
+
+`dndn-report-api`와 `dndn-report-worker`는 동일한 `DnDn-App/apps/report` 이미지 태그를 공유하는 구조를 전제로 합니다.
+
 ## Recommended Flow
 
 1. Terraform으로 EKS와 Argo CD 런타임을 준비
@@ -57,3 +70,5 @@ gitops/
 
 현재 `dev` 환경에는 placeholder `ConfigMap`만 들어 있습니다.
 실제 배포 시에는 각 앱 경로를 Helm chart 또는 실제 manifest로 교체하면 됩니다.
+
+또한 앱 레포의 GitHub Actions는 image build / push까지만 담당하고, 실제 EKS 반영은 이 디렉터리의 GitOps 선언과 Argo CD가 맡는 구조를 기준으로 합니다.

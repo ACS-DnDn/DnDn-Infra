@@ -38,6 +38,13 @@
 - 실제 배포 순서 기준: `deploy-order.md`
 - 관측성 도입 기준: `monitoring-plan.md`
 
+현재 최신 결정 중 특히 자주 헷갈리는 항목은 아래 문서가 기준입니다.
+
+- `DnDn-App`, `DnDn-HR`는 image build / push까지만 담당
+  - 기준 문서: `gitops-flow.md`, `repo-boundaries.md`
+- `dndn-report`는 이미지 1개이지만 `dndn-report-api`, `dndn-report-worker` 두 런타임으로 배포
+  - 기준 문서: `workload-mapping.md`, `deployment-requirements.md`
+
 서로 겹치는 내용이 있더라도, 세부 결정은 위 기준 문서를 우선합니다.
 
 ## 4. Maintenance Rules
