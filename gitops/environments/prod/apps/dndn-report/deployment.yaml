@@ -27,6 +27,9 @@ spec:
             allowPrivilegeEscalation: false
           ports:
             - containerPort: 8000
+          env:
+            - name: UV_NO_CACHE
+              value: "true"
           envFrom:
             - configMapRef:
                 name: dndn-report-config

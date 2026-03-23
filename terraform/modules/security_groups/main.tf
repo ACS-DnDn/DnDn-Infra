@@ -80,10 +80,18 @@ resource "aws_security_group" "node" {
   }
 
   ingress {
-    description = "Pod-to-Pod (same SG)"
+    description = "Pod-to-Pod TCP (same SG)"
     from_port   = 0
     to_port     = 65535
     protocol    = "tcp"
+    self        = true
+  }
+
+  ingress {
+    description = "Pod-to-Pod UDP (same SG) — DNS 등"
+    from_port   = 0
+    to_port     = 65535
+    protocol    = "udp"
     self        = true
   }
 
