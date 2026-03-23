@@ -48,6 +48,23 @@ output "s3_bucket_name" {
   value       = module.s3.bucket_name
 }
 
+# ── EventBridge Scheduler ─────────────────────────────────────────────────────
+
+output "scheduler_role_arn" {
+  description = "EventBridge Scheduler 실행 Role ARN — API 환경변수 SCHEDULER_ROLE_ARN에 사용"
+  value       = module.iam_irsa.scheduler_role_arn
+}
+
+output "scheduler_group_name" {
+  description = "EventBridge Scheduler 그룹 이름 — API 환경변수 SCHEDULER_GROUP_NAME에 사용"
+  value       = module.iam_irsa.scheduler_group_name
+}
+
+output "scheduler_trigger_lambda_arn" {
+  description = "scheduler-trigger Lambda ARN — API 환경변수 SCHEDULER_TARGET_ARN에 사용"
+  value       = module.lambda.scheduler_trigger_arn
+}
+
 # ── IRSA Role ARNs ────────────────────────────────────────────────────────────
 
 output "irsa_api_role_arn" {

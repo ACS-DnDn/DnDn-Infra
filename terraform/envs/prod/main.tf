@@ -112,10 +112,12 @@ module "lambda" {
   project     = var.project
   environment = var.environment
 
-  private_subnet_ids     = module.vpc.private_subnet_ids
-  lambda_sg_id           = module.security_groups.lambda_sg_id
-  s3_bucket_name = module.s3.bucket_name
-  rds_secret_arn = module.rds.master_user_secret_arn
+  private_subnet_ids = module.vpc.private_subnet_ids
+  lambda_sg_id       = module.security_groups.lambda_sg_id
+  s3_bucket_name     = module.s3.bucket_name
+  rds_secret_arn     = module.rds.master_user_secret_arn
+  api_internal_url   = var.api_internal_url
+  internal_api_key   = var.internal_api_key
 }
 
 # ── Cognito ──────────────────────────────────────────────────────────────

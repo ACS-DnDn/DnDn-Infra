@@ -18,6 +18,11 @@ output "scheduler_role_arn" {
   value       = aws_iam_role.scheduler.arn
 }
 
+output "scheduler_group_name" {
+  description = "EventBridge Scheduler 스케줄 그룹 이름"
+  value       = aws_scheduler_schedule_group.dndn_schedules.name
+}
+
 output "gha_terraform_role_arn" {
   description = "GitHub Actions Terraform Role ARN"
   value       = aws_iam_role.gha_terraform.arn
