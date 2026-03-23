@@ -25,14 +25,14 @@ spec:
           securityContext:
             allowPrivilegeEscalation: false
           ports:
-            - containerPort: 80
+            - containerPort: 8080
           volumeMounts:
             - name: nginx-conf
               mountPath: /etc/nginx/conf.d
           readinessProbe:
             httpGet:
               path: /
-              port: 80
+              port: 8080
             initialDelaySeconds: 5
             periodSeconds: 10
           resources:
