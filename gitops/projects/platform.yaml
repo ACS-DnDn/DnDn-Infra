@@ -8,9 +8,15 @@ spec:
   sourceRepos:
     - https://github.com/ACS-DnDn/DnDn-Infra.git
   destinations:
-    - namespace: dndn
+    - namespace: dndn-api
+      server: https://kubernetes.default.svc
+    - namespace: dndn-web
       server: https://kubernetes.default.svc
     - namespace: dndn-hr
+      server: https://kubernetes.default.svc
+    - namespace: dndn-report
+      server: https://kubernetes.default.svc
+    - namespace: dndn-worker
       server: https://kubernetes.default.svc
     - namespace: argocd
       server: https://kubernetes.default.svc
