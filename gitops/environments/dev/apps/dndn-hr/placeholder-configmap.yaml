@@ -1,7 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: dndn-hr-placeholder
-data:
-  owner: DnDn-HR
-  next_step: Replace this placeholder with Helm chart or manifests

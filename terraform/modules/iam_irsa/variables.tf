@@ -39,3 +39,8 @@ variable "s3_event_queue_arn" {
   description = "S3 이벤트 SQS Queue ARN (dndn-prd-sqs-s3-event) — Reporter 컨슘"
   type        = string
 }
+
+variable "cognito_user_pool_arn" {
+  description = "Cognito User Pool ARN (API 로그인/사용자 관리용)"
+  type        = string
+}

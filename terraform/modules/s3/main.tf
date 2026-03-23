@@ -42,6 +42,26 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "main" {
   }
 }
 
+# ── CORS (presigned URL 브라우저 직접 업로드/다운로드) ──────────────────────
+
+resource "aws_s3_bucket_cors_configuration" "main" {
+  bucket = aws_s3_bucket.main.id
+
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["GET", "PUT"]
+    allowed_origins = [
+      "https://www.dndn.cloud",
+      "https://dndn.cloud",
+      "https://www.dndnhr.cloud",
+      "https://dndnhr.cloud",
+      "http://localhost:5173",
+    ]
+    expose_headers  = ["ETag", "Content-Disposition"]
+    max_age_seconds = 3600
+  }
+}
+
 # ── Lifecycle (canonical/ 30일 후 자동 삭제) ─────────────────────────────
 
 resource "aws_s3_bucket_lifecycle_configuration" "main" {
@@ -98,7 +118,7 @@ resource "aws_s3_bucket_notification" "main" {
 
   queue {
     queue_arn     = var.s3_event_queue_arn
-    events        = ["s3:ObjectCreated:Put"]
+    events        = ["s3:ObjectCreated:Put", "s3:ObjectCreated:Copy"]
     filter_prefix = "canonical/"
     filter_suffix = ".json"
   }

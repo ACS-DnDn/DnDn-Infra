@@ -55,6 +55,15 @@ resource "aws_security_group" "ec2" {
     description = "HTTPS"
   }
 
+  # HR 포털 (브라우저 → nginx → dndn-hr SPA)
+  ingress {
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "HR Portal"
+  }
+
   # API 포트 (Lambda scheduler-trigger → EC2 API)
   ingress {
     from_port       = 8000

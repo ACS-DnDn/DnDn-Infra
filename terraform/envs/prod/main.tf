@@ -91,6 +91,7 @@ module "iam_irsa" {
   report_request_queue_arn = module.sqs.report_request_queue_arn
   s3_event_queue_arn       = module.sqs.s3_event_queue_arn
   s3_bucket_name           = module.s3.bucket_name
+  cognito_user_pool_arn    = module.cognito.user_pool_arn
 }
 
 # ── S3 ───────────────────────────────────────────────────────────────────────
