@@ -32,7 +32,7 @@
 지금 바로 구축하지 않는 이유는 아래와 같습니다.
 
 - EKS와 앱 구조가 아직 확정되지 않았습니다
-- 실제 워크로드 매니페스트가 아직 placeholder 중심입니다
+- `prod` 매니페스트는 추가되었지만 Argo CD bootstrap과 wiring이 아직 완전히 닫히지 않았습니다
 - 앱 메트릭, 포트, health endpoint, secret 구조가 아직 고정되지 않았습니다
 
 이 상태에서 AMP/AMG를 먼저 붙이면 재작업 가능성이 큽니다.
@@ -67,7 +67,7 @@
 - EKS 기본 구조 확정
 - `DnDn-App` 주요 서비스 배포 단위 확정
 - `DnDn-HR` 배포 방식 확정
-- GitOps placeholder 일부 제거
+- Argo CD root app과 child app wiring 완료
 - `dev` 환경에서 최소 1개 실제 앱 배포 완료
 
 ## 7. Immediate Next Step

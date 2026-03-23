@@ -130,7 +130,8 @@ Terraform이 자리를 만들더라도, 실제 코드와 앱은 별도 배포가
 
 - Lambda 런타임 자원은 Terraform에 있음
 - Lambda 코드 반영 파이프라인은 별도 유지
-- GitOps Application 리소스는 추가되었으나, 실제 워크로드(Deployment/Service 등)는 placeholder만 존재
+- `prod` 환경 기준 실제 워크로드 매니페스트는 추가되어 있음
+- 다만 Argo CD child application 경로와 bootstrap root app은 아직 현재 구조와 맞지 않음
 - Worker Lambda는 여전히 별도 구현 또는 전략 결정이 필요함
 - `DnDn-App`, `DnDn-HR` GitHub Actions는 장기적으로 image build / push까지만 담당
 
@@ -195,8 +196,8 @@ Terraform이 자리를 만들더라도, 실제 코드와 앱은 별도 배포가
 현재 레포 기준으로 가장 큰 공백은 여기입니다.
 
 - 고객 CFN에 필요한 EventBridge ARN env 출력 부재
-- EKS 앱 배포 구조는 추가되었으나 실제 워크로드 매니페스트는 아직 미구현
-- 앱별 Argo CD Application은 있으나 실제 워크로드 매니페스트는 placeholder 상태
+- EKS 앱 배포용 `prod` 매니페스트는 있으나 Argo CD wiring이 아직 미완성
+- `gitops/apps/*.yaml`는 여전히 `dev` 경로를 참조하고 있어 현재 파일 구조와 맞지 않음
 - `dndn-report-api`, `dndn-report-worker`를 반영한 GitOps 구조 미반영
 - Worker Lambda 부재
 
@@ -274,9 +275,9 @@ Terraform이 자리를 만들더라도, 실제 코드와 앱은 별도 배포가
 
 추가할 것:
 
-- `gitops/bootstrap`
-- `gitops/apps`
-- `gitops/environments`
+- `gitops/bootstrap` root app 구현
+- `gitops/apps` 경로 정리
+- `gitops/environments/prod`와 Argo CD 연결 정리
 
 ### Priority 3. Worker Strategy
 

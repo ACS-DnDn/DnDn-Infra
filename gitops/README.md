@@ -36,14 +36,14 @@ gitops/
 
 - `projects/platform.yaml`
   - 공통 AppProject
-- `bootstrap/root-app-dev.yaml`
-  - dev 환경 root application
 - `apps/*.yaml`
-  - 앱별 child application
-- `environments/dev/apps/*`
-  - 앱별 placeholder manifest
-- `environments/dev/root/kustomization.yaml`
-  - dev root app entrypoint
+  - 앱별 child application 초안 (`dev` 경로를 참조하는 legacy 상태)
+- `bootstrap/`
+  - 현재는 `.gitkeep`만 존재하고 root app은 아직 없음
+- `environments/prod/apps/*`
+  - `prod` 환경 앱 manifest
+- `environments/prod/ingress/*`
+  - 공용 ALB ingress manifest
 
 현재 워크로드 기준 참고:
 
@@ -68,7 +68,7 @@ gitops/
 
 ## Notes
 
-현재 `dev` 환경에는 placeholder `ConfigMap`만 들어 있습니다.
-실제 배포 시에는 각 앱 경로를 Helm chart 또는 실제 manifest로 교체하면 됩니다.
+현재 실제 manifest는 `prod` 환경에 먼저 들어와 있습니다.
+다만 `gitops/apps/*.yaml`와 `bootstrap/`은 아직 현재 파일 구조에 맞게 정리되지 않았습니다.
 
 또한 앱 레포의 GitHub Actions는 image build / push까지만 담당하고, 실제 EKS 반영은 이 디렉터리의 GitOps 선언과 Argo CD가 맡는 구조를 기준으로 합니다.
