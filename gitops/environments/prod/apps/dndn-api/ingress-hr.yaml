@@ -1,13 +1,12 @@
-# ── ALB Ingress: dndnhr.cloud — HR 프론트엔드 ─────────────────────────────
-# dndn-public 그룹에 합류 → 동일 ALB 공유
-# HR 전용 ACM 인증서를 추가 인증서로 등록
-# /api 경로는 dndn-api 네임스페이스의 dndnhr-api-ingress에서 처리
+# ── ALB Ingress: dndnhr.cloud /api → dndn-api (같은 네임스페이스) ──────────
+# ExternalName이 ALB ip target-type에서 동작하지 않으므로
+# dndn-api 네임스페이스에서 직접 서비스 참조
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: dndn-hr-ingress
-  namespace: dndn-hr
+  name: dndnhr-api-ingress
+  namespace: dndn-api
   annotations:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
@@ -16,27 +15,27 @@ metadata:
     alb.ingress.kubernetes.io/ssl-redirect: "443"
     alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:ap-northeast-2:387721658341:certificate/b6a8f0ad-0472-4ec4-ad6f-92473a2adba2"
     alb.ingress.kubernetes.io/group.name: dndn-public
-    alb.ingress.kubernetes.io/group.order: "90"
-    alb.ingress.kubernetes.io/healthcheck-path: /
+    alb.ingress.kubernetes.io/group.order: "15"
+    alb.ingress.kubernetes.io/healthcheck-path: /health
 spec:
   rules:
     - host: www.dndnhr.cloud
       http:
         paths:
-          - path: /
+          - path: /api
             pathType: Prefix
             backend:
               service:
-                name: dndn-hr
+                name: dndn-api
                 port:
-                  number: 80
+                  number: 8000
     - host: dndnhr.cloud
       http:
         paths:
-          - path: /
+          - path: /api
             pathType: Prefix
             backend:
               service:
-                name: dndn-hr
+                name: dndn-api
                 port:
-                  number: 80
+                  number: 8000
