@@ -414,7 +414,10 @@ resource "aws_iam_role_policy" "reporter_sqs" {
         "sqs:ChangeMessageVisibility",
         "sqs:GetQueueAttributes",
       ]
-      Resource = var.s3_event_queue_arn
+      Resource = [
+        var.s3_event_queue_arn,
+        var.report_request_queue_arn,
+      ]
     }]
   })
 }
