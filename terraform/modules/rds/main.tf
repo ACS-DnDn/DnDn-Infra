@@ -49,3 +49,31 @@ resource "aws_db_instance" "main" {
     Name = "${local.prefix}-RDS"
   }
 }
+
+# ── App DB Secret ──────────────────────────────────────────────────────────
+# RDS 관리형 시크릿(master_user_secret)은 username/password만 포함 → Lambda 연결 불가
+# host/port/dbname을 합쳐 Lambda용 전체 연결 정보 시크릿을 별도 생성
+
+data "aws_secretsmanager_secret_version" "rds_managed" {
+  secret_id = aws_db_instance.main.master_user_secret[0].secret_arn
+}
+
+resource "aws_secretsmanager_secret" "app_db" {
+  name        = "${lower(var.project)}-${lower(var.environment)}-app-db"
+  description = "Lambda용 DB 연결 정보 (host/port/username/password/dbname)"
+
+  tags = {
+    Name = "${local.prefix}-APP-DB-SECRET"
+  }
+}
+
+resource "aws_secretsmanager_secret_version" "app_db" {
+  secret_id = aws_secretsmanager_secret.app_db.id
+  secret_string = jsonencode({
+    host     = aws_db_instance.main.address
+    port     = aws_db_instance.main.port
+    username = jsondecode(data.aws_secretsmanager_secret_version.rds_managed.secret_string)["username"]
+    password = jsondecode(data.aws_secretsmanager_secret_version.rds_managed.secret_string)["password"]
+    dbname   = var.db_name
+  })
+}
