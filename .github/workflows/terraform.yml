@@ -20,15 +20,13 @@ permissions:
 env:
   AWS_REGION: ap-northeast-2
   TF_WORKING_DIR: terraform/envs/prod
+  TF_VAR_internal_api_key: ${{ secrets.TF_VAR_INTERNAL_API_KEY }}
+  TF_VAR_api_internal_url: ${{ secrets.TF_VAR_API_INTERNAL_URL }}
 
 jobs:
   terraform:
     name: ${{ github.event_name == 'push' && 'Apply' || 'Plan' }}
     runs-on: ubuntu-latest
-    # bootstrap 전: GHA OIDC Role이 AWS에 없으면 실패하므로 수동 실행 시에만 동작
-    # 첫 terraform apply(로컬)로 Role 생성 후 이 조건 제거
-    if: github.event_name != 'pull_request'
-
     steps:
       - uses: actions/checkout@v4
 
