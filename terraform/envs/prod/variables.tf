@@ -41,3 +41,9 @@ variable "internal_api_key" {
   type        = string
   sensitive   = true
 }
+
+variable "assume_role_external_id" {
+  description = "고객 계정 DnDnOpsAgentRole AssumeRole External ID"
+  type        = string
+  default     = "DnDnExternalId"
+}

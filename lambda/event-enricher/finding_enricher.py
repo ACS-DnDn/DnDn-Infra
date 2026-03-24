@@ -766,6 +766,63 @@ def _sqs_arn_to_url(arn: str) -> str:
     return arn  # fallback: 원본 반환
 
 
+def _collect_security_group(resource: dict, region: str) -> dict:
+    """EC2 SecurityGroup — 0.0.0.0/0 또는 ::/0 인바운드 규칙 여부."""
+    details = resource.get("Details", {}).get("AwsEc2SecurityGroup", {})
+    ip_permissions = details.get("IpPermissions", [])
+
+    if not ip_permissions:
+        sg_id = resource.get("Id", "").split("/")[-1]
+        try:
+            sgs = _client("ec2", region_name=region).describe_security_groups(
+                GroupIds=[sg_id]
+            ).get("SecurityGroups", [])
+            if sgs:
+                ip_permissions = sgs[0].get("IpPermissions", [])
+                details = {"GroupId": sg_id, "GroupName": sgs[0].get("GroupName", "")}
+        except Exception as e:
+            logger.warning("EC2 DescribeSecurityGroups failed: %s", e)
+
+    exposure = "internal"
+    for rule in ip_permissions:
+        for ipv4 in rule.get("IpRanges", []):
+            if ipv4.get("CidrIp") == "0.0.0.0/0":
+                exposure = "internet-facing"
+                break
+        for ipv6 in rule.get("Ipv6Ranges", []):
+            if ipv6.get("CidrIpv6") == "::/0":
+                exposure = "internet-facing"
+                break
+        if exposure == "internet-facing":
+            break
+
+    sg_id   = details.get("GroupId", "") or resource.get("Id", "").split("/")[-1]
+    sg_name = details.get("GroupName", "")
+    return {
+        "ExposureScope": exposure,
+        "AffectedResources": [{"Type": "EC2SecurityGroup", "GroupId": sg_id, "GroupName": sg_name}],
+    }
+
+
+def _collect_vpc(resource: dict, region: str) -> dict:
+    """EC2 VPC — 인터넷 게이트웨이 연결 여부로 ExposureScope 판단."""
+    vpc_id = resource.get("Id", "").split("/")[-1]
+    exposure = "internal"
+    try:
+        igws = _client("ec2", region_name=region).describe_internet_gateways(
+            Filters=[{"Name": "attachment.vpc-id", "Values": [vpc_id]}]
+        ).get("InternetGateways", [])
+        if igws:
+            exposure = "internet-facing"
+    except Exception as e:
+        logger.warning("EC2 DescribeInternetGateways failed: %s", e)
+
+    return {
+        "ExposureScope": exposure,
+        "AffectedResources": [{"Type": "EC2Vpc", "VpcId": vpc_id}],
+    }
+
+
 def _collect_sqs_queue(resource: dict, region: str) -> dict:
     """SQS Queue — 퍼블릭 정책 여부."""
     raw_id    = resource.get("Id", "")
@@ -796,6 +853,8 @@ def _collect_sqs_queue(resource: dict, region: str) -> dict:
 _COLLECTORS = {
     "AwsElbv2LoadBalancer": _collect_elb,
     "AwsEc2Instance":       _collect_ec2,
+    "AwsEc2SecurityGroup":  _collect_security_group,
+    "AwsEc2Vpc":            _collect_vpc,
     "AwsS3Bucket":          _collect_s3,
     "AwsRdsDbInstance":     _collect_rds,
     "AwsIamRole":           _collect_iam_role,
