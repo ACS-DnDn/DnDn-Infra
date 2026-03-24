@@ -4,11 +4,11 @@ metadata:
   name: dndn-report
   namespace: dndn-report
   labels:
-    app: dndn-report
+    app: dndn-report-api
 spec:
   type: ClusterIP
   selector:
-    app: dndn-report
+    app: dndn-report-api
   ports:
     - port: 8000
       targetPort: 8000
