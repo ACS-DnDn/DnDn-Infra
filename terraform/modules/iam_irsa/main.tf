@@ -308,12 +308,20 @@ resource "aws_iam_role_policy" "worker_s3" {
       {
         Effect   = "Allow"
         Action   = ["s3:PutObject", "s3:GetObject"]
-        Resource = "arn:aws:s3:::${var.s3_bucket_name}/*"
+        Resource = [
+          "arn:aws:s3:::${var.s3_bucket_name}/raw/*",
+          "arn:aws:s3:::${var.s3_bucket_name}/canonical/*",
+        ]
       },
       {
         Effect   = "Allow"
         Action   = "s3:ListBucket"
         Resource = "arn:aws:s3:::${var.s3_bucket_name}"
+        Condition = {
+          StringLike = {
+            "s3:prefix" = ["raw/*", "canonical/*"]
+          }
+        }
       }
     ]
   })

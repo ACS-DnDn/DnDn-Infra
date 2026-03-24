@@ -26,9 +26,10 @@ _PRESET_DELTAS = {
 
 def _compute_date_range(preset: str) -> tuple[str, str]:
     """preset(daily/weekly/monthly) 기준으로 수집 기간(UTC ISO 8601) 계산."""
+    if preset not in _PRESET_DELTAS:
+        raise ValueError(f"Unknown preset '{preset}'. Allowed: {list(_PRESET_DELTAS.keys())}")
     now = datetime.now(timezone.utc)
-    delta = _PRESET_DELTAS.get(preset, timedelta(days=7))
-    return (now - delta).isoformat(), now.isoformat()
+    return (now - _PRESET_DELTAS[preset]).isoformat(), now.isoformat()
 
 
 def handler(event, context):
