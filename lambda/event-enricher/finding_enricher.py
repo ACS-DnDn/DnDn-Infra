@@ -514,6 +514,9 @@ def _collect_s3(resource: dict, region: str) -> dict:
         all_blocked = all([cfg.get("BlockPublicAcls"), cfg.get("IgnorePublicAcls"),
                            cfg.get("BlockPublicPolicy"), cfg.get("RestrictPublicBuckets")])
         exposure = "internal" if all_blocked else "internet-facing"
+    except s3.exceptions.NoSuchPublicAccessBlockConfiguration:
+        # PAB 설정 없음 = 퍼블릭 액세스 차단 안 됨
+        exposure = "internet-facing"
     except Exception as e:
         logger.warning("S3 GetPublicAccessBlock failed: %s", e)
 
@@ -805,17 +808,26 @@ def _collect_security_group(resource: dict, region: str) -> dict:
 
 
 def _collect_vpc(resource: dict, region: str) -> dict:
-    """EC2 VPC — 인터넷 게이트웨이 연결 여부로 ExposureScope 판단."""
+    """EC2 VPC — 라우팅 테이블 기반 IGW 연결 여부로 ExposureScope 판단.
+    ec2:DescribeInternetGateways 대신 ec2:DescribeRouteTables 사용
+    (BaseReadPolicy에 포함된 권한).
+    """
     vpc_id = resource.get("Id", "").split("/")[-1]
-    exposure = "internal"
+    exposure = "unknown"
     try:
-        igws = _client("ec2", region_name=region).describe_internet_gateways(
-            Filters=[{"Name": "attachment.vpc-id", "Values": [vpc_id]}]
-        ).get("InternetGateways", [])
-        if igws:
-            exposure = "internet-facing"
+        route_tables = _client("ec2", region_name=region).describe_route_tables(
+            Filters=[{"Name": "vpc-id", "Values": [vpc_id]}]
+        ).get("RouteTables", [])
+        exposure = "internal"
+        for rt in route_tables:
+            for route in rt.get("Routes", []):
+                if route.get("GatewayId", "").startswith("igw-") and route.get("State") == "active":
+                    exposure = "internet-facing"
+                    break
+            if exposure == "internet-facing":
+                break
     except Exception as e:
-        logger.warning("EC2 DescribeInternetGateways failed: %s", e)
+        logger.warning("EC2 DescribeRouteTables failed: %s", e)
 
     return {
         "ExposureScope": exposure,

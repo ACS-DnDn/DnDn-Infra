@@ -46,9 +46,12 @@ resource "aws_iam_role_policy" "lambda_custom" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect   = "Allow"
-        Action   = "s3:PutObject"
-        Resource = "arn:aws:s3:::${var.s3_bucket_name}/canonical/*"
+        Effect = "Allow"
+        Action = "s3:PutObject"
+        Resource = [
+          "arn:aws:s3:::${var.s3_bucket_name}/canonical/*",
+          "arn:aws:s3:::${var.s3_bucket_name}/raw/*",
+        ]
       },
       {
         Effect   = "Allow"
