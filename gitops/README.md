@@ -37,7 +37,7 @@ gitops/
 - `projects/platform.yaml`
   - 공통 AppProject
 - `apps/*.yaml`
-  - 앱별 child application 초안 (`dev` 경로를 참조하는 legacy 상태)
+  - 앱별 child application 정의 (`prod` 경로 기준)
 - `bootstrap/`
   - 현재는 `.gitkeep`만 존재하고 root app은 아직 없음
 - `environments/prod/apps/*`
@@ -69,6 +69,6 @@ gitops/
 ## Notes
 
 현재 실제 manifest는 `prod` 환경에 먼저 들어와 있습니다.
-다만 `gitops/apps/*.yaml`와 `bootstrap/`은 아직 현재 파일 구조에 맞게 정리되지 않았습니다.
+다만 `bootstrap/`은 아직 현재 파일 구조에 맞게 비어 있어 root app 추가가 필요합니다.
 
 또한 앱 레포의 GitHub Actions는 image build / push까지만 담당하고, 실제 EKS 반영은 이 디렉터리의 GitOps 선언과 Argo CD가 맡는 구조를 기준으로 합니다.

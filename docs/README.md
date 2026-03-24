@@ -73,8 +73,7 @@
 
 - `dev`와 `staging` Terraform 환경 정의
 - Argo CD bootstrap/root app 구조
-- `gitops/apps/*.yaml`와 실제 `prod` manifest 경로 정렬
-- `dndn-report`의 `report-api` / `report-worker` 분리 반영 여부
+- `prod` root app / bootstrap wiring
 - Lambda 패키징/배포 절차 문서
 - 고객 온보딩 운영 체크리스트
 - 검증 절차 문서
