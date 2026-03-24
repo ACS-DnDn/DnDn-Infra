@@ -1,4 +1,5 @@
 # boto3/botocore/urllib3 — 버전 고정 (CVE-2026-21441, CVE-2025-66418 대응)
+# 2026-03-24 PRD Lambda 초기 배포 트리거
 boto3==1.42.65
 botocore==1.42.65
 urllib3==2.6.3
