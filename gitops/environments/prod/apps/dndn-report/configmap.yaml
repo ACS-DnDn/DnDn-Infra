@@ -9,5 +9,5 @@ data:
   BEDROCK_MODEL_ID: "apac.anthropic.claude-3-5-sonnet-20241022-v2:0"
   S3_BUCKET: "dndn-prd-s3"
   S3_PRESIGNED_EXPIRES: "3600"
-  SQS_QUEUE_URL: "https://sqs.ap-northeast-2.amazonaws.com/387721658341/dndn-prd-sqs-s3-event"
+  SQS_QUEUE_URL: "https://sqs.ap-northeast-2.amazonaws.com/387721658341/dndn-prd-sqs-report-request"
   POLL_INTERVAL: "5"
