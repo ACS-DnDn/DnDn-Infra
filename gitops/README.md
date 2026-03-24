@@ -39,11 +39,14 @@ gitops/
 - `apps/*.yaml`
   - 앱별 child application 정의 (`prod` 경로 기준)
 - `bootstrap/`
-  - 현재는 `.gitkeep`만 존재하고 root app은 아직 없음
+  - `root-app-prod.yaml`
+  - `prod` 환경용 root application 진입점
 - `environments/prod/apps/*`
   - `prod` 환경 앱 manifest
+- `environments/prod/root/kustomization.yaml`
+  - `AppProject`, child app, Argo CD 공용 ingress를 묶는 root source
 - `environments/prod/ingress/*`
-  - 공용 ALB ingress manifest
+  - 공용/플랫폼 ingress manifest
 
 현재 워크로드 기준 참고:
 
@@ -68,7 +71,6 @@ gitops/
 
 ## Notes
 
-현재 실제 manifest는 `prod` 환경에 먼저 들어와 있습니다.
-다만 `bootstrap/`은 아직 현재 파일 구조에 맞게 비어 있어 root app 추가가 필요합니다.
+현재 실제 manifest는 `prod` 환경에 먼저 들어와 있으며, `bootstrap/root-app-prod.yaml`이 해당 환경의 root application 진입점 역할을 합니다.
 
 또한 앱 레포의 GitHub Actions는 image build / push까지만 담당하고, 실제 EKS 반영은 이 디렉터리의 GitOps 선언과 Argo CD가 맡는 구조를 기준으로 합니다.

@@ -72,8 +72,7 @@
 아직 문서로 완전히 닫히지 않은 항목도 있습니다.
 
 - `dev`와 `staging` Terraform 환경 정의
-- Argo CD bootstrap/root app 구조
-- `prod` root app / bootstrap wiring
+- Argo CD root app 운영 절차와 sync 검증
 - Lambda 패키징/배포 절차 문서
 - 고객 온보딩 운영 체크리스트
 - 검증 절차 문서
