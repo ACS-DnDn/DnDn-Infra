@@ -1,3 +1,7 @@
+# NOTE:
+# Argo CD root app은 kustomize path restriction 때문에 prod/root 바깥 파일을 직접 참조할 수 없습니다.
+# 이 파일은 root source가 self-contained 하게 렌더되도록 둔 local copy이며,
+# 구조 변경 시 gitops/projects/platform.yaml 와 함께 맞춰야 합니다.
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
