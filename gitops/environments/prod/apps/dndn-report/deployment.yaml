@@ -24,7 +24,7 @@ spec:
       serviceAccountName: dndn-reporter-sa
       containers:
         - name: report-api
-          image: 387721658341.dkr.ecr.ap-northeast-2.amazonaws.com/dndn-prd-report:c02eb9538fb10a9a9aa844fd0331e7dccb96b215
+          image: 387721658341.dkr.ecr.ap-northeast-2.amazonaws.com/dndn-prd-report:cf662bbf1c2f3fd379f6fb010c433a7f9aef0c3a
           securityContext:
             allowPrivilegeEscalation: false
           ports:
@@ -83,7 +83,7 @@ spec:
       serviceAccountName: dndn-reporter-sa
       containers:
         - name: report-worker
-          image: 387721658341.dkr.ecr.ap-northeast-2.amazonaws.com/dndn-prd-report:c02eb9538fb10a9a9aa844fd0331e7dccb96b215
+          image: 387721658341.dkr.ecr.ap-northeast-2.amazonaws.com/dndn-prd-report:cf662bbf1c2f3fd379f6fb010c433a7f9aef0c3a
           command: ["/app/.venv/bin/python", "-m", "apps.report.src.sqs_worker"]
           securityContext:
             allowPrivilegeEscalation: false
