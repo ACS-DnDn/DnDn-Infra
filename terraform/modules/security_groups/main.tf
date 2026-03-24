@@ -72,6 +72,14 @@ resource "aws_security_group" "node" {
   vpc_id      = var.vpc_id
 
   ingress {
+    description     = "Pod traffic from ALB (IP target mode)"
+    from_port       = 3000
+    to_port         = 8080
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id]
+  }
+
+  ingress {
     description     = "NodePort traffic from ALB"
     from_port       = 30000
     to_port         = 32767
