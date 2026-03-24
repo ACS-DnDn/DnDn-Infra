@@ -311,6 +311,7 @@ resource "aws_iam_role_policy" "worker_s3" {
         Resource = [
           "arn:aws:s3:::${var.s3_bucket_name}/raw/*",
           "arn:aws:s3:::${var.s3_bucket_name}/canonical/*",
+          "arn:aws:s3:::${var.s3_bucket_name}/account_id=*",
         ]
       },
       {
@@ -319,7 +320,7 @@ resource "aws_iam_role_policy" "worker_s3" {
         Resource = "arn:aws:s3:::${var.s3_bucket_name}"
         Condition = {
           StringLike = {
-            "s3:prefix" = ["raw/*", "canonical/*"]
+            "s3:prefix" = ["raw/*", "canonical/*", "account_id=*"]
           }
         }
       }
