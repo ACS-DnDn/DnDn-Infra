@@ -99,7 +99,7 @@ resource "aws_iam_role_policy" "gha_deploy" {
       },
       {
         Effect = "Allow"
-        Action = "s3:PutObject"
+        Action = ["s3:PutObject", "s3:GetObject"]
         Resource = [
           "arn:aws:s3:::${var.s3_bucket_name}/lambda/*",
           "arn:aws:s3:::dndn-public/cfn/*",
