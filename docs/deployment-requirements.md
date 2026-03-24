@@ -117,15 +117,15 @@
 - 앱 코드는 `DnDn-App`, `DnDn-HR`가 소유
 - `DnDn-App`, `DnDn-HR`의 GitHub Actions는 이미지 빌드와 푸시까지만 담당
 - CD는 Argo CD 기준
-- `dev` 먼저 구성
-- 실제 앱 manifest 작업은 앱 PR 안정화 이후 진행
+- `prod` root app과 child app 구조는 정리 완료
+- 실제 앱 manifest는 `prod` 기준으로 먼저 운영
 - `dndn-report-api`, `dndn-report-worker`는 동일 이미지 태그를 공유한다
 
 ## 6. Immediate Next Step
 
 앱 레포 작업이 정리되면 아래 순서로 전환합니다.
 
-1. 이 문서의 `pending` 항목 채우기
-2. 현재 `prod` manifest의 env / secret / ingress 값을 검증
-3. Argo CD wiring을 현재 `prod` 경로 기준으로 정리
-4. `report-api`, `report-worker` 운영 검증 및 태그/리소스 정책 정리
+1. 현재 `prod` manifest의 env / secret / ingress 값을 검증
+2. `report-api`, `report-worker` 운영 검증 및 태그/리소스 정책 정리
+3. secret 관리 방식과 runtime hardening 정리
+4. `dev`, `staging` 환경 도입 시 공통 규칙 재사용

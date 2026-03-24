@@ -32,7 +32,7 @@
 지금 바로 구축하지 않는 이유는 아래와 같습니다.
 
 - EKS와 앱 구조가 아직 확정되지 않았습니다
-- `prod` 매니페스트는 추가되었지만 Argo CD bootstrap과 wiring이 아직 완전히 닫히지 않았습니다
+- `prod` root app과 child app wiring은 정리됐지만, 앱별 metrics / logs / alert 기준이 아직 운영 기준으로 고정되지 않았습니다
 - 앱 메트릭, 포트, health endpoint, secret 구조가 아직 고정되지 않았습니다
 
 이 상태에서 AMP/AMG를 먼저 붙이면 재작업 가능성이 큽니다.

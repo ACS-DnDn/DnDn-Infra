@@ -72,7 +72,8 @@
 아직 문서로 완전히 닫히지 않은 항목도 있습니다.
 
 - `dev`와 `staging` Terraform 환경 정의
-- Argo CD root app 운영 절차와 sync 검증
+- Argo CD 운영 runbook과 sync 검증 절차
+- secret 관리 방식 문서
 - Lambda 패키징/배포 절차 문서
 - 고객 온보딩 운영 체크리스트
 - 검증 절차 문서

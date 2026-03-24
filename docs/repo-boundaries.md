@@ -145,9 +145,9 @@
 
 1. 이 문서 기준으로 역할 합의
 2. `architecture.md`와 `deploy-order.md`를 함께 유지
-3. Terraform 디렉터리 골격 추가
-4. GitOps 디렉터리 골격 추가
-5. `DnDn-App`, `DnDn-HR` 워크로드의 배포 단위 정의
+3. Argo CD 운영 runbook과 GitOps 변경 절차 정리
+4. secret / image tag / 환경 확장 정책 정리
+5. `DnDn-App`, `DnDn-HR` 워크로드의 운영 검증 기준 정리
 
 ## 7. One-Line Conclusion
 

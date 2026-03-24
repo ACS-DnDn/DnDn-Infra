@@ -66,14 +66,14 @@
 
 예상 매핑:
 
-- `projects/platform`
+- `bootstrap/root-app-prod`
+- `environments/prod/root/*`
 - `apps/dndn-web`
 - `apps/dndn-api`
 - `apps/dndn-worker`
-- `apps/dndn-report-api`
-- `apps/dndn-report-worker`
+- `apps/dndn-report`
 - `apps/dndn-hr`
-- `environments/prod`
+- `environments/prod/apps/*`
 
 ## 5. Open Decisions
 
@@ -88,6 +88,6 @@
 
 지금 바로 필요한 다음 작업은 아래입니다.
 
-1. `gitops/` 디렉터리 골격 유지
-2. 앱별 `Application` 초안 유지 또는 보완
-3. 환경별 values 파일 위치와 naming 규칙 고정
+1. 현재 `prod` 배포 단위의 runtime 검증
+2. secret / ingress / 이미지 갱신 정책 정리
+3. `dev`, `staging` 환경 확장 전략 정리

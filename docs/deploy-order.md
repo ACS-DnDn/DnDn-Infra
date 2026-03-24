@@ -196,7 +196,7 @@ Terraform이 자리를 만들더라도, 실제 코드와 앱은 별도 배포가
 현재 레포 기준으로 가장 큰 공백은 여기입니다.
 
 - 고객 CFN에 필요한 EventBridge ARN env 출력 부재
-- EKS 앱 배포용 `prod` 매니페스트와 root app은 있으나 최초 적용 절차와 sync 검증은 더 필요함
+- Argo CD 운영 runbook과 검증 절차 문서 부재
 - Worker Lambda 부재
 
 즉, 이제는 런타임 "자원 정의"보다 "배포 자동화와 운영 레인 정리"가 더 큰 과제입니다.
@@ -253,7 +253,7 @@ Terraform이 자리를 만들더라도, 실제 코드와 앱은 별도 배포가
 
 1. `docs/deploy-order.md` 유지 및 보완
 2. Terraform 출력값 / 운영 흐름 정리
-3. GitOps 디렉터리 구조 추가
+3. Argo CD 운영 runbook / 검증 절차 정리
 4. Worker Lambda 처리 방향 확정
 5. 검증 절차와 운영 체크리스트 문서화
 
@@ -269,13 +269,13 @@ Terraform이 자리를 만들더라도, 실제 코드와 앱은 별도 배포가
 - 운영에 필요한 핵심 출력값 점검
 - naming / environment 표준화
 
-### Priority 2. GitOps Skeleton
+### Priority 2. GitOps Operations
 
-추가할 것:
+정리할 것:
 
-- `gitops/bootstrap` root app 구현
-- `gitops/apps` 경로 정리
-- `gitops/environments/prod`와 Argo CD 연결 정리
+- root app 최초 적용 절차
+- root app / child app sync 확인 순서
+- 장애 시 refresh / sync / rollback 체크리스트
 
 ### Priority 3. Worker Strategy
 
@@ -300,7 +300,7 @@ Terraform이 자리를 만들더라도, 실제 코드와 앱은 별도 배포가
 
 지금 가장 좋은 다음 액션은 아래 둘 중 하나입니다.
 
-1. Terraform 출력값과 GitOps 골격부터 정리해서 운영 레인을 명확히 하기
+1. Terraform 출력값과 Argo CD 운영 절차부터 정리해서 운영 레인을 명확히 하기
 2. 그 다음 `Worker Lambda`를 당장 만들지 여부를 결정하기
 
 실무적으로는 1번부터 가고, Worker는 임시 제외 또는 optional 처리하는 방향이 가장 빠릅니다.

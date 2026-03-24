@@ -22,5 +22,5 @@
 
 남은 작업:
 
-- Argo CD root app 실제 적용 및 sync 상태 검증
-- monitoring 영역까지 포함한 전체 bootstrap 범위 최종 정리
+- secret / config / runtime 검증 절차 정리
+- monitoring 영역까지 포함한 전체 운영 기준 정리

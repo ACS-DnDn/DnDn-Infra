@@ -1,6 +1,6 @@
 # GitOps
 
-이 디렉터리는 Argo CD 기반 GitOps 선언을 위한 골격입니다.
+이 디렉터리는 Argo CD 기반 GitOps 선언을 관리합니다.
 
 현재 기준 운영 원칙은 아래와 같습니다.
 
@@ -71,6 +71,6 @@ gitops/
 
 ## Notes
 
-현재 실제 manifest는 `prod` 환경에 먼저 들어와 있으며, `bootstrap/root-app-prod.yaml`이 해당 환경의 root application 진입점 역할을 합니다.
+현재 실제 manifest는 `prod` 환경에 먼저 들어와 있으며, `bootstrap/root-app-prod.yaml`이 해당 환경의 root application 진입점 역할을 합니다. 현재 `dndn-prod-root`는 최초 1회 수동 apply 후 Argo CD에서 관리하는 구조를 전제로 합니다.
 
 또한 앱 레포의 GitHub Actions는 image build / push까지만 담당하고, 실제 EKS 반영은 이 디렉터리의 GitOps 선언과 Argo CD가 맡는 구조를 기준으로 합니다.

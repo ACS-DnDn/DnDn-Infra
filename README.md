@@ -7,7 +7,7 @@ DnDn 플랫폼의 AWS 인프라와 배포 기반을 관리하는 저장소입니
 1. 고객 AWS 계정 온보딩
 2. 플랫폼 공통 인프라와 애플리케이션 런타임 기반
 
-즉, 지금은 초기 CloudFormation만 있는 레포가 아니라, `CloudFormation + Terraform + GitOps foundation`이 함께 존재하는 전환기 구조입니다.
+즉, 지금은 초기 CloudFormation만 있는 레포가 아니라, `CloudFormation + Terraform + GitOps`가 함께 운영되는 전환기 구조입니다.
 
 플랫폼 애플리케이션 관점에서는 현재 최소 아래 레포들을 함께 봐야 합니다.
 
@@ -89,8 +89,7 @@ DnDn-Infra/
       └─ prod/
          ├─ apps/ ... manifest
          ├─ ingress/
-         ├─ root/
-         │  └─ kustomization.yaml
+         ├─ root/ ... root app source
          └─ README.md
 ```
 
@@ -157,19 +156,20 @@ Terraform의 `lambda` 모듈이 이 함수들의 런타임 자리를 만들고, 
 
 ### 4. GitOps Foundation
 
-`gitops/`는 Argo CD 기반 GitOps 도입을 위한 초기 골격입니다.
+`gitops/`는 Argo CD 기반 GitOps 운영 선언을 담습니다.
 
 현재 포함된 것:
 
 - `AppProject`
-- 앱별 child application 초안
+- 앱별 child application
 - `prod` bootstrap root app
+- `prod/root` self-contained source
 - `prod` 환경 앱 manifest
 - `prod` 공용 ingress manifest
 
 현재 포함되지 않은 것:
 
-- bootstrap 이후 운영 절차와 sync 검증 기준
+- bootstrap 이후 운영 runbook과 검증 기준 문서
 
 ## Deployment Shape
 
@@ -198,12 +198,12 @@ Terraform의 `lambda` 모듈이 이 함수들의 런타임 자리를 만들고, 
 
 ## Current Gaps
 
-아직 비어 있거나 정리가 필요한 항목은 아래와 같습니다.
+아직 정리가 필요한 항목은 아래와 같습니다.
 
-- bootstrap 기준 Argo CD 최초 적용 절차와 sync 검증 정리
+- Argo CD 운영 runbook과 검증 절차 문서화
 - `dev`, `staging` Terraform 환경
 - 이미지 태그를 GitOps에 반영하는 전체 CD 흐름 정리
-- `DnDn-HR`까지 포함한 앱 배포 구조 정리
+- secret 관리 방식 고도화
 - Worker Lambda 또는 CloudTrail / Config 처리 전략 확정
 - 고객 CFN 배포에 필요한 EventBridge 출력값 노출 방식 정리
 
