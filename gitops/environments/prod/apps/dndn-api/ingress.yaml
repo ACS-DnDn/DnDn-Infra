@@ -13,6 +13,7 @@ metadata:
     alb.ingress.kubernetes.io/group.name: dndn-public
     alb.ingress.kubernetes.io/group.order: "10"
     alb.ingress.kubernetes.io/healthcheck-path: /health
+    alb.ingress.kubernetes.io/security-groups: sg-0748b240328f771c5
 spec:
   rules:
     - host: www.dndn.cloud
