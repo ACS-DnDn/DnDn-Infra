@@ -44,7 +44,7 @@ gitops/
 - `environments/prod/apps/*`
   - `prod` 환경 앱 manifest
 - `environments/prod/root/kustomization.yaml`
-  - `AppProject`, child app, Argo CD 공용 ingress를 묶는 root source
+  - `AppProject`, child app, Argo CD 공용 ingress를 묶는 self-contained root source
 - `environments/prod/ingress/*`
   - 공용/플랫폼 ingress manifest
 
