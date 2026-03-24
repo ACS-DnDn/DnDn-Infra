@@ -353,7 +353,10 @@ resource "aws_iam_role_policy" "reporter_bedrock" {
         "bedrock:InvokeModel",
         "bedrock:InvokeModelWithResponseStream",
       ]
-      Resource = "arn:aws:bedrock:${local.region}::foundation-model/*"
+      Resource = [
+        "arn:aws:bedrock:${local.region}::foundation-model/*",
+        "arn:aws:bedrock:${local.region}:${data.aws_caller_identity.current.account_id}:inference-profile/*",
+      ]
     }]
   })
 }
