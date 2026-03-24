@@ -3,6 +3,8 @@ kind: Service
 metadata:
   name: dndn-report
   namespace: dndn-report
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
   labels:
     app: dndn-report-api
 spec:
