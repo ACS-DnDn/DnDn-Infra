@@ -24,7 +24,7 @@
 
 `dndn-report-api`와 `dndn-report-worker`는 배포 단위는 분리하지만, 동일한 `DnDn-App/apps/report` 이미지 태그를 공유하는 구조를 권장합니다.
 
-현재 파일 기준으로는 `gitops/environments/prod/apps/dndn-report`가 단일 `dndn-report` 배포로 존재하므로, 이 분리는 아직 GitOps에 완전히 반영되지는 않았습니다.
+현재 GitOps에서는 `gitops/environments/prod/apps/dndn-report` 아래에 `dndn-report-api`, `dndn-report-worker` 두 Deployment가 함께 정의되어 있습니다.
 
 ## 2. Ownership Model
 

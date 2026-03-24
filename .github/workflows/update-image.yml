@@ -86,7 +86,15 @@ jobs:
           ssh -i ~/.ssh/bastion.pem ec2-user@${{ secrets.BASTION_HOST }} << EOF
             aws eks update-kubeconfig --name dndn-prd --region ap-northeast-2
             NAMESPACE="${APP}"
-            kubectl set image deployment/${APP} -n \${NAMESPACE} \
-              \$(kubectl get deployment/${APP} -n \${NAMESPACE} -o jsonpath='{.spec.template.spec.containers[0].name}')=${IMAGE}
-            kubectl rollout status deployment/${APP} -n \${NAMESPACE} --timeout=120s
+
+            if [ "${APP}" = "dndn-report" ]; then
+              kubectl set image deployment/dndn-report-api -n \${NAMESPACE} report-api=${IMAGE}
+              kubectl set image deployment/dndn-report-worker -n \${NAMESPACE} report-worker=${IMAGE}
+              kubectl rollout status deployment/dndn-report-api -n \${NAMESPACE} --timeout=120s
+              kubectl rollout status deployment/dndn-report-worker -n \${NAMESPACE} --timeout=120s
+            else
+              kubectl set image deployment/${APP} -n \${NAMESPACE} \
+                \$(kubectl get deployment/${APP} -n \${NAMESPACE} -o jsonpath='{.spec.template.spec.containers[0].name}')=${IMAGE}
+              kubectl rollout status deployment/${APP} -n \${NAMESPACE} --timeout=120s
+            fi
           EOF

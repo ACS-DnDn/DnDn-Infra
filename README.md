@@ -96,8 +96,7 @@ DnDn-Infra/
 
 - `terraform/envs/dev`, `terraform/envs/staging`
 - Argo CD 실제 bootstrap root application
-- `gitops/apps/*.yaml`와 현재 `prod` manifest 경로를 맞추는 정리
-- `report-api` / `report-worker` 분리 반영
+- `prod` root app / bootstrap wiring
 
 현재 이미 포함된 자동화:
 
@@ -170,8 +169,7 @@ Terraform의 `lambda` 모듈이 이 함수들의 런타임 자리를 만들고, 
 현재 포함되지 않은 것:
 
 - 실제 bootstrap root application
-- 현재 `prod` manifest를 참조하는 child application 정리
-- `report-api` / `report-worker` 분리 반영
+- `prod` root application
 
 ## Deployment Shape
 
@@ -203,11 +201,10 @@ Terraform의 `lambda` 모듈이 이 함수들의 런타임 자리를 만들고, 
 아직 비어 있거나 정리가 필요한 항목은 아래와 같습니다.
 
 - `prod`용 Argo CD root app 정리
-- 현재 `prod` manifest를 기준으로 Argo CD wiring 정리
+- bootstrap 기준 Argo CD wiring 정리
 - `dev`, `staging` Terraform 환경
 - 이미지 태그를 GitOps에 반영하는 전체 CD 흐름 정리
 - `DnDn-HR`까지 포함한 앱 배포 구조 정리
-- `dndn-report`를 `report-api`, `report-worker` 구조로 반영할지 확정
 - Worker Lambda 또는 CloudTrail / Config 처리 전략 확정
 - 고객 CFN 배포에 필요한 EventBridge 출력값 노출 방식 정리
 

@@ -30,7 +30,7 @@
 | `dndn-web` | `DnDn-App/apps/web` | Deployment | needed | likely needed | maybe | prod manifest present, runtime validation pending |
 | `dndn-api` | `DnDn-App/apps/api` | Deployment | needed | likely needed | yes | prod manifest present, runtime hardening pending |
 | `dndn-worker` | `DnDn-App/apps/worker` | Deployment | maybe no | no | yes | prod manifest present, queue/runtime validation pending |
-| `dndn-report-api` | `DnDn-App/apps/report` | Deployment | needed | no or internal | yes | target split agreed, current prod GitOps still single `dndn-report` |
+| `dndn-report-api` | `DnDn-App/apps/report` | Deployment | needed | no or internal | yes | prod manifest present, report split reflected |
 | `dndn-report-worker` | `DnDn-App/apps/report` | Deployment | no | no | yes | same image as report-api, command confirmed |
 | `dndn-hr` | `DnDn-HR` | Deployment | needed | needed | maybe | prod manifest present, final runtime values pending |
 
@@ -128,4 +128,4 @@
 1. 이 문서의 `pending` 항목 채우기
 2. 현재 `prod` manifest의 env / secret / ingress 값을 검증
 3. Argo CD wiring을 현재 `prod` 경로 기준으로 정리
-4. `report-api`, `report-worker` 분리 여부를 실제 manifest에 반영
+4. `report-api`, `report-worker` 운영 검증 및 태그/리소스 정책 정리

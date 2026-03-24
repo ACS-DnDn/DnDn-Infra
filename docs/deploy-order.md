@@ -131,7 +131,7 @@ Terraform이 자리를 만들더라도, 실제 코드와 앱은 별도 배포가
 - Lambda 런타임 자원은 Terraform에 있음
 - Lambda 코드 반영 파이프라인은 별도 유지
 - `prod` 환경 기준 실제 워크로드 매니페스트는 추가되어 있음
-- 다만 Argo CD child application 경로와 bootstrap root app은 아직 현재 구조와 맞지 않음
+- 다만 Argo CD bootstrap root app은 아직 비어 있음
 - Worker Lambda는 여전히 별도 구현 또는 전략 결정이 필요함
 - `DnDn-App`, `DnDn-HR` GitHub Actions는 장기적으로 image build / push까지만 담당
 
@@ -197,8 +197,7 @@ Terraform이 자리를 만들더라도, 실제 코드와 앱은 별도 배포가
 
 - 고객 CFN에 필요한 EventBridge ARN env 출력 부재
 - EKS 앱 배포용 `prod` 매니페스트는 있으나 Argo CD wiring이 아직 미완성
-- `gitops/apps/*.yaml`는 여전히 `dev` 경로를 참조하고 있어 현재 파일 구조와 맞지 않음
-- `dndn-report-api`, `dndn-report-worker`를 반영한 GitOps 구조 미반영
+- `gitops/bootstrap` / `prod root app` 미구현
 - Worker Lambda 부재
 
 즉, 이제는 런타임 "자원 정의"보다 "배포 자동화와 운영 레인 정리"가 더 큰 과제입니다.

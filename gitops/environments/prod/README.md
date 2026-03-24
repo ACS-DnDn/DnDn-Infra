@@ -22,5 +22,4 @@
 남은 작업:
 
 - `root/` 아래 bootstrap root app 추가
-- `gitops/apps/*.yaml`를 현재 `prod` 경로 기준으로 정리
-- `dndn-report`를 `report-api`, `report-worker`로 분리할지 반영
+- Argo CD bootstrap/root app wiring 마무리
