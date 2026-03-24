@@ -3,7 +3,7 @@
 이 디렉터리는 `prod` 환경용 GitOps manifest를 담습니다.
 
 현재는 앱별 `Deployment/Service/Ingress/Secret/ConfigMap` manifest가 들어와 있습니다.
-또한 `root/kustomization.yaml`을 통해 AppProject, child app, 공용 ingress를 묶는 root source를 제공합니다.
+또한 `root/kustomization.yaml`을 통해 AppProject, child app, Argo CD 공용 ingress를 묶는 root source를 제공합니다.
 
 현재 목적은 아래 두 가지입니다.
 

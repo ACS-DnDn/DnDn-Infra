@@ -8,5 +8,3 @@ resources:
   - ../../../apps/dndn-report.yaml
   - ../../../apps/dndn-hr.yaml
   - ../ingress/argocd-ingress.yaml
-  - ../ingress/dndn-ingress.yaml
-  - ../ingress/dndnhr-ingress.yaml
