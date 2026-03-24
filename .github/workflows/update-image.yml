@@ -83,7 +83,8 @@ jobs:
 
           # Bastion에 SSH 접속하여 kubectl set image 실행
           # Bastion에는 aws cli + kubectl이 미리 설치되어 있어야 함
-          ssh -i ~/.ssh/bastion.pem ec2-user@${{ secrets.BASTION_HOST }} << EOF
+          ssh -i ~/.ssh/bastion.pem ec2-user@${{ secrets.BASTION_HOST }} 'bash -se' << EOF
+            set -o pipefail
             aws eks update-kubeconfig --name dndn-prd --region ap-northeast-2
             NAMESPACE="${APP}"
 
