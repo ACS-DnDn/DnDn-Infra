@@ -31,6 +31,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 import boto3
+from botocore.exceptions import ClientError
 
 from event_router import get_workspace_id, is_event_enabled, get_customer_session
 
@@ -514,9 +515,13 @@ def _collect_s3(resource: dict, region: str) -> dict:
         all_blocked = all([cfg.get("BlockPublicAcls"), cfg.get("IgnorePublicAcls"),
                            cfg.get("BlockPublicPolicy"), cfg.get("RestrictPublicBuckets")])
         exposure = "internal" if all_blocked else "internet-facing"
-    except s3.exceptions.NoSuchPublicAccessBlockConfiguration:
-        # PAB 설정 없음 = 퍼블릭 액세스 차단 안 됨
-        exposure = "internet-facing"
+    except ClientError as e:
+        code = e.response["Error"]["Code"]
+        if code == "NoSuchPublicAccessBlockConfiguration":
+            # PAB 설정 없음 = 퍼블릭 액세스 차단 안 됨
+            exposure = "internet-facing"
+        else:
+            logger.warning("S3 GetPublicAccessBlock failed: %s", e)
     except Exception as e:
         logger.warning("S3 GetPublicAccessBlock failed: %s", e)
 
