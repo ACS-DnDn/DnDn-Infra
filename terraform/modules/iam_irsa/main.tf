@@ -364,6 +364,7 @@ resource "aws_iam_role_policy" "reporter_bedrock" {
       ]
       Resource = [
         "arn:aws:bedrock:*::foundation-model/*",
+        "arn:aws:bedrock:*::inference-profile/*",
         "arn:aws:bedrock:${local.region}:${data.aws_caller_identity.current.account_id}:inference-profile/*",
       ]
     }]
