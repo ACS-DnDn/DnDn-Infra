@@ -1,22 +1,21 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: dndn-hr
+  name: dndn-prod-root
   namespace: argocd
-  annotations:
-    argocd.argoproj.io/sync-wave: "0"
 spec:
-  project: platform
+  project: default
   source:
     repoURL: https://github.com/ACS-DnDn/DnDn-Infra.git
     targetRevision: main
-    path: gitops/environments/prod/apps/dndn-hr
+    path: gitops/environments/prod/root
   destination:
     server: https://kubernetes.default.svc
-    namespace: dndn-hr
+    namespace: argocd
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      - PruneLast=true

@@ -78,7 +78,7 @@ DnDn-Infra/
    ├─ projects/
    │  └─ platform.yaml
    ├─ bootstrap/
-   │  └─ .gitkeep
+   │  └─ root-app-prod.yaml
    ├─ apps/
    │  ├─ dndn-api.yaml
    │  ├─ dndn-hr.yaml
@@ -89,14 +89,14 @@ DnDn-Infra/
       └─ prod/
          ├─ apps/ ... manifest
          ├─ ingress/
+         ├─ root/
+         │  └─ kustomization.yaml
          └─ README.md
 ```
 
 아직 없는 영역:
 
 - `terraform/envs/dev`, `terraform/envs/staging`
-- Argo CD 실제 bootstrap root application
-- `prod` root app / bootstrap wiring
 
 현재 이미 포함된 자동화:
 
@@ -163,13 +163,13 @@ Terraform의 `lambda` 모듈이 이 함수들의 런타임 자리를 만들고, 
 
 - `AppProject`
 - 앱별 child application 초안
+- `prod` bootstrap root app
 - `prod` 환경 앱 manifest
 - `prod` 공용 ingress manifest
 
 현재 포함되지 않은 것:
 
-- 실제 bootstrap root application
-- `prod` root application
+- bootstrap 이후 운영 절차와 sync 검증 기준
 
 ## Deployment Shape
 
@@ -201,7 +201,7 @@ Terraform의 `lambda` 모듈이 이 함수들의 런타임 자리를 만들고, 
 아직 비어 있거나 정리가 필요한 항목은 아래와 같습니다.
 
 - `prod`용 Argo CD root app 정리
-- bootstrap 기준 Argo CD wiring 정리
+- bootstrap 기준 Argo CD 운영 절차 정리
 - `dev`, `staging` Terraform 환경
 - 이미지 태그를 GitOps에 반영하는 전체 CD 흐름 정리
 - `DnDn-HR`까지 포함한 앱 배포 구조 정리

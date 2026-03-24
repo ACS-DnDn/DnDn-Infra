@@ -84,7 +84,7 @@ spec:
       containers:
         - name: report-worker
           image: 387721658341.dkr.ecr.ap-northeast-2.amazonaws.com/dndn-prd-report:072232aac00ffd30c11bb7f62576fac12bc18b0d
-          command: ["uv", "run", "python", "-m", "src.sqs_worker"]
+          command: ["uv", "run", "python", "-m", "apps.report.src.sqs_worker"]
           securityContext:
             allowPrivilegeEscalation: false
           env:
