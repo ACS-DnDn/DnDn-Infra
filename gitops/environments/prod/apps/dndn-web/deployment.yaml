@@ -21,7 +21,7 @@ spec:
         fsGroup: 101
       containers:
         - name: web
-          image: 387721658341.dkr.ecr.ap-northeast-2.amazonaws.com/dndn-prd-web:8a274f4d59bc007324ed26ef1143d6be9fa80da3
+          image: 387721658341.dkr.ecr.ap-northeast-2.amazonaws.com/dndn-prd-web:4201933b4340e5b20a5999276d3a47f6df00ca48
           securityContext:
             allowPrivilegeEscalation: false
           ports:
