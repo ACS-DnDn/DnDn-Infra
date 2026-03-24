@@ -60,6 +60,7 @@ resource "aws_iam_role" "gha_deploy" {
           "token.actions.githubusercontent.com:sub" = [
             "repo:${var.github_org}/DnDn-App:*",
             "repo:${var.github_org}/DnDn-HR:*",
+            "repo:${var.github_org}/DnDn-Infra:*",
           ]
         }
       }
