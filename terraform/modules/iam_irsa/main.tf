@@ -164,9 +164,13 @@ resource "aws_iam_role_policy" "api_scheduler" {
           "scheduler:UpdateSchedule",
           "scheduler:DeleteSchedule",
           "scheduler:GetSchedule",
-          "scheduler:ListSchedules",
         ]
         Resource = "arn:aws:scheduler:${local.region}:${data.aws_caller_identity.current.account_id}:schedule/${aws_scheduler_schedule_group.dndn_schedules.name}/*"
+      },
+      {
+        Effect   = "Allow"
+        Action   = "scheduler:ListSchedules"
+        Resource = "*"
       },
       {
         # create_schedule / update_schedule 호출 시 Target.RoleArn 전달 필요
@@ -304,10 +308,7 @@ resource "aws_iam_role_policy" "worker_s3" {
       {
         Effect   = "Allow"
         Action   = ["s3:PutObject", "s3:GetObject"]
-        Resource = [
-          "arn:aws:s3:::${var.s3_bucket_name}/reports/*",
-          "arn:aws:s3:::${var.s3_bucket_name}/canonical/*",
-        ]
+        Resource = "arn:aws:s3:::${var.s3_bucket_name}/*"
       },
       {
         Effect   = "Allow"
@@ -423,10 +424,6 @@ resource "aws_iam_role" "scheduler" {
       Condition = {
         StringEquals = {
           "aws:SourceAccount" = data.aws_caller_identity.current.account_id
-          "aws:SourceArn"     = "arn:aws:scheduler:${local.region}:${data.aws_caller_identity.current.account_id}:schedule/${aws_scheduler_schedule_group.dndn_schedules.name}/*"
-        }
-        ArnLike = {
-          "aws:SourceArn" = "arn:aws:scheduler:${local.region}:${data.aws_caller_identity.current.account_id}:schedule/${aws_scheduler_schedule_group.dndn_schedules.name}/*"
         }
       }
     }]
