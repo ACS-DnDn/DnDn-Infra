@@ -11,3 +11,4 @@ data:
   S3_PRESIGNED_EXPIRES: "3600"
   SQS_QUEUE_URL: "https://sqs.ap-northeast-2.amazonaws.com/387721658341/dndn-prd-sqs-s3-event"
   POLL_INTERVAL: "5"
+  DNDN_API_URL: "http://dndn-api.dndn-api.svc.cluster.local:8000"
