@@ -20,3 +20,4 @@ data:
   REPORT_REQUEST_QUEUE_URL: "https://sqs.ap-northeast-2.amazonaws.com/387721658341/dndn-prd-sqs-report-request"
   GITHUB_REDIRECT_URI: "https://www.dndn.cloud/auth/github/callback"
   SLACK_REDIRECT_URI: "https://www.dndn.cloud/auth/slack/callback"
+  GITHUB_WEBHOOK_URL: "https://www.dndn.cloud/api/github/webhook"
