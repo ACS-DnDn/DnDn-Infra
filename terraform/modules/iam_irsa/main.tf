@@ -112,6 +112,14 @@ resource "aws_iam_role_policy" "gha_deploy" {
       },
       {
         Effect   = "Allow"
+        Action   = "s3:ListBucket"
+        Resource = "arn:aws:s3:::dndn-public"
+        Condition = {
+          StringLike = { "s3:prefix" = ["cfn/*"] }
+        }
+      },
+      {
+        Effect   = "Allow"
         Action   = ["eks:DescribeCluster", "eks:ListClusters"]
         Resource = "*"
       }
