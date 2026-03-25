@@ -235,6 +235,7 @@ Resources:
               - s3:ListAllMyBuckets
               - s3:GetBucketLocation
               - s3:GetPublicAccessBlock
+              - s3:GetBucketPublicAccessBlock
               - lambda:ListFunctions
               - lambda:GetFunction
               - ecs:ListClusters
