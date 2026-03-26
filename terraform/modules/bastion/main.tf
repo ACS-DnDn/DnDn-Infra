@@ -73,6 +73,10 @@ resource "aws_instance" "bastion" {
   tags = {
     Name = "${local.prefix}-BASTION"
   }
+
+  lifecycle {
+    ignore_changes = [ami, user_data]
+  }
 }
 
 # ── Elastic IP (고정 IP) ──────────────────────────────────────────────────
