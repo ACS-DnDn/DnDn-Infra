@@ -216,6 +216,15 @@ resource "aws_iam_role_policy" "api_s3" {
         Effect   = "Allow"
         Action   = "s3:ListBucket"
         Resource = "arn:aws:s3:::${var.s3_bucket_name}"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:DeleteObject",
+        ]
+        Resource = "arn:aws:s3:::dndn-public/logos/*"
       }
     ]
   })
