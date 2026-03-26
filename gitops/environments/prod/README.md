@@ -20,7 +20,11 @@
 - `ingress/`
 - `root/`
 
+추가로 `root/` source 안에는 Helm chart 기반 `dndn-external-secrets` app과
+`ClusterSecretStore`가 포함되어 있어 secret 외부화를 위한 bootstrap 경로를 제공합니다.
+
 남은 작업:
 
+- AWS Secrets Manager 값 이관 후 plain Secret 제거
 - secret / config / runtime 검증 절차 정리
 - monitoring 영역까지 포함한 전체 운영 기준 정리
