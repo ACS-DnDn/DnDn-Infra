@@ -114,3 +114,22 @@ resource "aws_route_table_association" "private" {
   subnet_id      = aws_subnet.private[count.index].id
   route_table_id = aws_route_table.private.id
 }
+
+# ── S3 Gateway Endpoint ──────────────────────────────────────────────────
+# S3 트래픽을 NAT Gateway 대신 AWS 내부 네트워크로 라우팅 (무료, 지연↓, NAT 비용↓)
+
+data "aws_region" "current" {}
+
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id       = aws_vpc.main.id
+  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
+
+  route_table_ids = [
+    aws_route_table.public.id,
+    aws_route_table.private.id,
+  ]
+
+  tags = {
+    Name = "${local.prefix}-VPCE-S3"
+  }
+}
