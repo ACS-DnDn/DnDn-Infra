@@ -221,6 +221,20 @@ resource "aws_iam_role_policy" "api_s3" {
   })
 }
 
+resource "aws_iam_role_policy" "api_assume_customer" {
+  name = "AssumeCustomerAgentRolePolicy"
+  role = aws_iam_role.api.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = "sts:AssumeRole"
+      Resource = "arn:aws:iam::*:role/DnDnOpsAgentRole"
+    }]
+  })
+}
+
 resource "aws_iam_role_policy" "api_cognito" {
   name = "CognitoApiPolicy"
   role = aws_iam_role.api.id
