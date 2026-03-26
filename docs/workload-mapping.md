@@ -26,7 +26,22 @@
 
 현재 GitOps에서는 `gitops/environments/prod/apps/dndn-report` 아래에 `dndn-report-api`, `dndn-report-worker` 두 Deployment가 함께 정의되어 있습니다.
 
-## 2. Ownership Model
+## 2. Current Prod Runtime Notes
+
+현재 prod manifest 기준으로 보면 각 워크로드의 runtime 메모는 아래와 같습니다.
+
+| Workload | Service | Ingress | Secret | Current Notes |
+| --- | --- | --- | --- | --- |
+| `dndn-web` | yes | yes | no | nginx 정적 서빙, `ConfigMap` 기반 nginx 설정 |
+| `dndn-api` | yes | yes | yes | AWS Secrets Manager + External Secrets Operator로 secret 주입 |
+| `dndn-worker` | no | no | no | `ConfigMap` + IRSA 기반 상시 worker |
+| `dndn-report-api` | yes | no or internal | yes | `apps/report` 공용 이미지 사용 |
+| `dndn-report-worker` | no | no | yes | report 공용 이미지, worker command 고정 |
+| `dndn-hr` | yes | yes | no | nginx 정적 서빙 |
+
+현재 기준으로 `dndn-web`, `dndn-hr`, `dndn-worker`는 prod manifest에 별도 Kubernetes Secret이 없습니다.
+
+## 3. Ownership Model
 
 | Area | Owner | What It Means |
 | --- | --- | --- |
@@ -36,7 +51,7 @@
 
 즉, 워크로드 이름과 실행 단위는 함께 논의하더라도 실제 배포 선언은 `DnDn-Infra`가 관리합니다.
 
-## 3. Traffic Model
+## 4. Traffic Model
 
 워크로드별 기본 연결 관계는 아래와 같습니다.
 
@@ -56,7 +71,7 @@
   - 외부 노출 없음
   - SQS를 소비하고 S3/DB 같은 내부 자원 사용
 
-## 4. Argo CD Shape
+## 5. Argo CD Shape
 
 현재 기준 추천 구조는 `app-of-apps`입니다.
 
@@ -75,7 +90,7 @@
 - `apps/dndn-hr`
 - `environments/prod/apps/*`
 
-## 5. Open Decisions
+## 6. Open Decisions
 
 아직 결정이 필요한 항목은 아래와 같습니다.
 
@@ -84,7 +99,7 @@
 - 환경별 도메인과 `Ingress` 정책
 - 현재 secret이 없는 워크로드(`dndn-worker`, `dndn-hr`, `dndn-web`)에 추후 비밀값 주입이 필요해질 경우 어떤 저장 방식을 택할지
 
-## 6. Immediate Next Step
+## 7. Immediate Next Step
 
 지금 바로 필요한 다음 작업은 아래입니다.
 

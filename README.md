@@ -69,7 +69,6 @@ DnDn-Infra/
 ├─ docs/
 │  ├─ architecture.md
 │  ├─ deploy-order.md
-│  ├─ deployment-requirements.md
 │  ├─ gitops-flow.md
 │  ├─ operations-runbook.md
 │  ├─ repo-boundaries.md
@@ -216,7 +215,6 @@ Terraform의 `lambda` 모듈이 이 함수들의 런타임 자리를 만들고, 
 - [docs/repo-boundaries.md](docs/repo-boundaries.md)
 - [docs/deploy-order.md](docs/deploy-order.md)
 - [docs/gitops-flow.md](docs/gitops-flow.md)
-- [docs/deployment-requirements.md](docs/deployment-requirements.md)
 - [docs/workload-mapping.md](docs/workload-mapping.md)
 - [docs/monitoring-plan.md](docs/monitoring-plan.md)
 - [gitops/README.md](gitops/README.md)

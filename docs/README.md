@@ -11,11 +11,10 @@
 1. `architecture.md`
 2. `repo-boundaries.md`
 3. `workload-mapping.md`
-4. `deployment-requirements.md`
-5. `gitops-flow.md`
-6. `operations-runbook.md`
-7. `deploy-order.md`
-8. `monitoring-plan.md`
+4. `gitops-flow.md`
+5. `operations-runbook.md`
+6. `deploy-order.md`
+7. `monitoring-plan.md`
 
 ## 2. Document Guide
 
@@ -23,8 +22,7 @@
 | --- | --- | --- |
 | `architecture.md` | 전체 목표 아키텍처가 무엇인가 | 구조 레이어나 주요 런타임이 바뀔 때 |
 | `repo-boundaries.md` | 어떤 레포가 무엇을 소유하는가 | 책임 경계나 공통 인터페이스가 바뀔 때 |
-| `workload-mapping.md` | 어떤 앱을 어떤 배포 단위로 볼 것인가 | 워크로드 수, 런타임, 노출 방식이 바뀔 때 |
-| `deployment-requirements.md` | 실제 매니페스트 작성 전에 어떤 입력값이 필요한가 | 앱 요구사항이 구체화될 때 |
+| `workload-mapping.md` | 어떤 앱을 어떤 배포 단위로 보고, prod에서 어떤 runtime 메모를 갖는가 | 워크로드 수, 런타임, 노출 방식, secret 주입 구조가 바뀔 때 |
 | `gitops-flow.md` | GitOps 기준 배포 흐름은 무엇인가 | 승격 방식, 환경 전략, sync 정책이 바뀔 때 |
 | `operations-runbook.md` | 현재 prod 운영자가 어떤 순서로 확인하고 sync/apply 하는가 | 운영 절차나 sync/apply 기준이 바뀔 때 |
 | `deploy-order.md` | 실제 배포는 어떤 순서로 진행하는가 | 인프라 선행 조건이나 운영 절차가 바뀔 때 |
@@ -46,7 +44,7 @@
 - `DnDn-App`, `DnDn-HR`는 image build / push까지만 담당
   - 기준 문서: `gitops-flow.md`, `repo-boundaries.md`
 - `dndn-report`는 이미지 1개이지만 `dndn-report-api`, `dndn-report-worker` 두 런타임으로 배포
-  - 기준 문서: `workload-mapping.md`, `deployment-requirements.md`
+  - 기준 문서: `workload-mapping.md`
 - `prod`의 `dndn-api`, `dndn-report` secret은 AWS Secrets Manager + External Secrets Operator로 동기화
   - 기준 문서: `gitops-flow.md`, `gitops/environments/prod/README.md`
 
@@ -62,7 +60,6 @@
   - `README.md`
 - 앱 배포 단위 변경
   - `workload-mapping.md`
-  - `deployment-requirements.md`
   - `gitops-flow.md`
 - 환경 전략이나 GitOps 구조 변경
   - `gitops-flow.md`
