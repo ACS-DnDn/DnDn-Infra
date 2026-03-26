@@ -32,15 +32,31 @@ def _compute_date_range(preset: str) -> tuple[str, str]:
     return (now - _PRESET_DELTAS[preset]).isoformat(), now.isoformat()
 
 
+def _format_title(title: str, preset: str, end_dt: datetime, include_range: bool) -> str:
+    """includeRange가 True이면 제목에 수집 기간을 붙인다."""
+    if not include_range:
+        return title
+    days = _PRESET_DELTAS[preset].days
+    start_dt = end_dt - _PRESET_DELTAS[preset]
+    fmt = lambda d: f"{d.year % 100:02d}-{d.month:02d}-{d.day:02d}"
+    if days == 1:
+        return f"{title} {fmt(end_dt)}"
+    return f"{title} ({fmt(start_dt)} ~ {fmt(end_dt)})"
+
+
 def handler(event, context):
     workspace_id = event["workspaceId"]
     title = event["title"]
     preset = event.get("preset", "weekly")
+    include_range = event.get("includeRange", False)
 
     start_date, end_date = _compute_date_range(preset)
+    end_dt = datetime.fromisoformat(end_date)
+
+    final_title = _format_title(title, preset, end_dt, include_range)
 
     payload = json.dumps({
-        "title": title,
+        "title": final_title,
         "startDate": start_date,
         "endDate": end_date,
     }).encode("utf-8")
