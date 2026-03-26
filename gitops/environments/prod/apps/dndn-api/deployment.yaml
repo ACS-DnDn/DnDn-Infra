@@ -22,7 +22,7 @@ spec:
       serviceAccountName: dndn-api-sa
       containers:
         - name: api
-          image: 387721658341.dkr.ecr.ap-northeast-2.amazonaws.com/dndn-prd-api:b6cf88df24f05015e1f3df037ac78b6fbf961dbd
+          image: 387721658341.dkr.ecr.ap-northeast-2.amazonaws.com/dndn-prd-api:339388952be759b0b5fbaaf5e8cfc584dd9ffde9
           securityContext:
             allowPrivilegeEscalation: false
           ports:
