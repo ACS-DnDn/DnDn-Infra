@@ -44,7 +44,7 @@ jobs:
     name: ${{ github.event_name == 'push' && 'Apply' || (github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'apply' && github.ref == 'refs/heads/main' && 'Manual Apply' || 'Plan') }}
     runs-on: ubuntu-latest
     concurrency:
-      group: terraform-prod
+      group: ${{ (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'apply')) && 'terraform-prod-apply' || format('terraform-prod-{0}-{1}', github.event_name, github.ref_name) }}
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
@@ -108,7 +108,7 @@ jobs:
         env:
           TF_TARGET: ${{ github.event.inputs.target }}
         run: |
-          PLAN_ARGS=( -input=false -no-color -out=tfplan )
+          PLAN_ARGS=( -input=false -lock-timeout=5m -no-color -out=tfplan )
           if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ] && [ -n "${TF_TARGET}" ]; then
             if printf '%s' "${TF_TARGET}" | grep -Eq '[[:space:]]'; then
               echo "Invalid Terraform target address: ${TF_TARGET}" >&2
@@ -165,4 +165,4 @@ jobs:
       - name: Terraform Apply
         if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.event.inputs.mode == 'apply')
         working-directory: ${{ env.TF_WORKING_DIR }}
-        run: terraform apply -input=false -auto-approve tfplan
+        run: terraform apply -input=false -lock-timeout=5m -auto-approve tfplan
