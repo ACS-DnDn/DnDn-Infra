@@ -120,6 +120,7 @@
 - `prod` root app과 child app 구조는 정리 완료
 - 실제 앱 manifest는 `prod` 기준으로 먼저 운영
 - `dndn-report-api`, `dndn-report-worker`는 동일 이미지 태그를 공유한다
+- `dndn-api`, `dndn-report` secret은 현재 AWS Secrets Manager + External Secrets Operator 기준으로 주입한다
 
 ## 6. Immediate Next Step
 
@@ -127,5 +128,5 @@
 
 1. 현재 `prod` manifest의 env / secret / ingress 값을 검증
 2. `report-api`, `report-worker` 운영 검증 및 태그/리소스 정책 정리
-3. secret 관리 방식과 runtime hardening 정리
+3. 남은 워크로드 secret inventory와 runtime hardening 정리
 4. `dev`, `staging` 환경 도입 시 공통 규칙 재사용

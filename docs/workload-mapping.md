@@ -82,7 +82,7 @@
 - `dndn-worker`를 장기적으로 EKS 상시 워커로 둘지, 일부를 Lambda로 유지할지
 - `dndn-hr`를 컨테이너로 배포할지, 정적 사이트 배포로 둘지
 - 환경별 도메인과 `Ingress` 정책
-- secret 관리 방식을 `IRSA + External Secrets` 기준으로 가져갈지 여부
+- `dndn-worker`, `dndn-hr`, `dndn-web`도 `AWS Secrets Manager + External Secrets` 기준으로 확장할지 여부
 
 ## 6. Immediate Next Step
 

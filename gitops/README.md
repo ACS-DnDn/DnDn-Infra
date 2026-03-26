@@ -43,8 +43,12 @@ gitops/
   - `prod` 환경용 root application 진입점
 - `environments/prod/apps/*`
   - `prod` 환경 앱 manifest
+- `environments/prod/apps/dndn-api/externalsecret.yaml`
+  - `dndn-api-secret`을 AWS Secrets Manager에서 동기화
+- `environments/prod/apps/dndn-report/externalsecret.yaml`
+  - `dndn-report-secret`을 AWS Secrets Manager에서 동기화
 - `environments/prod/root/kustomization.yaml`
-  - `AppProject`, child app, Argo CD 공용 ingress를 묶는 self-contained root source
+  - `AppProject`, child app, External Secrets store, Argo CD 공용 ingress를 묶는 self-contained root source
 - `environments/prod/ingress/*`
   - 공용/플랫폼 ingress manifest
 
@@ -74,3 +78,5 @@ gitops/
 현재 실제 manifest는 `prod` 환경에 먼저 들어와 있으며, `bootstrap/root-app-prod.yaml`이 해당 환경의 root application 진입점 역할을 합니다. 현재 `dndn-prod-root`는 최초 1회 수동 apply 후 Argo CD에서 관리하는 구조를 전제로 합니다.
 
 또한 앱 레포의 GitHub Actions는 image build / push까지만 담당하고, 실제 EKS 반영은 이 디렉터리의 GitOps 선언과 Argo CD가 맡는 구조를 기준으로 합니다.
+
+현재 `dndn-api`, `dndn-report` secret은 Git의 plain Kubernetes Secret manifest가 아니라 AWS Secrets Manager와 External Secrets Operator를 통해 동기화됩니다.

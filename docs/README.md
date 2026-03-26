@@ -44,6 +44,8 @@
   - 기준 문서: `gitops-flow.md`, `repo-boundaries.md`
 - `dndn-report`는 이미지 1개이지만 `dndn-report-api`, `dndn-report-worker` 두 런타임으로 배포
   - 기준 문서: `workload-mapping.md`, `deployment-requirements.md`
+- `prod`의 `dndn-api`, `dndn-report` secret은 AWS Secrets Manager + External Secrets Operator로 동기화
+  - 기준 문서: `gitops-flow.md`, `gitops/environments/prod/README.md`
 
 서로 겹치는 내용이 있더라도, 세부 결정은 위 기준 문서를 우선합니다.
 
@@ -73,7 +75,7 @@
 
 - `dev`와 `staging` Terraform 환경 정의
 - Argo CD 운영 runbook과 sync 검증 절차
-- secret 관리 방식 문서
+- 나머지 워크로드 secret inventory와 운영 기준
 - Lambda 패키징/배포 절차 문서
 - 고객 온보딩 운영 체크리스트
 - 검증 절차 문서

@@ -2,8 +2,8 @@
 
 이 디렉터리는 `prod` 환경용 GitOps manifest를 담습니다.
 
-현재는 앱별 `Deployment/Service/Ingress/Secret/ConfigMap` manifest가 들어와 있습니다.
-또한 `root/kustomization.yaml`을 통해 AppProject, child app, Argo CD 공용 ingress를 묶는 self-contained root source를 제공합니다.
+현재는 앱별 `Deployment/Service/Ingress/ExternalSecret/ConfigMap` manifest가 들어와 있습니다.
+또한 `root/kustomization.yaml`을 통해 AppProject, child app, External Secrets store, Argo CD 공용 ingress를 묶는 self-contained root source를 제공합니다.
 
 현재 목적은 아래 두 가지입니다.
 
@@ -20,10 +20,12 @@
 - `ingress/`
 - `root/`
 
-추가로 `root/` source 안에는 Helm chart 기반 `dndn-external-secrets` app이 포함되어 있어
-secret 외부화를 위한 operator bootstrap 경로를 제공합니다.
+추가로 `root/` source 안에는 Helm chart 기반 `dndn-external-secrets` app과 `ClusterSecretStore`가 포함되어 있어
+AWS Secrets Manager 기반 secret 외부화 경로를 제공합니다.
+
+현재 `dndn-api`, `dndn-report`는 plain Secret manifest를 제거했고, External Secrets Operator가 `/dndn/prod/api`, `/dndn/prod/report`를 읽어 동일한 이름의 Kubernetes Secret을 동적으로 생성하는 구조입니다.
 
 남은 작업:
 
-- secret / config / runtime 검증 절차 정리
+- 나머지 워크로드 secret inventory와 운영 기준 정리
 - monitoring 영역까지 포함한 전체 운영 기준 정리

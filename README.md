@@ -27,7 +27,7 @@ DnDn 플랫폼의 AWS 인프라와 배포 기반을 관리하는 저장소입니
   - Docker image 빌드 및 ECR 푸시
 - `DnDn-Infra`
   - Terraform, Helm/Kustomize, GitOps, Argo CD 배포 선언 소유
-  - 환경별 values / secret / ingress / runtime 설정 소유
+  - 환경별 values / ingress / runtime 설정과 secret reference 구조 소유
 
 ## Current Scope
 
@@ -99,6 +99,8 @@ DnDn-Infra/
 
 현재 이미 포함된 자동화:
 
+- `.github/workflows/deploy-cfn.yml`
+- `.github/workflows/update-image.yml`
 - `.github/workflows/terraform.yml`
 - `.github/workflows/deploy-lambda.yml`
 
@@ -164,12 +166,10 @@ Terraform의 `lambda` 모듈이 이 함수들의 런타임 자리를 만들고, 
 - 앱별 child application
 - `prod` bootstrap root app
 - `prod/root` self-contained source
+- `prod` External Secrets operator bootstrap
 - `prod` 환경 앱 manifest
 - `prod` 공용 ingress manifest
-
-현재 포함되지 않은 것:
-
-- bootstrap 이후 운영 runbook과 검증 기준 문서
+- `prod` API / report secret 외부화 경로
 
 ## Deployment Shape
 
@@ -198,12 +198,12 @@ Terraform의 `lambda` 모듈이 이 함수들의 런타임 자리를 만들고, 
 
 ## Current Gaps
 
-아직 정리가 필요한 항목은 아래와 같습니다.
+현재 남은 주요 항목은 아래와 같습니다.
 
 - Argo CD 운영 runbook과 검증 절차 문서화
 - `dev`, `staging` Terraform 환경
 - 이미지 태그를 GitOps에 반영하는 전체 CD 흐름 정리
-- secret 관리 방식 고도화
+- 나머지 워크로드 secret inventory와 운영 기준 정리
 - Worker Lambda 또는 CloudTrail / Config 처리 전략 확정
 - 고객 CFN 배포에 필요한 EventBridge 출력값 노출 방식 정리
 
