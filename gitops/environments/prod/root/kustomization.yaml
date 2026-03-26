@@ -7,7 +7,6 @@ kind: Kustomization
 resources:
   - platform-project.yaml
   - dndn-external-secrets-app.yaml
-  - aws-secretsmanager-store.yaml
   - dndn-api-app.yaml
   - dndn-web-app.yaml
   - dndn-worker-app.yaml
