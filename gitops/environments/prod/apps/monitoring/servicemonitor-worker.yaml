@@ -14,5 +14,5 @@ spec:
       app: dndn-worker
   endpoints:
     - port: metrics
-      path: /metrics/
+      path: /metrics
       interval: 30s
