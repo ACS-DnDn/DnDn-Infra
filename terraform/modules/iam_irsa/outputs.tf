@@ -13,6 +13,11 @@ output "reporter_role_arn" {
   value       = aws_iam_role.reporter.arn
 }
 
+output "external_secrets_role_arn" {
+  description = "External Secrets controller IRSA Role ARN"
+  value       = aws_iam_role.external_secrets.arn
+}
+
 output "scheduler_role_arn" {
   description = "EventBridge Scheduler 실행 Role ARN"
   value       = aws_iam_role.scheduler.arn

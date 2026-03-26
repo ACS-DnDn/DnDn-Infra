@@ -82,6 +82,11 @@ output "irsa_reporter_role_arn" {
   value       = module.iam_irsa.reporter_role_arn
 }
 
+output "irsa_external_secrets_role_arn" {
+  description = "External Secrets ServiceAccount IRSA Role ARN"
+  value       = module.iam_irsa.external_secrets_role_arn
+}
+
 # ── ACM ───────────────────────────────────────────────────────────────────────
 
 output "acm_certificate_arn" {

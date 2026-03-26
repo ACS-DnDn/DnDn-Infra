@@ -6,6 +6,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - platform-project.yaml
+  - dndn-external-secrets-app.yaml
   - dndn-api-app.yaml
   - dndn-web-app.yaml
   - dndn-worker-app.yaml

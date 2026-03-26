@@ -329,8 +329,8 @@ resource "aws_iam_role_policy" "worker_s3" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect   = "Allow"
-        Action   = ["s3:PutObject", "s3:GetObject"]
+        Effect = "Allow"
+        Action = ["s3:PutObject", "s3:GetObject"]
         Resource = [
           "arn:aws:s3:::${var.s3_bucket_name}/raw/*",
           "arn:aws:s3:::${var.s3_bucket_name}/canonical/*",
@@ -442,6 +442,46 @@ resource "aws_iam_role_policy" "reporter_sqs" {
         var.s3_event_queue_arn,
         var.report_request_queue_arn,
       ]
+    }]
+  })
+}
+
+# ── External Secrets Role (AWS Secrets Manager 조회) ───────────────────────
+
+resource "aws_iam_role" "external_secrets" {
+  name = "${local.prefix}-ExternalSecrets-Role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        Federated = var.oidc_provider_arn
+      }
+      Action = "sts:AssumeRoleWithWebIdentity"
+      Condition = {
+        StringEquals = {
+          "${local.oidc_url}:sub" = "system:serviceaccount:external-secrets:external-secrets"
+          "${local.oidc_url}:aud" = "sts.amazonaws.com"
+        }
+      }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "external_secrets_sm" {
+  name = "SecretsManagerReadPolicy"
+  role = aws_iam_role.external_secrets.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret",
+      ]
+      Resource = "arn:aws:secretsmanager:${local.region}:${data.aws_caller_identity.current.account_id}:secret:/dndn/prod/*"
     }]
   })
 }

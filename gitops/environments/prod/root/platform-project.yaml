@@ -13,6 +13,7 @@ spec:
   description: DnDn platform workloads managed by Argo CD
   sourceRepos:
     - https://github.com/ACS-DnDn/DnDn-Infra.git
+    - https://charts.external-secrets.io
   destinations:
     - namespace: dndn-api
       server: https://kubernetes.default.svc
@@ -23,6 +24,8 @@ spec:
     - namespace: dndn-report
       server: https://kubernetes.default.svc
     - namespace: dndn-worker
+      server: https://kubernetes.default.svc
+    - namespace: external-secrets
       server: https://kubernetes.default.svc
     - namespace: argocd
       server: https://kubernetes.default.svc
