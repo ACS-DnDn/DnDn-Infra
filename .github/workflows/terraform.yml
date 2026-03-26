@@ -44,7 +44,7 @@ jobs:
     name: ${{ github.event_name == 'push' && 'Apply' || (github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'apply' && github.ref == 'refs/heads/main' && 'Manual Apply' || 'Plan') }}
     runs-on: ubuntu-latest
     concurrency:
-      group: terraform-prod
+      group: ${{ (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'apply')) && 'terraform-prod-apply' || format('terraform-prod-{0}-{1}', github.event_name, github.ref_name) }}
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
@@ -85,10 +85,10 @@ jobs:
           if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
             SAFE_TARGET="${TF_TARGET//$'\n'/ }"
             SAFE_TARGET="${SAFE_TARGET//$'\r'/ }"
-            SAFE_TARGET="${SAFE_TARGET//\`/\'}"
+            SAFE_TARGET="$(printf '%s' "${SAFE_TARGET}" | tr '\140' \"'\")"
             SAFE_REASON="${TF_REASON//$'\n'/ }"
             SAFE_REASON="${SAFE_REASON//$'\r'/ }"
-            SAFE_REASON="${SAFE_REASON//\`/\'}"
+            SAFE_REASON="$(printf '%s' "${SAFE_REASON}" | tr '\140' \"'\")"
             printf '%s\n' "- mode: ${TF_MODE}" >> "$GITHUB_STEP_SUMMARY"
             if [ -n "${TF_TARGET}" ]; then
               printf '%s\n' "- target: \`${SAFE_TARGET}\`" >> "$GITHUB_STEP_SUMMARY"
