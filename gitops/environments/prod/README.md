@@ -25,7 +25,5 @@ secret 외부화를 위한 operator bootstrap 경로를 제공합니다.
 
 남은 작업:
 
-- ClusterSecretStore 및 ExternalSecret 리소스 추가
-- AWS Secrets Manager 값 이관 후 plain Secret 제거
 - secret / config / runtime 검증 절차 정리
 - monitoring 영역까지 포함한 전체 운영 기준 정리
