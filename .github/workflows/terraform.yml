@@ -66,23 +66,41 @@ jobs:
         run: terraform validate
 
       - name: Workflow Summary
+        env:
+          TF_MODE: ${{ github.event.inputs.mode }}
+          TF_TARGET: ${{ github.event.inputs.target }}
+          TF_REASON: ${{ github.event.inputs.reason }}
         run: |
           echo "### Terraform Run" >> "$GITHUB_STEP_SUMMARY"
-          echo "- event: ${{ github.event_name }}" >> "$GITHUB_STEP_SUMMARY"
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "- mode: ${{ github.event.inputs.mode }}" >> "$GITHUB_STEP_SUMMARY"
-            echo "- target: ${{ github.event.inputs.target || 'full apply/plan' }}" >> "$GITHUB_STEP_SUMMARY"
-            echo "- reason: ${{ github.event.inputs.reason || 'n/a' }}" >> "$GITHUB_STEP_SUMMARY"
+          printf '%s\n' "- event: ${GITHUB_EVENT_NAME}" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            printf '%s\n' "- mode: ${TF_MODE}" >> "$GITHUB_STEP_SUMMARY"
+            if [ -n "${TF_TARGET}" ]; then
+              printf '%s\n' "- target: ${TF_TARGET}" >> "$GITHUB_STEP_SUMMARY"
+            else
+              printf '%s\n' "- target: full apply/plan" >> "$GITHUB_STEP_SUMMARY"
+            fi
+            if [ -n "${TF_REASON}" ]; then
+              printf '%s\n' "- reason: ${TF_REASON}" >> "$GITHUB_STEP_SUMMARY"
+            else
+              printf '%s\n' "- reason: n/a" >> "$GITHUB_STEP_SUMMARY"
+            fi
           fi
 
       - name: Terraform Plan
         working-directory: ${{ env.TF_WORKING_DIR }}
+        env:
+          TF_TARGET: ${{ github.event.inputs.target }}
         run: |
-          PLAN_ARGS="-no-color -out=tfplan"
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.target }}" ]; then
-            PLAN_ARGS="$PLAN_ARGS -target=${{ github.event.inputs.target }}"
+          PLAN_ARGS=( -no-color -out=tfplan )
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ] && [ -n "${TF_TARGET}" ]; then
+            if ! printf '%s\n' "${TF_TARGET}" | grep -Eq '^[A-Za-z0-9_./\\[\\]-]+$'; then
+              echo "Invalid Terraform target address: ${TF_TARGET}" >&2
+              exit 1
+            fi
+            PLAN_ARGS+=( "-target=${TF_TARGET}" )
           fi
-          terraform plan $PLAN_ARGS
+          terraform plan "${PLAN_ARGS[@]}"
         continue-on-error: ${{ github.event_name == 'pull_request' }}
 
       # PR일 때: Plan 결과를 PR 댓글로 게시
@@ -106,6 +124,6 @@ jobs:
 
       # main push 또는 수동 apply일 때: Apply
       - name: Terraform Apply
-        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'apply')
+        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.event.inputs.mode == 'apply')
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform apply -auto-approve tfplan
