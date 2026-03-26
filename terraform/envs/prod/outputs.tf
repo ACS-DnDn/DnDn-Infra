@@ -110,12 +110,24 @@ output "acm_hr_certificate_arn" {
 
 output "s3_public_bucket_name" {
   description = "퍼블릭 자산 버킷 이름 — CFN 템플릿 업로드 대상"
-  value       = data.aws_s3_bucket.public.id
+  value       = module.s3_public.bucket_name
 }
 
 output "s3_public_cfn_base_url" {
   description = "고객 배포용 CFN base URL — 온보딩 플로우에서 Launch Stack URL 생성에 사용"
-  value       = "https://${data.aws_s3_bucket.public.bucket}.s3.${data.aws_s3_bucket.public.region}.amazonaws.com/cfn"
+  value       = module.s3_public.cfn_base_url
+}
+
+# ── App Secrets ──────────────────────────────────────────────────────────────
+
+output "app_secret_api_arn" {
+  description = "API pod ExternalSecrets 참조 Secret ARN"
+  value       = module.app_secrets.api_secret_arn
+}
+
+output "app_secret_report_arn" {
+  description = "Report pod ExternalSecrets 참조 Secret ARN"
+  value       = module.app_secrets.report_secret_arn
 }
 
 # ── Route53 ───────────────────────────────────────────────────────────────────

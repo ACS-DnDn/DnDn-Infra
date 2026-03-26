@@ -160,7 +160,7 @@ module "route53" {
   project     = var.project
   environment = var.environment
 
-  alb_dns_name = "k8s-dndnpublic-368238e9ff-870521026.ap-northeast-2.elb.amazonaws.com"
+  alb_dns_name = var.alb_dns_name
 }
 
 # ── ACM ───────────────────────────────────────────────────────────────────
@@ -175,12 +175,19 @@ module "acm" {
   hr_route53_zone_id = module.route53.hr_zone_id
 }
 
-# ── S3 Public (고객 배포용 CFN 템플릿) ───────────────────────────────────────
-# dndn-public 버킷은 DEV/PRD 공유 — 수동 생성 후 data 소스로 참조
-# aws s3api create-bucket --bucket dndn-public --region ap-northeast-2 --create-bucket-configuration LocationConstraint=ap-northeast-2
+# ── S3 Public (고객 배포용 CFN 템플릿 + 회사 로고) ─────────────────────────
 
-data "aws_s3_bucket" "public" {
-  bucket = "dndn-public"
+module "s3_public" {
+  source = "../../modules/s3_public"
+}
+
+# ── App Secrets (K8s ExternalSecrets 참조) ──────────────────────────────────
+
+module "app_secrets" {
+  source = "../../modules/app_secrets"
+
+  project     = var.project
+  environment = var.environment
 }
 
 # ── ALB Controller (Helm) ────────────────────────────────────────────────
