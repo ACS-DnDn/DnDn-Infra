@@ -42,6 +42,12 @@ variable "internal_api_key" {
   sensitive   = true
 }
 
+variable "alb_dns_name" {
+  description = "K8s ALB Controller가 생성한 ALB DNS 이름 (Ingress 배포 후 설정)"
+  type        = string
+  default     = ""
+}
+
 variable "assume_role_external_id" {
   description = "고객 계정 DnDnOpsAgentRole AssumeRole External ID"
   type        = string
