@@ -4,8 +4,8 @@ output "instance_id" {
 }
 
 output "public_ip" {
-  description = "Bastion 퍼블릭 IP (유동)"
-  value       = aws_instance.bastion.public_ip
+  description = "Bastion Elastic IP (고정)"
+  value       = aws_eip.bastion.public_ip
 }
 
 output "role_arn" {

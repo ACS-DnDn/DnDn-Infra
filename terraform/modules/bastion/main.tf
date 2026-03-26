@@ -74,3 +74,18 @@ resource "aws_instance" "bastion" {
     Name = "${local.prefix}-BASTION"
   }
 }
+
+# ── Elastic IP (고정 IP) ──────────────────────────────────────────────────
+
+resource "aws_eip" "bastion" {
+  domain = "vpc"
+
+  tags = {
+    Name = "${local.prefix}-BASTION-EIP"
+  }
+}
+
+resource "aws_eip_association" "bastion" {
+  instance_id   = aws_instance.bastion.id
+  allocation_id = aws_eip.bastion.id
+}
