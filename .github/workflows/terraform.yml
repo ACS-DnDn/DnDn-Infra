@@ -9,8 +9,24 @@ on:
     branches: [main]
     paths:
       - 'terraform/**'
-  # 수동 실행 (bootstrap 완료 전 테스트용)
   workflow_dispatch:
+    inputs:
+      mode:
+        description: '실행 모드'
+        required: true
+        default: plan
+        type: choice
+        options:
+          - plan
+          - apply
+      target:
+        description: 'Optional Terraform target address (e.g. module.iam_irsa.aws_iam_role_policy.reporter_bedrock)'
+        required: false
+        type: string
+      reason:
+        description: '수동 실행 사유'
+        required: false
+        type: string
 
 permissions:
   id-token: write   # OIDC 토큰 발급
@@ -25,10 +41,19 @@ env:
 
 jobs:
   terraform:
-    name: ${{ github.event_name == 'push' && 'Apply' || 'Plan' }}
+    name: ${{ github.event_name == 'push' && 'Apply' || (github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'apply' && github.ref == 'refs/heads/main' && 'Manual Apply' || 'Plan') }}
     runs-on: ubuntu-latest
+    concurrency:
+      group: terraform-prod
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
+
+      - name: Validate Manual Apply Ref
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'apply' && github.ref != 'refs/heads/main'
+        run: |
+          echo "Manual apply is only allowed from refs/heads/main. Current ref: ${GITHUB_REF}" >&2
+          exit 1
 
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
@@ -49,14 +74,54 @@ jobs:
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform validate
 
+      - name: Workflow Summary
+        env:
+          TF_MODE: ${{ github.event.inputs.mode }}
+          TF_TARGET: ${{ github.event.inputs.target }}
+          TF_REASON: ${{ github.event.inputs.reason }}
+        run: |
+          echo "### Terraform Run" >> "$GITHUB_STEP_SUMMARY"
+          printf '%s\n' "- event: ${GITHUB_EVENT_NAME}" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            SAFE_TARGET="${TF_TARGET//$'\n'/ }"
+            SAFE_TARGET="${SAFE_TARGET//$'\r'/ }"
+            SAFE_TARGET="${SAFE_TARGET//\`/\'}"
+            SAFE_REASON="${TF_REASON//$'\n'/ }"
+            SAFE_REASON="${SAFE_REASON//$'\r'/ }"
+            SAFE_REASON="${SAFE_REASON//\`/\'}"
+            printf '%s\n' "- mode: ${TF_MODE}" >> "$GITHUB_STEP_SUMMARY"
+            if [ -n "${TF_TARGET}" ]; then
+              printf '%s\n' "- target: \`${SAFE_TARGET}\`" >> "$GITHUB_STEP_SUMMARY"
+            else
+              printf '%s\n' "- target: full apply/plan" >> "$GITHUB_STEP_SUMMARY"
+            fi
+            if [ -n "${TF_REASON}" ]; then
+              printf '%s\n' "- reason: \`${SAFE_REASON}\`" >> "$GITHUB_STEP_SUMMARY"
+            else
+              printf '%s\n' "- reason: n/a" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          fi
+
       - name: Terraform Plan
+        id: plan
         working-directory: ${{ env.TF_WORKING_DIR }}
-        run: terraform plan -no-color -out=tfplan
+        env:
+          TF_TARGET: ${{ github.event.inputs.target }}
+        run: |
+          PLAN_ARGS=( -input=false -no-color -out=tfplan )
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ] && [ -n "${TF_TARGET}" ]; then
+            if printf '%s' "${TF_TARGET}" | grep -Eq '[[:space:]]'; then
+              echo "Invalid Terraform target address: ${TF_TARGET}" >&2
+              exit 1
+            fi
+            PLAN_ARGS+=( "-target=${TF_TARGET}" )
+          fi
+          terraform plan "${PLAN_ARGS[@]}"
         continue-on-error: ${{ github.event_name == 'pull_request' }}
 
       # PR일 때: Plan 결과를 PR 댓글로 게시
       - name: Comment Plan on PR
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && steps.plan.outcome == 'success'
         uses: actions/github-script@v7
         with:
           script: |
@@ -73,8 +138,31 @@ jobs:
               body
             });
 
-      # main push일 때: Apply
+      - name: Comment Plan Failure on PR
+        if: github.event_name == 'pull_request' && steps.plan.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = [
+              '### Terraform Plan Failed',
+              '',
+              '`terraform plan` failed in CI. Check the workflow logs for the exact error output.',
+            ].join('\n');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body
+            });
+
+      - name: Fail PR on Plan Error
+        if: github.event_name == 'pull_request' && steps.plan.outcome == 'failure'
+        run: |
+          echo "Terraform plan failed for this pull request. See workflow logs and PR comment." >&2
+          exit 1
+
+      # main push 또는 수동 apply일 때: Apply
       - name: Terraform Apply
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.event.inputs.mode == 'apply')
         working-directory: ${{ env.TF_WORKING_DIR }}
-        run: terraform apply -auto-approve tfplan
+        run: terraform apply -input=false -auto-approve tfplan
