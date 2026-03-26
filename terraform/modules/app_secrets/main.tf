@@ -1,5 +1,6 @@
 locals {
-  prefix = "${lower(var.project)}-${lower(var.environment)}"
+  prefix   = "${lower(var.project)}-${lower(var.environment)}"
+  env_path = lower(var.environment) == "prd" ? "prod" : lower(var.environment)
 }
 
 # ── API 시크릿 (/dndn/prod/api) ──────────────────────────────────────────
@@ -7,8 +8,12 @@ locals {
 # 값은 수동으로 설정 (Terraform은 뼈대만 생성)
 
 resource "aws_secretsmanager_secret" "api" {
-  name        = "/dndn/${lower(var.environment == "PRD" ? "prod" : var.environment)}/api"
+  name        = "/dndn/${local.env_path}/api"
   description = "dndn-api pod용 — DB 연결, OAuth 자격증명, internal key, webhook secret"
+
+  lifecycle {
+    prevent_destroy = true
+  }
 
   tags = {
     Name      = "${local.prefix}-API-SECRET"
@@ -38,8 +43,12 @@ resource "aws_secretsmanager_secret_version" "api" {
 # ── Report 시크릿 (/dndn/prod/report) ────────────────────────────────────
 
 resource "aws_secretsmanager_secret" "report" {
-  name        = "/dndn/${lower(var.environment == "PRD" ? "prod" : var.environment)}/report"
+  name        = "/dndn/${local.env_path}/report"
   description = "dndn-report pod용 — DB 연결, internal key"
+
+  lifecycle {
+    prevent_destroy = true
+  }
 
   tags = {
     Name      = "${local.prefix}-REPORT-SECRET"

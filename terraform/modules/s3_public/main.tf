@@ -37,6 +37,21 @@ resource "aws_s3_bucket_policy" "public" {
     Version = "2012-10-17"
     Statement = [
       {
+        Sid       = "DenyNonTLS"
+        Effect    = "Deny"
+        Principal = "*"
+        Action    = "s3:*"
+        Resource = [
+          aws_s3_bucket.public.arn,
+          "${aws_s3_bucket.public.arn}/*",
+        ]
+        Condition = {
+          Bool = {
+            "aws:SecureTransport" = "false"
+          }
+        }
+      },
+      {
         Sid       = "PublicReadCfnTemplates"
         Effect    = "Allow"
         Principal = "*"

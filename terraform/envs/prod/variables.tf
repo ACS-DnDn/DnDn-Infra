@@ -45,7 +45,7 @@ variable "internal_api_key" {
 variable "alb_dns_name" {
   description = "K8s ALB Controller가 생성한 ALB DNS 이름 (Ingress 배포 후 설정)"
   type        = string
-  default     = ""
+  default     = "k8s-dndnpublic-368238e9ff-870521026.ap-northeast-2.elb.amazonaws.com"
 }
 
 variable "assume_role_external_id" {
