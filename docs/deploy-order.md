@@ -60,7 +60,7 @@ main 기준 현재 구조는 아래처럼 바뀌었습니다.
 
 - 현재 환경은 `prod`만 존재
 - Lambda 모듈은 함수 리소스를 만들지만, zip 패키지는 별도 업로드를 전제로 함
-- EventBridge는 Terraform 모듈로 생성되며, Worker Lambda는 여전히 optional 상태임
+- EventBridge는 Terraform 모듈로 생성되며, event enricher 계열 Worker Lambda는 여전히 optional 상태임
 
 주요 출력값:
 
@@ -132,7 +132,8 @@ Terraform이 자리를 만들더라도, 실제 코드와 앱은 별도 배포가
 - Lambda 코드 반영 파이프라인은 별도 유지
 - `prod` 환경 기준 실제 워크로드 매니페스트는 추가되어 있음
 - Argo CD bootstrap root app과 `prod/root` source는 추가되어 있음
-- Worker Lambda는 여전히 별도 구현 또는 전략 결정이 필요함
+- 앱 워크로드 `dndn-worker`는 EKS에서 이미 운영 중임
+- 별도의 event enricher 계열 Worker Lambda는 여전히 구현 또는 전략 결정이 필요함
 - `DnDn-App`, `DnDn-HR` GitHub Actions는 장기적으로 image build / push까지만 담당
 
 ### Recommended CD Model
@@ -198,7 +199,7 @@ Terraform이 자리를 만들더라도, 실제 코드와 앱은 별도 배포가
 - 고객 CFN에 필요한 EventBridge ARN env 출력 부재
 - monitoring 설치 경로 / values / ownership 문서 부재
 - Argo CD repo credential 운영 정책 미정
-- Worker Lambda 부재
+- event enricher 계열 Worker Lambda 부재
 
 즉, 이제는 런타임 "자원 정의"보다 "배포 자동화와 운영 레인 정리"가 더 큰 과제입니다.
 
@@ -282,11 +283,11 @@ Terraform이 자리를 만들더라도, 실제 코드와 앱은 별도 배포가
 
 결정 필요:
 
-- Worker Lambda를 바로 구현할지
+- event enricher 계열 Worker Lambda를 바로 구현할지
 - CloudTrail / Config는 당분간 로그 적재만 할지
 - 플랫폼 EventBus 템플릿을 Worker optional 구조로 바꿀지
 
-현재는 Worker가 빠져 있어서 전체 플로우가 완전히 닫히지 않습니다.
+현재는 event enricher 계열 Worker Lambda가 빠져 있어서 전체 이벤트 후처리 플로우가 완전히 닫히지 않습니다.
 
 ### Priority 4. CI/CD and Ops Docs
 

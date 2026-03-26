@@ -77,6 +77,8 @@ gitops/
 
 현재 실제 manifest는 `prod` 환경에 먼저 들어와 있으며, `bootstrap/root-app-prod.yaml`이 해당 환경의 root application 진입점 역할을 합니다. 현재 `dndn-prod-root`는 최초 1회 수동 apply 후 Argo CD에서 관리하는 구조를 전제로 합니다.
 
+현재 prod 운영에서 Argo CD가 직접 읽는 source의 기준은 `gitops/environments/prod/root/*` 입니다. `gitops/apps/*.yaml`는 child app 정의를 공유하는 위치이지만, 실제 prod bootstrap 기준점은 root source 쪽입니다.
+
 또한 앱 레포의 GitHub Actions는 image build / push까지만 담당하고, 실제 EKS 반영은 이 디렉터리의 GitOps 선언과 Argo CD가 맡는 구조를 기준으로 합니다.
 
 현재 `dndn-api`, `dndn-report` secret은 Git의 plain Kubernetes Secret manifest가 아니라 AWS Secrets Manager와 External Secrets Operator를 통해 동기화됩니다.

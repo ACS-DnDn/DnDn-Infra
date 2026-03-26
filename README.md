@@ -71,6 +71,7 @@ DnDn-Infra/
 │  ├─ deploy-order.md
 │  ├─ deployment-requirements.md
 │  ├─ gitops-flow.md
+│  ├─ operations-runbook.md
 │  ├─ repo-boundaries.md
 │  └─ workload-mapping.md
 └─ gitops/
@@ -204,7 +205,7 @@ Terraform의 `lambda` 모듈이 이 함수들의 런타임 자리를 만들고, 
 - 이미지 태그를 GitOps에 반영하는 전체 CD 흐름 정리
 - monitoring 설치 경로 / values / ownership 정리
 - Argo CD repo credential의 선언적 관리 여부 결정
-- Worker Lambda 또는 CloudTrail / Config 처리 전략 확정
+- event enricher 계열 Worker Lambda 또는 CloudTrail / Config 처리 전략 확정
 - 고객 CFN 배포에 필요한 EventBridge 출력값 노출 방식 정리
 
 ## Related Docs
