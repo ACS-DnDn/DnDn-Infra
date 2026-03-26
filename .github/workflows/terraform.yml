@@ -41,7 +41,7 @@ env:
 
 jobs:
   terraform:
-    name: ${{ github.event_name == 'push' && 'Apply' || (github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'apply' && 'Manual Apply' || 'Plan') }}
+    name: ${{ github.event_name == 'push' && 'Apply' || (github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'apply' && github.ref == 'refs/heads/main' && 'Manual Apply' || 'Plan') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
