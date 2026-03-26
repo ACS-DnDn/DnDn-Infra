@@ -82,12 +82,12 @@
 - `dndn-worker`를 장기적으로 EKS 상시 워커로 둘지, 일부를 Lambda로 유지할지
 - `dndn-hr`를 컨테이너로 배포할지, 정적 사이트 배포로 둘지
 - 환경별 도메인과 `Ingress` 정책
-- `dndn-worker`, `dndn-hr`, `dndn-web`도 `AWS Secrets Manager + External Secrets` 기준으로 확장할지 여부
+- 현재 secret이 없는 워크로드(`dndn-worker`, `dndn-hr`, `dndn-web`)에 추후 비밀값 주입이 필요해질 경우 어떤 저장 방식을 택할지
 
 ## 6. Immediate Next Step
 
 지금 바로 필요한 다음 작업은 아래입니다.
 
 1. 현재 `prod` 배포 단위의 runtime 검증
-2. secret / ingress / 이미지 갱신 정책 정리
+2. ingress / 이미지 갱신 정책 정리
 3. `dev`, `staging` 환경 확장 전략 정리

@@ -27,5 +27,9 @@ AWS Secrets Manager 기반 secret 외부화 경로를 제공합니다.
 
 남은 작업:
 
-- 나머지 워크로드 secret inventory와 운영 기준 정리
 - monitoring 영역까지 포함한 전체 운영 기준 정리
+- Argo CD repo credential의 선언적 관리 여부 결정
+
+현재 확인 기준으로 `dndn-web`, `dndn-hr`는 nginx 정적 서빙이며, `dndn-worker`는 ConfigMap + IRSA 구조라 prod manifest 기준 추가 secret 외부화 대상은 없습니다.
+
+운영 절차와 검증 순서는 [docs/operations-runbook.md](../../../docs/operations-runbook.md)를 우선 기준으로 봅니다.

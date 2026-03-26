@@ -145,8 +145,8 @@
 
 1. 이 문서 기준으로 역할 합의
 2. `architecture.md`와 `deploy-order.md`를 함께 유지
-3. Argo CD 운영 runbook과 GitOps 변경 절차 정리
-4. secret / image tag / 환경 확장 정책 정리
+3. `operations-runbook.md`를 기준으로 GitOps 변경 절차 유지
+4. image tag / 환경 확장 / repo credential 정책 정리
 5. `DnDn-App`, `DnDn-HR` 워크로드의 운영 검증 기준 정리
 
 ## 7. One-Line Conclusion

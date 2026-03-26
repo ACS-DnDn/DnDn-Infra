@@ -196,7 +196,8 @@ Terraform이 자리를 만들더라도, 실제 코드와 앱은 별도 배포가
 현재 레포 기준으로 가장 큰 공백은 여기입니다.
 
 - 고객 CFN에 필요한 EventBridge ARN env 출력 부재
-- Argo CD 운영 runbook과 검증 절차 문서 부재
+- monitoring 설치 경로 / values / ownership 문서 부재
+- Argo CD repo credential 운영 정책 미정
 - Worker Lambda 부재
 
 즉, 이제는 런타임 "자원 정의"보다 "배포 자동화와 운영 레인 정리"가 더 큰 과제입니다.
@@ -253,7 +254,7 @@ Terraform이 자리를 만들더라도, 실제 코드와 앱은 별도 배포가
 
 1. `docs/deploy-order.md` 유지 및 보완
 2. Terraform 출력값 / 운영 흐름 정리
-3. Argo CD 운영 runbook / 검증 절차 정리
+3. monitoring 및 Argo CD 운영 정책 정리
 4. Worker Lambda 처리 방향 확정
 5. 검증 절차와 운영 체크리스트 문서화
 

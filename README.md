@@ -200,16 +200,17 @@ Terraform의 `lambda` 모듈이 이 함수들의 런타임 자리를 만들고, 
 
 현재 남은 주요 항목은 아래와 같습니다.
 
-- Argo CD 운영 runbook과 검증 절차 문서화
 - `dev`, `staging` Terraform 환경
 - 이미지 태그를 GitOps에 반영하는 전체 CD 흐름 정리
-- 나머지 워크로드 secret inventory와 운영 기준 정리
+- monitoring 설치 경로 / values / ownership 정리
+- Argo CD repo credential의 선언적 관리 여부 결정
 - Worker Lambda 또는 CloudTrail / Config 처리 전략 확정
 - 고객 CFN 배포에 필요한 EventBridge 출력값 노출 방식 정리
 
 ## Related Docs
 
 - [docs/README.md](docs/README.md)
+- [docs/operations-runbook.md](docs/operations-runbook.md)
 - [docs/architecture.md](docs/architecture.md)
 - [docs/repo-boundaries.md](docs/repo-boundaries.md)
 - [docs/deploy-order.md](docs/deploy-order.md)

@@ -80,3 +80,7 @@ gitops/
 또한 앱 레포의 GitHub Actions는 image build / push까지만 담당하고, 실제 EKS 반영은 이 디렉터리의 GitOps 선언과 Argo CD가 맡는 구조를 기준으로 합니다.
 
 현재 `dndn-api`, `dndn-report` secret은 Git의 plain Kubernetes Secret manifest가 아니라 AWS Secrets Manager와 External Secrets Operator를 통해 동기화됩니다.
+
+현재 `dndn-web`, `dndn-hr`는 nginx 정적 서빙 기반이고, `dndn-worker`는 ConfigMap + IRSA 기반이므로 prod manifest 기준 추가 Kubernetes Secret은 없습니다.
+
+운영 절차와 sync 순서는 [docs/operations-runbook.md](../docs/operations-runbook.md)를 기준으로 봅니다.

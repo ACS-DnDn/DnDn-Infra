@@ -13,8 +13,9 @@
 3. `workload-mapping.md`
 4. `deployment-requirements.md`
 5. `gitops-flow.md`
-6. `deploy-order.md`
-7. `monitoring-plan.md`
+6. `operations-runbook.md`
+7. `deploy-order.md`
+8. `monitoring-plan.md`
 
 ## 2. Document Guide
 
@@ -25,6 +26,7 @@
 | `workload-mapping.md` | 어떤 앱을 어떤 배포 단위로 볼 것인가 | 워크로드 수, 런타임, 노출 방식이 바뀔 때 |
 | `deployment-requirements.md` | 실제 매니페스트 작성 전에 어떤 입력값이 필요한가 | 앱 요구사항이 구체화될 때 |
 | `gitops-flow.md` | GitOps 기준 배포 흐름은 무엇인가 | 승격 방식, 환경 전략, sync 정책이 바뀔 때 |
+| `operations-runbook.md` | 현재 prod 운영자가 어떤 순서로 확인하고 sync/apply 하는가 | 운영 절차나 sync/apply 기준이 바뀔 때 |
 | `deploy-order.md` | 실제 배포는 어떤 순서로 진행하는가 | 인프라 선행 조건이나 운영 절차가 바뀔 때 |
 | `monitoring-plan.md` | 관측성은 언제 어떤 순서로 도입하는가 | 모니터링 범위나 도입 시점이 바뀔 때 |
 
@@ -35,6 +37,7 @@
 - 책임 경계 기준: `repo-boundaries.md`
 - 워크로드 기준: `workload-mapping.md`
 - GitOps 승격 기준: `gitops-flow.md`
+- 현재 prod 운영 절차 기준: `operations-runbook.md`
 - 실제 배포 순서 기준: `deploy-order.md`
 - 관측성 도입 기준: `monitoring-plan.md`
 
@@ -63,6 +66,7 @@
   - `gitops-flow.md`
 - 환경 전략이나 GitOps 구조 변경
   - `gitops-flow.md`
+  - `operations-runbook.md`
   - `deploy-order.md`
   - `gitops/README.md`
 - 모니터링 스택이나 도입 시점 변경
@@ -74,8 +78,8 @@
 아직 문서로 완전히 닫히지 않은 항목도 있습니다.
 
 - `dev`와 `staging` Terraform 환경 정의
-- Argo CD 운영 runbook과 sync 검증 절차
-- 나머지 워크로드 secret inventory와 운영 기준
+- monitoring 설치 경로 / values / ownership 문서
+- Argo CD repo credential 운영 정책
 - Lambda 패키징/배포 절차 문서
 - 고객 온보딩 운영 체크리스트
 - 검증 절차 문서
