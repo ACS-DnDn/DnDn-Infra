@@ -13,4 +13,5 @@ resources:
   - dndn-worker-app.yaml
   - dndn-report-app.yaml
   - dndn-hr-app.yaml
+  - dndn-monitoring-app.yaml
   - argocd-ingress.yaml
