@@ -48,6 +48,13 @@ output "s3_bucket_name" {
   value       = module.s3.bucket_name
 }
 
+# ── EventBridge ───────────────────────────────────────────────────────────────
+
+output "event_bus_arn" {
+  description = "플랫폼 EventBridge Bus ARN — 고객 CFN 파라미터 DnDnEventBusArn에 사용"
+  value       = module.eventbridge.event_bus_arn
+}
+
 # ── EventBridge Scheduler ─────────────────────────────────────────────────────
 
 output "scheduler_role_arn" {
