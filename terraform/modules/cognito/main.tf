@@ -108,3 +108,9 @@ resource "aws_cognito_user_group" "member" {
   user_pool_id = aws_cognito_user_pool.main.id
   description  = "일반 사원. 부서장이 연동한 워크스페이스 접근."
 }
+
+resource "aws_cognito_user_group" "superadmin" {
+  name         = "superadmin"
+  user_pool_id = aws_cognito_user_pool.main.id
+  description  = "슈퍼어드민. 회사 등록/관리 및 전체 시스템 관리."
+}
