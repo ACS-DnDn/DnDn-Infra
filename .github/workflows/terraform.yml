@@ -87,6 +87,12 @@ jobs:
             fi
           fi
 
+      - name: Validate Manual Apply Ref
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'apply' && github.ref != 'refs/heads/main'
+        run: |
+          echo "Manual apply is only allowed from refs/heads/main. Current ref: ${GITHUB_REF}" >&2
+          exit 1
+
       - name: Terraform Plan
         working-directory: ${{ env.TF_WORKING_DIR }}
         env:
