@@ -9,8 +9,24 @@ on:
     branches: [main]
     paths:
       - 'terraform/**'
-  # 수동 실행 (bootstrap 완료 전 테스트용)
   workflow_dispatch:
+    inputs:
+      mode:
+        description: '실행 모드'
+        required: true
+        default: plan
+        type: choice
+        options:
+          - plan
+          - apply
+      target:
+        description: 'Optional Terraform target address (e.g. module.iam_irsa.aws_iam_role_policy.reporter_bedrock)'
+        required: false
+        type: string
+      reason:
+        description: '수동 실행 사유'
+        required: false
+        type: string
 
 permissions:
   id-token: write   # OIDC 토큰 발급
@@ -25,7 +41,7 @@ env:
 
 jobs:
   terraform:
-    name: ${{ github.event_name == 'push' && 'Apply' || 'Plan' }}
+    name: ${{ github.event_name == 'push' && 'Apply' || (github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'apply' && 'Manual Apply' || 'Plan') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -49,9 +65,24 @@ jobs:
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform validate
 
+      - name: Workflow Summary
+        run: |
+          echo "### Terraform Run" >> "$GITHUB_STEP_SUMMARY"
+          echo "- event: ${{ github.event_name }}" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "- mode: ${{ github.event.inputs.mode }}" >> "$GITHUB_STEP_SUMMARY"
+            echo "- target: ${{ github.event.inputs.target || 'full apply/plan' }}" >> "$GITHUB_STEP_SUMMARY"
+            echo "- reason: ${{ github.event.inputs.reason || 'n/a' }}" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
       - name: Terraform Plan
         working-directory: ${{ env.TF_WORKING_DIR }}
-        run: terraform plan -no-color -out=tfplan
+        run: |
+          PLAN_ARGS="-no-color -out=tfplan"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.target }}" ]; then
+            PLAN_ARGS="$PLAN_ARGS -target=${{ github.event.inputs.target }}"
+          fi
+          terraform plan $PLAN_ARGS
         continue-on-error: ${{ github.event_name == 'pull_request' }}
 
       # PR일 때: Plan 결과를 PR 댓글로 게시
@@ -73,8 +104,8 @@ jobs:
               body
             });
 
-      # main push일 때: Apply
+      # main push 또는 수동 apply일 때: Apply
       - name: Terraform Apply
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'apply')
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform apply -auto-approve tfplan
