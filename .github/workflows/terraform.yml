@@ -49,6 +49,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Validate Manual Apply Ref
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'apply' && github.ref != 'refs/heads/main'
+        run: |
+          echo "Manual apply is only allowed from refs/heads/main. Current ref: ${GITHUB_REF}" >&2
+          exit 1
+
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -77,26 +83,27 @@ jobs:
           echo "### Terraform Run" >> "$GITHUB_STEP_SUMMARY"
           printf '%s\n' "- event: ${GITHUB_EVENT_NAME}" >> "$GITHUB_STEP_SUMMARY"
           if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            SAFE_TARGET="${TF_TARGET//$'\n'/ }"
+            SAFE_TARGET="${SAFE_TARGET//$'\r'/ }"
+            SAFE_TARGET="${SAFE_TARGET//\`/\'}"
+            SAFE_REASON="${TF_REASON//$'\n'/ }"
+            SAFE_REASON="${SAFE_REASON//$'\r'/ }"
+            SAFE_REASON="${SAFE_REASON//\`/\'}"
             printf '%s\n' "- mode: ${TF_MODE}" >> "$GITHUB_STEP_SUMMARY"
             if [ -n "${TF_TARGET}" ]; then
-              printf '%s\n' "- target: ${TF_TARGET}" >> "$GITHUB_STEP_SUMMARY"
+              printf '%s\n' "- target: \`${SAFE_TARGET}\`" >> "$GITHUB_STEP_SUMMARY"
             else
               printf '%s\n' "- target: full apply/plan" >> "$GITHUB_STEP_SUMMARY"
             fi
             if [ -n "${TF_REASON}" ]; then
-              printf '%s\n' "- reason: ${TF_REASON}" >> "$GITHUB_STEP_SUMMARY"
+              printf '%s\n' "- reason: \`${SAFE_REASON}\`" >> "$GITHUB_STEP_SUMMARY"
             else
               printf '%s\n' "- reason: n/a" >> "$GITHUB_STEP_SUMMARY"
             fi
           fi
 
-      - name: Validate Manual Apply Ref
-        if: github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'apply' && github.ref != 'refs/heads/main'
-        run: |
-          echo "Manual apply is only allowed from refs/heads/main. Current ref: ${GITHUB_REF}" >&2
-          exit 1
-
       - name: Terraform Plan
+        id: plan
         working-directory: ${{ env.TF_WORKING_DIR }}
         env:
           TF_TARGET: ${{ github.event.inputs.target }}
@@ -114,7 +121,7 @@ jobs:
 
       # PR일 때: Plan 결과를 PR 댓글로 게시
       - name: Comment Plan on PR
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && steps.plan.outcome == 'success'
         uses: actions/github-script@v7
         with:
           script: |
