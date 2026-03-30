@@ -1,13 +1,13 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: >
-  DnDn Cognito User Pool — 사용자 인증 (이메일+비밀번호, AdminCreateUser 전용)
+  DnDn Cognito User Pool — User authentication (email+password, AdminCreateUser only)
 
 Parameters:
   Environment:
     Type: String
     Default: dev
     AllowedValues: [dev, staging, prod]
-    Description: 배포 환경
+    Description: Deployment environment
 
 Resources:
   # ---------------------------------------------------------------
@@ -18,24 +18,24 @@ Resources:
     Properties:
       UserPoolName: !Sub "DnDn_UserPool_${Environment}"
 
-      # 로그인 속성: 이메일
+      # Login attribute: email
       UsernameAttributes:
         - email
       AutoVerifiedAttributes:
-        - email   # AdminCreateUser 시 email_verified=true 자동 설정 → 계정 복구에 필요
+        - email   # AdminCreateUser sets email_verified=true automatically — required for account recovery
 
-      # 셀프 가입 비활성화 — AdminCreateUser만 허용
+      # Disable self sign-up — AdminCreateUser only
       AdminCreateUserConfig:
         AllowAdminCreateUserOnly: true
         InviteMessageTemplate:
-          EmailSubject: "[DnDn] 계정이 생성되었습니다"
+          EmailSubject: "[DnDn] Your account has been created"
           EmailMessage: >
-            안녕하세요, DnDn 플랫폼 계정이 생성되었습니다.
-            임시 비밀번호: {####}
-            첫 로그인 시 비밀번호를 변경해 주세요.
-          SMSMessage: "DnDn 임시 비밀번호: {####}"
+            Hello, your DnDn platform account has been created.
+            Temporary password: {####}
+            Please change your password on first login.
+          SMSMessage: "DnDn temporary password: {####}"
 
-      # 비밀번호 정책 (프론트 PW_RULES와 일치)
+      # Password policy (matches frontend PW_RULES)
       Policies:
         PasswordPolicy:
           MinimumLength: 8
@@ -45,10 +45,10 @@ Resources:
           RequireSymbols: true
           TemporaryPasswordValidityDays: 7
 
-      # MFA 비활성화 (추후 개발 예정)
+      # MFA disabled (planned for future)
       MfaConfiguration: "OFF"
 
-      # 사용자 속성 스키마
+      # User attribute schema
       Schema:
         - Name: email
           AttributeDataType: String
@@ -59,13 +59,13 @@ Resources:
           Required: false
           Mutable: true
 
-      # 계정 복구: 이메일만
+      # Account recovery: email only
       AccountRecoverySetting:
         RecoveryMechanisms:
           - Name: verified_email
             Priority: 1
 
-      # 사용자명 대소문자 구분 안 함
+      # Case-insensitive username
       UsernameConfiguration:
         CaseSensitive: false
 
@@ -76,35 +76,35 @@ Resources:
           Value: !Ref Environment
 
   # ---------------------------------------------------------------
-  # App Client (프론트엔드/백엔드용, 시크릿 없음)
+  # App Client (for frontend/backend, no secret)
   # ---------------------------------------------------------------
   DnDnUserPoolClient:
     Type: AWS::Cognito::UserPoolClient
     Properties:
       ClientName: !Sub "DnDn_AppClient_${Environment}"
       UserPoolId: !Ref DnDnUserPool
-      GenerateSecret: false          # SPA에서 사용 — 시크릿 없음
+      GenerateSecret: false          # Used by SPA — no secret
 
       ExplicitAuthFlows:
-        - ALLOW_USER_PASSWORD_AUTH    # 이메일+비밀번호 로그인
-        - ALLOW_REFRESH_TOKEN_AUTH    # 토큰 갱신
+        - ALLOW_USER_PASSWORD_AUTH    # Email+password login
+        - ALLOW_REFRESH_TOKEN_AUTH    # Token refresh
 
-      # 토큰 만료 설정
-      AccessTokenValidity: 1          # 1시간
-      IdTokenValidity: 1              # 1시간
-      RefreshTokenValidity: 30        # 30일
+      # Token expiration settings
+      AccessTokenValidity: 1          # 1 hour
+      IdTokenValidity: 1              # 1 hour
+      RefreshTokenValidity: 30        # 30 days
       TokenValidityUnits:
         AccessToken: hours
         IdToken: hours
         RefreshToken: days
 
-      # 토큰 취소 활성화 (로그아웃 시 필요)
+      # Enable token revocation (required for logout)
       EnableTokenRevocation: true
 
-      PreventUserExistenceErrors: ENABLED   # 사용자 존재 여부 노출 방지
+      PreventUserExistenceErrors: ENABLED   # Prevent user existence disclosure
 
 # ---------------------------------------------------------------
-# Outputs — 배포 후 앱 설정에 사용
+# Outputs — used for app configuration after deployment
 # ---------------------------------------------------------------
 Outputs:
   UserPoolId:
