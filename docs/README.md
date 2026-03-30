@@ -76,9 +76,13 @@
 
 - `dev`와 `staging` Terraform 환경 정의
 - monitoring 설치 경로 / values / ownership 문서
-- Argo CD repo credential 운영 정책
 - Lambda 패키징/배포 절차 문서
 - 고객 온보딩 운영 체크리스트
 - 검증 절차 문서
+
+현재 이미 정리된 항목:
+
+- `event_bus_arn`은 `terraform/envs/prod` output으로 노출됨
+- Argo CD repo 접근은 public GitHub repo direct `repoURL` 구조로 확인됨
 
 이 항목들은 새 문서를 추가하기보다, 먼저 기존 문서 어디에 들어갈지 기준을 정한 뒤 확장하는 것이 좋습니다.

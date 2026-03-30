@@ -203,9 +203,13 @@ Terraform의 `lambda` 모듈이 이 함수들의 런타임 자리를 만들고, 
 - `dev`, `staging` Terraform 환경
 - 이미지 태그를 GitOps에 반영하는 전체 CD 흐름 정리
 - monitoring 설치 경로 / values / ownership 정리
-- Argo CD repo credential의 선언적 관리 여부 결정
-- event enricher 계열 Worker Lambda 또는 CloudTrail / Config 처리 전략 확정
-- 고객 CFN 배포에 필요한 EventBridge 출력값 노출 방식 정리
+- event enricher 계열 Worker Lambda 또는 CloudTrail / Config 처리 전략 정리
+- Lambda 패키징 / 배포 절차 문서 보강
+
+현재 정리된 항목:
+
+- 고객 CFN에 필요한 `event_bus_arn`은 `terraform/envs/prod/outputs.tf`에서 env-level output으로 노출됨
+- Argo CD는 현재 public GitHub repo를 direct `repoURL`로 읽는 구조이며, 별도 repo credential manifest는 없음
 
 ## Related Docs
 

@@ -71,13 +71,9 @@ main 기준 현재 구조는 아래처럼 바뀌었습니다.
 - `cognito_app_client_id`
 - `report_request_queue_url`
 - `s3_bucket_name`
+- `event_bus_arn`
 - `irsa_*_role_arn`
 - `acm_certificate_arn`
-
-추가 확인 필요:
-
-- 고객 CFN 입력에 필요한 `event_bus_arn`은 현재 `terraform/modules/eventbridge`에는 있으나, `terraform/envs/prod/outputs.tf`에는 아직 노출되어 있지 않습니다
-- 고객 온보딩 자동화를 위해 이 출력값을 env 레벨에서도 노출하는 것이 좋습니다
 
 ## Step 2. Customer Account CloudFormation
 
@@ -196,10 +192,9 @@ Terraform이 자리를 만들더라도, 실제 코드와 앱은 별도 배포가
 
 현재 레포 기준으로 가장 큰 공백은 여기입니다.
 
-- 고객 CFN에 필요한 EventBridge ARN env 출력 부재
 - monitoring 설치 경로 / values / ownership 문서 부재
-- Argo CD repo credential 운영 정책 미정
-- event enricher 계열 Worker Lambda 부재
+- Lambda 패키징 / 배포 절차 문서 보강 필요
+- event enricher 계열 Worker Lambda 전략 정리 필요
 
 즉, 이제는 런타임 "자원 정의"보다 "배포 자동화와 운영 레인 정리"가 더 큰 과제입니다.
 
@@ -254,24 +249,16 @@ Terraform이 자리를 만들더라도, 실제 코드와 앱은 별도 배포가
 현재 시점에서 추천 우선순위는 아래와 같습니다.
 
 1. `docs/deploy-order.md` 유지 및 보완
-2. Terraform 출력값 / 운영 흐름 정리
-3. monitoring 및 Argo CD 운영 정책 정리
-4. Worker Lambda 처리 방향 확정
-5. 검증 절차와 운영 체크리스트 문서화
+2. monitoring 및 운영 ownership 정리
+3. Worker Lambda 처리 방향 확정
+4. Lambda / 고객 온보딩 검증 절차 보강
+5. `dev` / `staging` 환경 전략 정리
 
 ## Next Implementation Tasks
 
 바로 이어서 작업한다면 아래 순서가 가장 자연스럽습니다.
 
-### Priority 1. Terraform Output Cleanup
-
-정리할 것:
-
-- 고객 CFN에 필요한 EventBridge ARN env 출력
-- 운영에 필요한 핵심 출력값 점검
-- naming / environment 표준화
-
-### Priority 2. GitOps Operations
+### Priority 1. GitOps Operations
 
 정리할 것:
 
@@ -279,7 +266,7 @@ Terraform이 자리를 만들더라도, 실제 코드와 앱은 별도 배포가
 - root app / child app sync 확인 순서
 - 장애 시 refresh / sync / rollback 체크리스트
 
-### Priority 3. Worker Strategy
+### Priority 2. Worker Strategy
 
 결정 필요:
 
@@ -287,9 +274,9 @@ Terraform이 자리를 만들더라도, 실제 코드와 앱은 별도 배포가
 - CloudTrail / Config는 당분간 로그 적재만 할지
 - 플랫폼 EventBus 템플릿을 Worker optional 구조로 바꿀지
 
-현재는 event enricher 계열 Worker Lambda가 빠져 있어서 전체 이벤트 후처리 플로우가 완전히 닫히지 않습니다.
+현재는 Security Hub / Health는 Lambda로 처리되고, CloudTrail / Config는 logs fallback 구조이므로 이 항목은 "필수 장애"가 아니라 확장 전략에 가깝습니다.
 
-### Priority 4. CI/CD and Ops Docs
+### Priority 3. CI/CD and Ops Docs
 
 추가 문서 후보:
 
@@ -302,7 +289,7 @@ Terraform이 자리를 만들더라도, 실제 코드와 앱은 별도 배포가
 
 지금 가장 좋은 다음 액션은 아래 둘 중 하나입니다.
 
-1. Terraform 출력값과 Argo CD 운영 절차부터 정리해서 운영 레인을 명확히 하기
+1. monitoring / Lambda 배포 절차 같은 운영 ownership 문서부터 보강하기
 2. 그 다음 `Worker Lambda`를 당장 만들지 여부를 결정하기
 
 실무적으로는 1번부터 가고, Worker는 임시 제외 또는 optional 처리하는 방향이 가장 빠릅니다.

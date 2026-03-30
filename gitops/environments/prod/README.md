@@ -28,8 +28,9 @@ AWS Secrets Manager 기반 secret 외부화 경로를 제공합니다.
 남은 작업:
 
 - monitoring 영역까지 포함한 전체 운영 기준 정리
-- Argo CD repo credential의 선언적 관리 여부 결정
 
 현재 확인 기준으로 `dndn-web`, `dndn-hr`는 nginx 정적 서빙이며, `dndn-worker`는 ConfigMap + IRSA 구조라 prod manifest 기준 추가 secret 외부화 대상은 없습니다.
+
+현재 Argo CD repo 접근은 public GitHub repo direct `repoURL` 구조로 확인됐고, `argocd` namespace에는 별도 repository / repo-creds secret이 없는 상태입니다. 즉 repo credential 선언화는 현재 장애 대응 항목이 아니라, private 전환 시 검토할 후속 과제입니다.
 
 운영 절차와 검증 순서는 [docs/operations-runbook.md](../../../docs/operations-runbook.md)를 우선 기준으로 봅니다.
