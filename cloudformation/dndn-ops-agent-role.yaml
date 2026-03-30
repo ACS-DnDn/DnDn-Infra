@@ -1,32 +1,32 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >
-  DnDn OpsAgent Role — 고객 AWS 계정에 배포하는 템플릿.
-  DnDn 플랫폼이 이 계정의 인프라 변경 이력을 수집·분석하고,
-  실시간 이벤트를 플랫폼으로 전달할 수 있도록 설정합니다.
+  DnDn OpsAgent Role — Deploy this template to a customer AWS account.
+  Allows the DnDn platform to collect and analyze infrastructure change history,
+  and forward real-time events to the platform.
 
 # ============================================================
-#  사용자(고객)가 입력하는 파라미터
+#  Parameters (provided by the customer)
 # ============================================================
 Parameters:
   DnDnPlatformAccountId:
     Type: String
-    Description: DnDn 플랫폼이 운영되는 AWS 계정 ID
+    Description: AWS Account ID where the DnDn platform is hosted
     AllowedPattern: '^\d{12}$'
-    ConstraintDescription: 12자리 숫자여야 합니다
+    ConstraintDescription: Must be a 12-digit number
   ExternalId:
     Type: String
-    Description: Cross-account AssumeRole 보안을 위한 외부 ID (DnDn이 고객별 발급, 필수)
+    Description: External ID for cross-account AssumeRole security (issued per customer by DnDn, required)
     MinLength: 8
     NoEcho: true
   DnDnEventBusArn:
     Type: String
-    Description: DnDn 플랫폼 계정의 EventBridge 버스 ARN
+    Description: EventBridge bus ARN in the DnDn platform account
     Default: ''
     AllowedPattern: '^(arn:aws:events:[a-z0-9-]+:\d{12}:event-bus/[a-zA-Z0-9._-]+)?$'
-    ConstraintDescription: 유효한 EventBus ARN 형식이어야 합니다 (포워딩 비활성화 시 빈 문자열 허용)
+    ConstraintDescription: Must be a valid EventBus ARN (empty string allowed to disable forwarding)
   EnableEventForwarding:
     Type: String
-    Description: 실시간 이벤트 포워딩 활성화 여부 (DnDnEventBusArn 설정 후 true로 변경)
+    Description: Enable real-time event forwarding (set to true after configuring DnDnEventBusArn)
     AllowedValues: ['true', 'false']
     Default: 'false'
 
@@ -39,7 +39,7 @@ Conditions:
 Resources:
 
   # ============================================================
-  #  IAM Role — DnDn 플랫폼이 AssumeRole로 접근
+  #  IAM Role — DnDn platform accesses via AssumeRole
   # ============================================================
   DnDnOpsAgentRole:
     Type: AWS::IAM::Role
@@ -64,7 +64,7 @@ Resources:
           Value: OpsAutomation
 
   # ============================================================
-  #  정책 1: CloudTrail — 변경 이벤트 수집
+  #  Policy 1: CloudTrail — Change event collection
   # ============================================================
   CloudTrailReadPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -86,7 +86,7 @@ Resources:
             Resource: '*'
 
   # ============================================================
-  #  정책 2: AWS Config — Before/After 상태 비교
+  #  Policy 2: AWS Config — Before/After state comparison
   # ============================================================
   ConfigReadPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -112,7 +112,7 @@ Resources:
             Resource: '*'
 
   # ============================================================
-  #  정책 3: Security Hub + Access Analyzer — 보안 현황
+  #  Policy 3: Security Hub + Access Analyzer — Security posture
   # ============================================================
   SecurityReadPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -146,7 +146,7 @@ Resources:
             Resource: '*'
 
   # ============================================================
-  #  정책 4: Cost Explorer — 비용 분석
+  #  Policy 4: Cost Explorer — Cost analysis
   # ============================================================
   CostReadPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -171,7 +171,7 @@ Resources:
             Resource: '*'
 
   # ============================================================
-  #  정책 5: CloudWatch — 메트릭 비교
+  #  Policy 5: CloudWatch — Metric comparison
   # ============================================================
   CloudWatchReadPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -196,10 +196,18 @@ Resources:
             Action:
               - logs:DescribeLogGroups
               - logs:FilterLogEvents
+              - logs:StartQuery
+              - logs:GetQueryResults
+              - logs:StopQuery
+            Resource: '*'
+          - Sid: FlowLogsRead
+            Effect: Allow
+            Action:
+              - ec2:DescribeFlowLogs
             Resource: '*'
 
   # ============================================================
-  #  정책 6: 공통 — 리소스 탐색 + 연동 테스트
+  #  Policy 6: Common — Resource discovery + integration check
   # ============================================================
   BaseReadPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -257,7 +265,7 @@ Resources:
             Resource: '*'
 
   # ============================================================
-  #  정책 7: AWS Health — 이벤트 상세 조회 (Lambda enricher용)
+  #  Policy 7: AWS Health — Event detail lookup (for Lambda enricher)
   # ============================================================
   HealthReadPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -278,16 +286,16 @@ Resources:
             Resource: '*'
 
   # ============================================================
-  #  EventBridge — 실시간 이벤트 포워딩 (대상계정 → DnDn 플랫폼)
+  #  EventBridge — Real-time event forwarding (customer account → DnDn platform)
   # ============================================================
 
-  # CloudTrail 인프라 변경 이벤트 → DnDn 플랫폼으로 전달
+  # CloudTrail infrastructure change events → forward to DnDn platform
   CloudTrailEventRule:
     Type: AWS::Events::Rule
     Condition: ShouldForwardEvents
     Properties:
       Name: DnDn-CloudTrail-Changes
-      Description: 인프라 변경 API 호출을 DnDn 플랫폼으로 포워딩
+      Description: Forward infrastructure change API calls to DnDn platform
       State: ENABLED
       EventPattern:
         source:
@@ -323,13 +331,13 @@ Resources:
           Arn: !Ref DnDnEventBusArn
           RoleArn: !GetAtt EventBridgeForwardRole.Arn
 
-  # Security Hub 신규 Finding → DnDn 플랫폼으로 전달
+  # Security Hub new findings → forward to DnDn platform
   SecurityHubEventRule:
     Type: AWS::Events::Rule
     Condition: ShouldForwardEvents
     Properties:
       Name: DnDn-SecurityHub-Findings
-      Description: Security Hub 신규/업데이트 finding을 DnDn 플랫폼으로 포워딩
+      Description: Forward new/updated Security Hub findings to DnDn platform
       State: ENABLED
       EventPattern:
         source:
@@ -342,13 +350,13 @@ Resources:
           Arn: !Ref DnDnEventBusArn
           RoleArn: !GetAtt EventBridgeForwardRole.Arn
 
-  # Config 규정 준수 변경 → DnDn 플랫폼으로 전달
+  # Config compliance changes → forward to DnDn platform
   ConfigEventRule:
     Type: AWS::Events::Rule
     Condition: ShouldForwardEvents
     Properties:
       Name: DnDn-Config-Changes
-      Description: Config 규정 준수 상태 변경을 DnDn 플랫폼으로 포워딩
+      Description: Forward Config compliance state changes to DnDn platform
       State: ENABLED
       EventPattern:
         source:
@@ -361,13 +369,13 @@ Resources:
           Arn: !Ref DnDnEventBusArn
           RoleArn: !GetAtt EventBridgeForwardRole.Arn
 
-  # AWS Health 이벤트 → DnDn 플랫폼으로 전달
+  # AWS Health events → forward to DnDn platform
   HealthEventRule:
     Type: AWS::Events::Rule
     Condition: ShouldForwardEvents
     Properties:
       Name: DnDn-Health-Events
-      Description: AWS Health 이벤트(유지보수, 장애, Retirement 등)를 DnDn 플랫폼으로 포워딩
+      Description: Forward AWS Health events (maintenance, outage, retirement, etc.) to DnDn platform
       State: ENABLED
       EventPattern:
         source:
@@ -379,7 +387,7 @@ Resources:
           Arn: !Ref DnDnEventBusArn
           RoleArn: !GetAtt EventBridgeForwardRole.Arn
 
-  # EventBridge가 크로스 계정으로 이벤트를 보내기 위한 역할
+  # Role for EventBridge to send events cross-account
   EventBridgeForwardRole:
     Type: AWS::IAM::Role
     Condition: ShouldForwardEvents
@@ -406,19 +414,19 @@ Resources:
           Value: DnDn
 
 # ============================================================
-#  출력값
+#  Outputs
 # ============================================================
 Outputs:
   RoleArn:
-    Description: DnDn 플랫폼에서 AssumeRole 할 역할 ARN
+    Description: IAM Role ARN for DnDn platform to AssumeRole
     Value: !GetAtt DnDnOpsAgentRole.Arn
   RoleName:
-    Description: 생성된 역할 이름
+    Description: Name of the created IAM role
     Value: !Ref DnDnOpsAgentRole
   EventForwardingEnabled:
-    Description: 이벤트 포워딩 활성화 여부
+    Description: Whether event forwarding is enabled
     Value: !Ref EnableEventForwarding
   EventForwardRoleArn:
     Condition: ShouldForwardEvents
-    Description: EventBridge 포워딩 역할 ARN
+    Description: EventBridge forwarding role ARN
     Value: !GetAtt EventBridgeForwardRole.Arn
