@@ -196,6 +196,14 @@ Resources:
             Action:
               - logs:DescribeLogGroups
               - logs:FilterLogEvents
+              - logs:StartQuery
+              - logs:GetQueryResults
+              - logs:StopQuery
+            Resource: '*'
+          - Sid: FlowLogsRead
+            Effect: Allow
+            Action:
+              - ec2:DescribeFlowLogs
             Resource: '*'
 
   # ============================================================
