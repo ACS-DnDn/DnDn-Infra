@@ -1,68 +1,37 @@
 # Deploy Order
 
-이 문서는 현재 `DnDn-Infra` 저장소 기준의 배포 순서와 선행 조건을 정리합니다.
-
-main 기준 현재 구조는 아래처럼 바뀌었습니다.
-
-- 고객 계정 온보딩: CloudFormation
-- 플랫폼 공통 인프라: Terraform
-- event enricher 코드: Lambda 소스 디렉터리
-
-즉, 현재 배포의 중심은 Terraform이고, CloudFormation은 고객 계정 온보딩 용도로 남아 있습니다.
+이 문서는 현재 `DnDn-Infra` 기준의 실제 배포 순서를 정리합니다.
 
 ## Deployment Overview
 
-배포 흐름은 아래 순서로 진행하는 것이 안전합니다.
+현재 안전한 순서는 아래입니다.
 
 1. 플랫폼 계정 Terraform 적용
-2. 고객 계정 온보딩 CloudFormation 배포
-3. Lambda 코드 / 앱 아티팩트 배포
-4. 이벤트 연동 및 애플리케이션 검증
+2. CloudFormation 템플릿 업로드 및 고객 계정 온보딩
+3. Lambda 코드 배포
+4. Argo CD root / child app 상태 확인
+5. 앱 이미지 반영
+6. 운영 검증
 
-핵심 원칙은 이렇습니다.
+핵심 원칙은 아래와 같습니다.
 
-- 먼저 플랫폼 계정 공통 자원을 Terraform으로 만든다
-- 그 다음 고객 계정이 플랫폼 EventBridge로 보낼 수 있게 연결한다
-- Lambda 코드는 자원 생성과 별개로 배포해야 한다
-- EKS 앱 배포는 Argo CD 기반 GitOps로 표준화한다
+- AWS 공통 자원이 먼저 준비되어야 한다
+- 고객 계정은 플랫폼 EventBridge ARN을 받은 뒤 연결한다
+- Lambda 코드는 Terraform과 별도로 배포한다
+- 앱 이미지는 Git manifest와 클러스터 둘 다 현재 워크플로우가 반영한다
 
 ## Step 1. Platform Terraform Apply
 
-배포 대상:
+대상:
 
 - `terraform/envs/prod`
 
-배포 계정:
-
-- DnDn 플랫폼 AWS 계정
-
 목적:
 
-- 플랫폼 공통 인프라 생성
-- EventBridge / Lambda / Cognito / EKS / RDS / S3 / SQS 생성
-- 앱 런타임 기반 준비
+- 플랫폼 공통 AWS 자원 생성
+- EKS / RDS / S3 / SQS / EventBridge / Lambda / Cognito / Route53 / ACM / IRSA 준비
 
-현재 `prod`에서 생성되는 주요 자산:
-
-- VPC / Security Groups / Bastion
-- ECR
-- RDS
-- EKS
-- SQS
-- S3
-- Lambda
-- Cognito
-- EventBridge
-- Route53 / ACM
-- IAM IRSA
-
-초기 적용 시 주의:
-
-- 현재 환경은 `prod`만 존재
-- Lambda 모듈은 함수 리소스를 만들지만, zip 패키지는 별도 업로드를 전제로 함
-- EventBridge는 Terraform 모듈로 생성되며, event enricher 계열 Worker Lambda는 여전히 optional 상태임
-
-주요 출력값:
+현재 주요 출력값:
 
 - `eks_cluster_name`
 - `rds_endpoint`
@@ -72,224 +41,132 @@ main 기준 현재 구조는 아래처럼 바뀌었습니다.
 - `report_request_queue_url`
 - `s3_bucket_name`
 - `event_bus_arn`
+- `scheduler_role_arn`
+- `scheduler_group_name`
+- `scheduler_trigger_lambda_arn`
 - `irsa_*_role_arn`
 - `acm_certificate_arn`
+- `acm_hr_certificate_arn`
 
-## Step 2. Customer Account CloudFormation
+운영 메모:
 
-배포 대상:
+- 현재 환경 엔트리는 `prod`만 존재
+- Lambda 모듈은 더미 zip으로 함수 리소스를 먼저 만들고, 실제 코드는 후속 워크플로우가 덮어쓴다
 
-- `cloudformation/dndn-ops-agent-role.yaml`
+## Step 2. CloudFormation Upload And Customer Onboarding
 
-배포 계정:
+대상:
 
-- 고객 AWS 계정
+- 업로드: `.github/workflows/deploy-cfn.yml`
+- 템플릿: `cloudformation/dndn-ops-agent-role.yaml`
 
 목적:
 
-- 플랫폼 계정이 고객 계정 `DnDnOpsAgentRole`을 `AssumeRole` 할 수 있도록 설정
-- 필요 시 고객 이벤트를 플랫폼 EventBus로 포워딩할 EventBridge 규칙 생성
+- 고객 계정에 `DnDnOpsAgentRole` 배포
+- 필요 시 고객 이벤트를 플랫폼 EventBridge로 전달
 
-주요 파라미터:
+초기 파라미터 기준:
 
 - `DnDnPlatformAccountId`
 - `ExternalId`
 - `DnDnEventBusArn`
 - `EnableEventForwarding=false`
 
-초기 배포 시 주의:
+주의:
 
-- 첫 배포는 반드시 `EnableEventForwarding=false`
-- `DnDnEventBusArn`에는 Step 1 Terraform에서 생성된 EventBridge Bus ARN 사용
-- `ExternalId`는 고객별 고유값이어야 함
+- 첫 배포는 `EnableEventForwarding=false`
+- `DnDnEventBusArn`에는 Terraform output `event_bus_arn` 사용
 
-주요 출력값:
+## Step 3. Lambda Code Deployment
 
-- `RoleArn`
-- `RoleName`
-- `EventForwardingEnabled`
-- `EventForwardRoleArn` (forwarding 활성화 시)
+대상 워크플로우:
 
-## Step 3. Artifact Deployment
+- `.github/workflows/deploy-lambda.yml`
 
-Terraform이 자리를 만들더라도, 실제 코드와 앱은 별도 배포가 필요합니다.
+현재 배포되는 함수:
 
-현재 별도 반영이 필요한 항목:
+- `dndn-prd-lmd-finding-enricher`
+- `dndn-prd-lmd-health-enricher`
+- `dndn-prd-lmd-scheduler-trigger`
 
-- finding enricher Lambda zip
-- health enricher Lambda zip
-- `DnDn-App` 이미지 빌드 및 푸시
-- `DnDn-HR` 이미지 빌드 및 푸시
-- GitOps 설정 변경 반영
+구현 메모:
 
-현재 상태:
+- `event-enricher`는 의존성을 함께 패키징
+- `scheduler-trigger`는 `handler.py` 단일 파일 zip
+- 업로드 대상 S3 키는 `lambda/<name>.zip`
 
-- Lambda 런타임 자원은 Terraform에 있음
-- Lambda 코드 반영 파이프라인은 별도 유지
-- `prod` 환경 기준 실제 워크로드 매니페스트는 추가되어 있음
-- Argo CD bootstrap root app과 `prod/root` source는 추가되어 있음
-- 앱 워크로드 `dndn-worker`는 EKS에서 이미 운영 중임
-- 별도의 event enricher 계열 Worker Lambda는 여전히 구현 또는 전략 결정이 필요함
-- `DnDn-App`, `DnDn-HR` GitHub Actions는 장기적으로 image build / push까지만 담당
+## Step 4. Argo CD Bootstrap And Base Sync
 
-### Recommended CD Model
+초기 진입점:
 
-앱 배포 기준 권장 모델은 아래와 같습니다.
+```bash
+kubectl apply -f gitops/bootstrap/root-app-prod.yaml -n argocd
+```
 
-1. GitHub Actions가 이미지 빌드
-2. ECR에 이미지 푸시
-3. GitOps 선언의 이미지 태그 또는 values 갱신
-4. Argo CD가 변경을 감지해 EKS에 반영
+이후 기준 경로:
 
-즉, 장기 기준 CD는 `helm 직접 배포`보다 `Argo CD 동기화`가 중심입니다.
+- root source: `gitops/environments/prod/root`
+- child apps: `gitops/environments/prod/apps/*`
 
-현재 배포 단위는 아래처럼 보는 것이 자연스럽습니다.
+현재 root source에 포함된 핵심 요소:
 
-- `dndn-web`
+- `platform` AppProject
+- `dndn-external-secrets`
+- `ClusterSecretStore/aws-secretsmanager`
 - `dndn-api`
+- `dndn-web`
 - `dndn-worker`
-- `dndn-report-api`
-- `dndn-report-worker`
+- `dndn-report`
 - `dndn-hr`
+- `dndn-monitoring`
+- `argocd` ingress
 
-참고:
+## Step 5. Application Image Rollout
 
-- `dndn-report-api`와 `dndn-report-worker`는 동일한 `DnDn-App/apps/report` 이미지 태그를 공유합니다
-- 앱 레포 workflow는 `aws eks update-kubeconfig` 또는 `helm upgrade --install`을 직접 수행하지 않는 방향이 권장됩니다
+현재 앱 이미지 반영은 아래처럼 동작합니다.
 
-### Required Environment Variables
+1. 앱 레포가 ECR에 이미지 푸시
+2. `repository_dispatch`가 이 레포의 `.github/workflows/update-image.yml` 트리거
+3. 워크플로우가 `gitops/environments/prod/apps/<app>/deployment.yaml`의 `image:`를 갱신 후 커밋
+4. 같은 워크플로우가 Bastion에서 `kubectl set image`로 즉시 롤아웃
 
-현재 Lambda 코드 기준으로 필요한 주요 환경변수는 아래와 같습니다.
+주의:
 
-- `DB_HOST`
-- `DB_PORT`
-- `DB_NAME`
-- `DB_USER`
-- `DB_PASSWORD`
-- `REPORT_QUEUE_URL`
-- `OUTPUT_BUCKET`
-- `CUSTOMER_ROLE_NAME`
-- `ASSUME_ROLE_EXTERNAL_ID`
+- 현재 prod는 Argo CD만으로 배포가 끝나는 구조가 아니다
+- `dndn-report`는 `dndn-report-api`, `dndn-report-worker` 두 Deployment를 동시에 갱신한다
 
-참고:
+## Step 6. Verification
 
-- `CUSTOMER_ROLE_NAME` 기본값은 `DnDnOpsAgentRole`
-- 고객별 `external_id`는 DB `workspaces.external_id`에서 조회
-- 기본 `ASSUME_ROLE_EXTERNAL_ID`는 fallback 성격
+배포 후 최소 검증 순서는 아래입니다.
 
-### Required External Resources
+### Platform
 
-- MariaDB
-  - `workspaces.acct_id`
-  - `workspaces.external_id`
-  - `report_settings.event_settings`
-- SQS
-  - 보고서 생성 요청 큐
-- S3
-  - raw / enriched 결과 저장 버킷
+- Terraform 리소스 생성 여부
+- EventBridge bus / rules
+- EKS / RDS / S3 / SQS / Cognito 출력값
 
-### Current Gap
+### Customer Onboarding
 
-현재 레포 기준으로 가장 큰 공백은 여기입니다.
+- 고객 계정 `DnDnOpsAgentRole`
+- 플랫폼 계정 `AssumeRole`
+- forwarding 활성화 후 EventBridge rule 상태
 
-- monitoring 설치 경로 / values / ownership 문서 부재
-- Lambda 패키징 / 배포 절차 문서 보강 필요
-- event enricher 계열 Worker Lambda 전략 정리 필요
+### Lambda
 
-즉, 이제는 런타임 "자원 정의"보다 "배포 자동화와 운영 레인 정리"가 더 큰 과제입니다.
+- `finding_enricher`, `health_enricher` 호출
+- DB / S3 / SQS 연동
+- `scheduler-trigger`의 내부 API 호출 성공
 
-## Step 4. Customer Event Forwarding Enable
+### EKS / GitOps
 
-고객 계정 온보딩이 끝나고 플랫폼 EventBridge ARN이 연결된 뒤, 고객 스택에서 forwarding을 켭니다.
+- `dndn-prod-root`, child app sync / health
+- `dndn-api`, `dndn-report`, `dndn-worker` pod 상태
+- 필요한 경우 Bastion 롤아웃 직후와 Argo CD reconcile 이후 상태 비교
 
-업데이트 대상:
+## Current Gaps
 
-- `cloudformation/dndn-ops-agent-role.yaml`
+아직 남아 있는 운영 과제는 아래입니다.
 
-변경 파라미터:
-
-- `EnableEventForwarding=true`
-
-이때부터 고객 계정 이벤트가 플랫폼 EventBus로 실제 유입됩니다.
-
-## Step 5. Verification
-
-배포 후에는 아래 순서로 검증합니다.
-
-### 1. Platform Stack Verification
-
-- Terraform 리소스가 정상 생성되었는지 확인
-- EventBridge Bus와 수신 규칙이 생성되었는지 확인
-- EKS / RDS / S3 / SQS / Cognito 출력값이 정상인지 확인
-
-### 2. Customer Stack Verification
-
-- 고객 계정에 `DnDnOpsAgentRole`이 생성되었는지 확인
-- 플랫폼 계정에서 `AssumeRole` 가능한지 확인
-- forwarding 활성화 후 EventBridge rule이 ENABLED 상태인지 확인
-
-### 3. Lambda Verification
-
-- Security Hub 이벤트가 `finding_enricher`를 호출하는지 확인
-- AWS Health 이벤트가 `health_enricher`를 호출하는지 확인
-- Lambda가 DB 연결에 성공하는지 확인
-- Lambda가 S3에 결과를 저장하는지 확인
-- Lambda가 SQS에 보고서 요청을 넣는지 확인
-
-### 4. End-to-End Verification
-
-- 고객 계정에서 테스트 이벤트 발생
-- 플랫폼 EventBus 수신 확인
-- Lambda 실행 확인
-- S3 raw / enriched 결과 확인
-- SQS 메시지 확인
-
-## Recommended Next Work
-
-현재 시점에서 추천 우선순위는 아래와 같습니다.
-
-1. `docs/deploy-order.md` 유지 및 보완
-2. monitoring 및 운영 ownership 정리
-3. Worker Lambda 처리 방향 확정
-4. Lambda / 고객 온보딩 검증 절차 보강
-5. `dev` / `staging` 환경 전략 정리
-
-## Next Implementation Tasks
-
-바로 이어서 작업한다면 아래 순서가 가장 자연스럽습니다.
-
-### Priority 1. GitOps Operations
-
-정리할 것:
-
-- root app 최초 적용 절차
-- root app / child app sync 확인 순서
-- 장애 시 refresh / sync / rollback 체크리스트
-
-### Priority 2. Worker Strategy
-
-결정 필요:
-
-- event enricher 계열 Worker Lambda를 바로 구현할지
-- CloudTrail / Config는 당분간 로그 적재만 할지
-- 플랫폼 EventBus 템플릿을 Worker optional 구조로 바꿀지
-
-현재는 Security Hub / Health는 Lambda로 처리되고, CloudTrail / Config는 logs fallback 구조이므로 이 항목은 "필수 장애"가 아니라 확장 전략에 가깝습니다.
-
-### Priority 3. CI/CD and Ops Docs
-
-추가 문서 후보:
-
-- `docs/configuration.md`
-- `docs/verification.md`
-- `docs/customer-onboarding.md`
-- Lambda / image 배포 파이프라인 문서
-
-## Practical Recommendation
-
-지금 가장 좋은 다음 액션은 아래 둘 중 하나입니다.
-
-1. monitoring / Lambda 배포 절차 같은 운영 ownership 문서부터 보강하기
-2. 그 다음 `Worker Lambda`를 당장 만들지 여부를 결정하기
-
-실무적으로는 1번부터 가고, Worker는 임시 제외 또는 optional 처리하는 방향이 가장 빠릅니다.
+- monitoring 스택 본체 설치 경로 / values / ownership
+- pure Argo CD 배포로 정리할지 여부
+- `dev`, `staging` 환경 전략

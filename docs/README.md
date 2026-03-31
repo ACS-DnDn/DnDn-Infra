@@ -1,12 +1,10 @@
 # Documentation Map
 
-이 디렉터리는 DnDn 인프라 문서를 역할별로 나눠 관리합니다.
+문서가 실제 구현 상태를 따라가도록, 이 파일을 문서 입구와 기준 문서 목록으로 유지합니다.
 
-문서가 늘어날수록 "어디가 기준 문서인지"가 흐려지기 쉬우므로, 이 파일을 문서 입구와 관리 기준으로 사용합니다.
+## Recommended Reading Order
 
-## 1. Recommended Reading Order
-
-처음 합류하거나 전체 구조를 다시 잡을 때는 아래 순서로 읽는 것이 가장 빠릅니다.
+처음 전체 구조를 잡을 때는 아래 순서가 가장 빠릅니다.
 
 1. `architecture.md`
 2. `repo-boundaries.md`
@@ -14,75 +12,62 @@
 4. `gitops-flow.md`
 5. `operations-runbook.md`
 6. `deploy-order.md`
-7. `monitoring-plan.md`
 
-## 2. Document Guide
+## Active Docs
 
-| Document | Primary Question | Update When |
+| Document | Covers | Update When |
 | --- | --- | --- |
-| `architecture.md` | 전체 목표 아키텍처가 무엇인가 | 구조 레이어나 주요 런타임이 바뀔 때 |
-| `repo-boundaries.md` | 어떤 레포가 무엇을 소유하는가 | 책임 경계나 공통 인터페이스가 바뀔 때 |
-| `workload-mapping.md` | 어떤 앱을 어떤 배포 단위로 보고, prod에서 어떤 runtime 메모를 갖는가 | 워크로드 수, 런타임, 노출 방식, secret 주입 구조가 바뀔 때 |
-| `gitops-flow.md` | GitOps 기준 배포 흐름은 무엇인가 | 승격 방식, 환경 전략, sync 정책이 바뀔 때 |
-| `operations-runbook.md` | 현재 prod 운영자가 어떤 순서로 확인하고 sync/apply 하는가 | 운영 절차나 sync/apply 기준이 바뀔 때 |
-| `deploy-order.md` | 실제 배포는 어떤 순서로 진행하는가 | 인프라 선행 조건이나 운영 절차가 바뀔 때 |
-| `monitoring-plan.md` | 관측성은 언제 어떤 순서로 도입하는가 | 모니터링 범위나 도입 시점이 바뀔 때 |
+| `architecture.md` | 현재 구현된 전체 인프라/배포 구조 | 주요 런타임 레이어나 실제 배포 방식이 바뀔 때 |
+| `repo-boundaries.md` | `DnDn-Infra`, `DnDn-App`, `DnDn-HR` 책임 경계 | 소유권, 인터페이스, 운영 경계가 바뀔 때 |
+| `workload-mapping.md` | prod 워크로드 단위와 runtime 메모 | 앱 수, 배포 단위, ingress/secret 구조가 바뀔 때 |
+| `gitops-flow.md` | 현재 GitOps / 이미지 반영 / Argo CD 흐름 | 이미지 갱신 절차, child app 구조, sync 방식이 바뀔 때 |
+| `operations-runbook.md` | prod 운영자가 바로 따라갈 최소 운영 절차 | sync/check/apply 순서나 운영 명령이 바뀔 때 |
+| `deploy-order.md` | Terraform, CFN, Lambda, 앱 배포의 실제 순서 | 배포 선행 조건과 워크플로우가 바뀔 때 |
 
-## 3. Current Source Of Truth
+## Current Source Of Truth
 
-현재 기준으로 아래 문서를 우선 기준으로 봅니다.
+현재 기준으로 우선 참조할 문서는 아래와 같습니다.
 
-- 책임 경계 기준: `repo-boundaries.md`
+- 전체 구조: `architecture.md`
+- 책임 경계: `repo-boundaries.md`
 - 워크로드 기준: `workload-mapping.md`
-- GitOps 승격 기준: `gitops-flow.md`
-- 현재 prod 운영 절차 기준: `operations-runbook.md`
-- 실제 배포 순서 기준: `deploy-order.md`
-- 관측성 도입 기준: `monitoring-plan.md`
+- GitOps 및 이미지 반영 흐름: `gitops-flow.md`
+- prod 운영 절차: `operations-runbook.md`
+- 배포 순서: `deploy-order.md`
 
-현재 최신 결정 중 특히 자주 헷갈리는 항목은 아래 문서가 기준입니다.
+현재 자주 헷갈리는 포인트와 기준 문서는 아래입니다.
 
-- `DnDn-App`, `DnDn-HR`는 image build / push까지만 담당
-  - 기준 문서: `gitops-flow.md`, `repo-boundaries.md`
-- `dndn-report`는 이미지 1개이지만 `dndn-report-api`, `dndn-report-worker` 두 런타임으로 배포
+- 앱 이미지는 앱 레포가 빌드하지만, prod 반영은 이 레포 워크플로우가 맡음
+  - 기준 문서: `gitops-flow.md`, `deploy-order.md`
+- `dndn-report`는 이미지 1개지만 `dndn-report-api`, `dndn-report-worker` 두 런타임으로 배포됨
   - 기준 문서: `workload-mapping.md`
-- `prod`의 `dndn-api`, `dndn-report` secret은 AWS Secrets Manager + External Secrets Operator로 동기화
-  - 기준 문서: `gitops-flow.md`, `gitops/environments/prod/README.md`
+- `dndn-api`, `dndn-report` secret은 plain Secret이 아니라 AWS Secrets Manager + External Secrets Operator 기준임
+  - 기준 문서: `gitops-flow.md`, `operations-runbook.md`, `gitops/environments/prod/README.md`
 
-서로 겹치는 내용이 있더라도, 세부 결정은 위 기준 문서를 우선합니다.
+## Retired Doc
 
-## 4. Maintenance Rules
+- `monitoring-plan.md`
+  - 계획 문서 성격이 강했고 현재 구현 정보와 분리되어 드리프트가 커져 삭제했습니다.
+  - monitoring 관련 현재 상태와 한계는 `operations-runbook.md`, `gitops/README.md`, `gitops/environments/prod/README.md`에 통합합니다.
+
+## Maintenance Rules
 
 문서가 어긋나지 않게 하려면 아래 묶음을 같이 업데이트하는 것이 좋습니다.
 
-- 레포 책임이나 소유권 변경
-  - `repo-boundaries.md`
-  - `architecture.md`
+- 레포 책임 변경
   - `README.md`
+  - `architecture.md`
+  - `repo-boundaries.md`
 - 앱 배포 단위 변경
   - `workload-mapping.md`
   - `gitops-flow.md`
-- 환경 전략이나 GitOps 구조 변경
+  - `gitops/environments/prod/README.md`
+- 이미지 반영 / GitOps 절차 변경
   - `gitops-flow.md`
   - `operations-runbook.md`
   - `deploy-order.md`
   - `gitops/README.md`
-- 모니터링 스택이나 도입 시점 변경
-  - `monitoring-plan.md`
-  - 필요 시 `architecture.md`
-
-## 5. Current Gaps
-
-아직 문서로 완전히 닫히지 않은 항목도 있습니다.
-
-- `dev`와 `staging` Terraform 환경 정의
-- monitoring 설치 경로 / values / ownership 문서
-- Lambda 패키징/배포 절차 문서
-- 고객 온보딩 운영 체크리스트
-- 검증 절차 문서
-
-현재 이미 정리된 항목:
-
-- `event_bus_arn`은 `terraform/envs/prod` output으로 노출됨
-- Argo CD repo 접근은 public GitHub repo direct `repoURL` 구조로 확인됨
-
-이 항목들은 새 문서를 추가하기보다, 먼저 기존 문서 어디에 들어갈지 기준을 정한 뒤 확장하는 것이 좋습니다.
+- monitoring 관리 범위 변경
+  - `operations-runbook.md`
+  - `gitops/README.md`
+  - `gitops/environments/prod/README.md`

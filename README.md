@@ -1,224 +1,82 @@
 # DnDn-Infra
 
-DnDn 플랫폼의 AWS 인프라와 배포 기반을 관리하는 저장소입니다.
+DnDn 플랫폼의 AWS 인프라, Lambda, GitOps, 운영 문서를 관리하는 저장소입니다.
 
-현재 이 레포는 두 레인을 함께 다룹니다.
+현재 이 레포가 실제로 맡는 범위는 아래 네 축입니다.
 
-1. 고객 AWS 계정 온보딩
-2. 플랫폼 공통 인프라와 애플리케이션 런타임 기반
+1. 고객 AWS 계정 온보딩용 CloudFormation
+2. 플랫폼 AWS 공통 인프라용 Terraform
+3. 운영 Lambda 소스와 배포 워크플로우
+4. EKS 앱 배포용 Argo CD / GitOps 선언
 
-즉, 지금은 초기 CloudFormation만 있는 레포가 아니라, `CloudFormation + Terraform + GitOps`가 함께 운영되는 전환기 구조입니다.
+## Current Implementation
 
-플랫폼 애플리케이션 관점에서는 현재 최소 아래 레포들을 함께 봐야 합니다.
+현재 저장소 기준으로 이미 구현된 상태는 아래와 같습니다.
+
+- `cloudformation/dndn-ops-agent-role.yaml`
+  - 고객 계정 `DnDnOpsAgentRole`
+  - 플랫폼 EventBridge로의 forwarding 연결
+- `terraform/envs/prod`
+  - 현재 유일한 실제 환경 엔트리
+  - `vpc`, `security_groups`, `bastion`, `ecr`, `rds`, `eks`, `sqs`, `s3`, `lambda`, `cognito`, `eventbridge`, `route53`, `acm`, `iam_irsa`, `app_secrets`, `alb_controller`, `s3_public`
+- `lambda/event-enricher`
+  - `finding_enricher`, `health_enricher`, `event_router`
+- `lambda/scheduler-trigger`
+  - EventBridge Scheduler가 내부 API를 호출하도록 연결하는 브릿지 Lambda
+- `gitops/environments/prod`
+  - `dndn-api`, `dndn-web`, `dndn-worker`, `dndn-report`, `dndn-hr`
+  - `dndn-monitoring` child app이 관리하는 `ServiceMonitor`
+  - External Secrets Operator + `ClusterSecretStore`
+  - `prod/root` self-contained root source
+
+관련 애플리케이션 레포의 책임은 아래처럼 나뉩니다.
 
 - `DnDn-App`
-  - 메인 DnDn 서비스
   - `web`, `api`, `worker`, `report`, `contracts`
+  - Docker image 빌드와 ECR 푸시
 - `DnDn-HR`
-  - 인사/조직/계정 관리용 별도 포털
-  - 별도 프론트엔드 앱으로 배포
-  - 백엔드는 메인 서비스와 연동
-  - DnDn 서비스 접근 계정과 부서/사용자 관리 성격으로 이해하는 것이 자연스럽습니다
-
-현재 기준 책임 분리는 아래처럼 보는 것이 맞습니다.
-
-- `DnDn-App`, `DnDn-HR`
-  - 애플리케이션 코드 소유
-  - Docker image 빌드 및 ECR 푸시
+  - HR 포털 프론트엔드 이미지 빌드와 ECR 푸시
 - `DnDn-Infra`
-  - Terraform, Helm/Kustomize, GitOps, Argo CD 배포 선언 소유
-  - 환경별 values / ingress / runtime 설정과 secret reference 구조 소유
-
-## Current Scope
-
-현재 실제 포함된 주요 구조는 아래와 같습니다.
-
-```text
-DnDn-Infra/
-├─ README.md
-├─ .github/
-│  └─ workflows/
-│     ├─ deploy-lambda.yml
-│     └─ terraform.yml
-├─ cloudformation/
-│  └─ dndn-ops-agent-role.yaml
-├─ lambda/
-│  └─ event-enricher/
-│     ├─ event_router.py
-│     ├─ finding_enricher.py
-│     ├─ health_enricher.py
-│     └─ requirements.txt
-├─ terraform/
-│  ├─ envs/
-│  │  └─ prod/
-│  └─ modules/
-│     ├─ acm/
-│     ├─ bastion/
-│     ├─ cognito/
-│     ├─ ecr/
-│     ├─ eks/
-│     ├─ eventbridge/
-│     ├─ iam_irsa/
-│     ├─ lambda/
-│     ├─ rds/
-│     ├─ route53/
-│     ├─ s3/
-│     ├─ security_groups/
-│     ├─ sqs/
-│     └─ vpc/
-├─ docs/
-│  ├─ architecture.md
-│  ├─ deploy-order.md
-│  ├─ gitops-flow.md
-│  ├─ operations-runbook.md
-│  ├─ repo-boundaries.md
-│  └─ workload-mapping.md
-└─ gitops/
-   ├─ README.md
-   ├─ projects/
-   │  └─ platform.yaml
-   ├─ bootstrap/
-   │  └─ root-app-prod.yaml
-   ├─ apps/
-   │  ├─ dndn-api.yaml
-   │  ├─ dndn-hr.yaml
-   │  ├─ dndn-report.yaml
-   │  ├─ dndn-web.yaml
-   │  └─ dndn-worker.yaml
-   └─ environments/
-      └─ prod/
-         ├─ apps/ ... manifest
-         ├─ ingress/
-         ├─ root/ ... root app source
-         └─ README.md
-```
-
-아직 없는 영역:
-
-- `terraform/envs/dev`, `terraform/envs/staging`
-
-현재 이미 포함된 자동화:
-
-- `.github/workflows/deploy-cfn.yml`
-- `.github/workflows/update-image.yml`
-- `.github/workflows/terraform.yml`
-- `.github/workflows/deploy-lambda.yml`
-
-## What This Repo Does
-
-### 1. Customer Account Onboarding
-
-`cloudformation/dndn-ops-agent-role.yaml`은 고객 AWS 계정에 배포하는 스택입니다.
-
-- `DnDnOpsAgentRole` 생성
-- 플랫폼 계정이 `sts:AssumeRole` 할 수 있도록 설정
-- 고객 이벤트를 플랫폼 EventBridge로 포워딩할 규칙 생성 가능
-
-### 2. Platform Runtime Infrastructure
-
-`terraform/envs/prod/`는 현재 플랫폼 공통 인프라의 실제 배포 엔트리입니다.
-
-현재 `prod`에서 조합되는 주요 모듈:
-
-- `vpc`
-- `security_groups`
-- `bastion`
-- `ecr`
-- `rds`
-- `eks`
-- `sqs`
-- `s3`
-- `lambda`
-- `cognito`
-- `eventbridge`
-- `route53`
-- `acm`
-- `iam_irsa`
-
-즉, 플랫폼 계정의 공통 AWS 자원은 이미 Terraform 중심으로 넘어온 상태입니다.
-
-이 인프라는 장기적으로 `DnDn-App`과 `DnDn-HR` 둘 다 올라갈 공통 런타임 기반으로 보는 것이 맞습니다.
-
-### 3. Event Enricher Lambda Source
-
-`lambda/event-enricher/`는 EventBridge에 연결되는 Lambda 소스 코드입니다.
-
-- `finding_enricher.py`
-- `health_enricher.py`
-- `event_router.py`
-
-이 코드는 아래 리소스에 의존합니다.
-
-- RDS / MariaDB
-- SQS
-- S3
-- IAM / STS
-
-Terraform의 `lambda` 모듈이 이 함수들의 런타임 자리를 만들고, 코드 배포 패키지는 별도 업로드 흐름을 전제로 합니다.
-
-### 4. GitOps Foundation
-
-`gitops/`는 Argo CD 기반 GitOps 운영 선언을 담습니다.
-
-현재 포함된 것:
-
-- `AppProject`
-- 앱별 child application
-- `prod` bootstrap root app
-- `prod/root` self-contained source
-- `prod` External Secrets operator bootstrap
-- `prod` 환경 앱 manifest
-- `prod` 공용 ingress manifest
-- `prod` API / report secret 외부화 경로
+  - 인프라 생성, 배포 선언, 운영 절차, 환경별 설정
 
 ## Deployment Shape
 
-현재 기준 배포 흐름은 아래 순서로 보는 것이 맞습니다.
+현재 구현 기준 실제 배포 흐름은 아래 순서입니다.
 
-1. 플랫폼 계정에 `terraform/envs/prod` 적용
-2. Terraform으로 EventBridge, Lambda, Cognito, EKS, RDS, S3, SQS 같은 공통 자원 생성
-3. 필요한 출력값을 기준으로 고객 계정에 `cloudformation/dndn-ops-agent-role.yaml` 배포
-4. Lambda zip / 앱 이미지 / EKS 워크로드를 별도 배포 파이프라인으로 반영
-5. GitHub Actions는 이미지 빌드와 푸시를 담당
-6. Argo CD가 GitOps 선언을 기준으로 EKS 앱 배포를 반영
+1. `terraform/envs/prod`로 플랫폼 공통 자원 생성
+2. `cloudformation/` 템플릿을 S3에 업로드하고 고객 계정에 온보딩 스택 배포
+3. `deploy-lambda.yml`로 `finding-enricher`, `health-enricher`, `scheduler-trigger` 코드 배포
+4. 앱 레포가 이미지를 빌드해 ECR에 푸시
+5. 이 레포의 `update-image.yml`이 `gitops/environments/prod/apps/*/deployment.yaml` 이미지를 갱신하고 커밋
+6. 같은 워크플로우가 Bastion 경유 `kubectl set image`로 즉시 롤아웃
+7. 이후 Argo CD가 Git 상태를 계속 기준선으로 유지
 
-여기서 앱 워크로드는 현재 기준으로 아래를 포함할 수 있습니다.
+즉 현재 앱 CD는 "순수 Argo-only"가 아니라, GitOps 선언 업데이트와 Bastion 직접 롤아웃이 함께 있는 하이브리드 상태입니다.
 
-- `DnDn-App`의 `web`, `api`, `worker`, `report-api`, `report-worker`
-- `DnDn-HR` 프론트엔드
+## Key Paths
 
-참고:
+유지보수 시 자주 보는 경로는 아래 정도면 충분합니다.
 
-- `report-api`와 `report-worker`는 동일한 `DnDn-App/apps/report` 이미지 태그를 공유합니다
-- `DnDn-App`, `DnDn-HR`의 GitHub Actions는 이미지 빌드와 푸시까지만 담당합니다
-- 실제 EKS 반영은 `DnDn-Infra`의 GitOps 선언과 Argo CD가 담당합니다
-
-즉, 현재는 고객 온보딩만 CloudFormation이고, 플랫폼 인프라는 Terraform이 중심입니다.
-앱 CD의 목표 구조는 `helm 직접 배포`가 아니라 `Argo CD + Helm/Kustomize 기반 GitOps`입니다.
+- `cloudformation/`
+- `terraform/envs/prod/`
+- `terraform/modules/`
+- `lambda/event-enricher/`
+- `lambda/scheduler-trigger/`
+- `gitops/bootstrap/`
+- `gitops/apps/`
+- `gitops/environments/prod/`
+- `.github/workflows/`
+- `docs/`
 
 ## Current Gaps
 
-현재 남은 주요 항목은 아래와 같습니다.
+아직 구현 또는 문서화가 덜 끝난 항목은 아래입니다.
 
-- `dev`, `staging` Terraform 환경
-- 이미지 태그를 GitOps에 반영하는 전체 CD 흐름 정리
-- monitoring 설치 경로 / values / ownership 정리
-- event enricher 계열 Worker Lambda 또는 CloudTrail / Config 처리 전략 정리
-- Lambda 패키징 / 배포 절차 문서 보강
+- `dev`, `staging` 환경 부재
+- monitoring 스택 설치 경로 / values / ownership 불명확
+- Argo CD repo credential 선언 부재
+- EventBridge event enricher 확장 범위와 후속 worker 전략
 
-현재 정리된 항목:
+## Docs
 
-- 고객 CFN에 필요한 `event_bus_arn`은 `terraform/envs/prod/outputs.tf`에서 env-level output으로 노출됨
-- Argo CD는 현재 public GitHub repo를 direct `repoURL`로 읽는 구조이며, 별도 repo credential manifest는 없음
-
-## Related Docs
-
-- [docs/README.md](docs/README.md)
-- [docs/operations-runbook.md](docs/operations-runbook.md)
-- [docs/architecture.md](docs/architecture.md)
-- [docs/repo-boundaries.md](docs/repo-boundaries.md)
-- [docs/deploy-order.md](docs/deploy-order.md)
-- [docs/gitops-flow.md](docs/gitops-flow.md)
-- [docs/workload-mapping.md](docs/workload-mapping.md)
-- [docs/monitoring-plan.md](docs/monitoring-plan.md)
-- [gitops/README.md](gitops/README.md)
+문서 입구와 기준 문서는 [docs/README.md](docs/README.md)에서 관리합니다.
