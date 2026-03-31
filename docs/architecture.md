@@ -234,13 +234,13 @@ gitops/
 - child app 이름은 유지하고, 환경별 차이는 `gitops/environments/<env>`에서 관리
 - Terraform도 `envs/<env>` 엔트리만 분리하고 모듈은 공통 재사용
 - bootstrap root app은 환경마다 별도 진입점 유지
-- `dev` scaffold 변경만으로는 현재 prod Terraform workflow가 돌지 않도록 분리
+- `dev` 참고용 코드 변경만으로는 현재 prod Terraform workflow가 돌지 않도록 분리
 
 현재 상태:
 
 - `dev`는 root app, child app, app manifest까지 코드상 준비됨
-- 다만 `route53`, `acm`, `eventbridge`, `s3_public`는 기본 비활성화 상태이며, 일부 GitOps 값도 placeholder로 남아 있음
-- 즉 현재 상태는 "의도가 보이는 reserved dev 환경 코드"이지 "즉시 apply 가능한 완전한 독립 dev 환경"은 아님
+- 다만 `route53`, `acm`, `eventbridge`, `s3_public`는 기본 비활성화 상태이며, 일부 GitOps 값은 추후 채울 값으로 남아 있음
+- 즉 현재 상태는 "의도가 보이는 dev 참고용 코드"이지 "즉시 apply 가능한 완전한 독립 dev 환경"은 아님
 
 ## Current Deployment Reality
 
@@ -261,6 +261,6 @@ gitops/
 
 필요 시 아래 항목만 후속으로 검토하면 됩니다.
 
-- `dev` scaffold 실제 활성화
-  - `route53`, `acm`, `eventbridge`, `s3_public` 같은 전역 리소스 전략과 placeholder 값 확정 포함
+- `dev` 참고용 환경 실제 활성화
+  - `route53`, `acm`, `eventbridge`, `s3_public` 같은 전역 리소스 전략과 추후 채울 값 확정 포함
 - private repo 전환 시 credential cutover

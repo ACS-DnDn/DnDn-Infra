@@ -357,13 +357,13 @@ gitops/environments/dev/root/*
 현재 상태:
 
 - `terraform/envs/dev`
-  - prod 복제 기반 reserved env
+  - prod 복제 기반 참고용 env
   - backend/state 이름은 dev 전용으로 분리
   - 아직 실제 backend bucket / lock table 생성과 tfvars 값 주입은 하지 않음
   - `route53`, `acm`, `eventbridge`, `s3_public`는 코드에 포함하되 기본값으로 비활성화
 - `gitops/environments/dev`
-  - root app, child app, app manifest mirror까지 준비
-  - 다만 인증서 ARN, 일부 Cognito/EventBridge 값은 placeholder로 남겨둠
+  - root app, child app, app manifest 복제본까지 준비
+  - 다만 인증서 ARN, 일부 Cognito/EventBridge 값은 추후 채울 값으로 남겨둠
   - 아직 cluster bootstrap이나 child app 등록은 하지 않음
 
 권장 운영 차이:
@@ -380,6 +380,6 @@ gitops/environments/dev/root/*
 
 필요 시 아래 항목만 후속으로 검토합니다.
 
-- `dev` scaffold 실제 활성화
-  - `route53`, `acm`, `eventbridge`, `s3_public` 같은 전역 리소스 전략과 placeholder 값 확정 포함
+- `dev` 참고용 환경 실제 활성화
+  - `route53`, `acm`, `eventbridge`, `s3_public` 같은 전역 리소스 전략과 추후 채울 값 확정 포함
 - private repo 전환 시 credential cutover
