@@ -1,7 +1,8 @@
 name: Update K8s Image Tag
 
 # dndn-app 레포에서 ECR 이미지 push 후 repository_dispatch로 트리거
-# 매니페스트의 이미지 태그를 업데이트하고 커밋 → Bastion 경유 kubectl apply
+# 매니페스트의 이미지 태그를 업데이트하고 커밋
+# 실제 반영은 Argo CD auto-sync가 담당
 
 on:
   repository_dispatch:
@@ -58,44 +59,3 @@ jobs:
           git diff --cached --quiet && echo "No changes" && exit 0
           git commit -m "chore: update ${{ github.event.client_payload.app }} image to ${{ github.event.client_payload.image }}"
           git push
-
-  deploy:
-    name: Apply to EKS via Bastion
-    needs: update
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: main
-
-      - name: Setup SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.BASTION_SSH_KEY }}" > ~/.ssh/bastion.pem
-          chmod 600 ~/.ssh/bastion.pem
-          ssh-keyscan -H ${{ secrets.BASTION_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
-
-      - name: Deploy via Bastion
-        run: |
-          APP="${{ github.event.client_payload.app }}"
-          IMAGE="${{ github.event.client_payload.image }}"
-
-          # Bastion에 SSH 접속하여 kubectl set image 실행
-          # Bastion에는 aws cli + kubectl이 미리 설치되어 있어야 함
-          ssh -i ~/.ssh/bastion.pem ec2-user@${{ secrets.BASTION_HOST }} 'bash -se' << EOF
-            set -o pipefail
-            aws eks update-kubeconfig --name dndn-prd --region ap-northeast-2
-            NAMESPACE="${APP}"
-
-            if [ "${APP}" = "dndn-report" ]; then
-              kubectl set image deployment/dndn-report-api -n \${NAMESPACE} report-api=${IMAGE}
-              kubectl set image deployment/dndn-report-worker -n \${NAMESPACE} report-worker=${IMAGE}
-              kubectl rollout status deployment/dndn-report-api -n \${NAMESPACE} --timeout=120s
-              kubectl rollout status deployment/dndn-report-worker -n \${NAMESPACE} --timeout=120s
-            else
-              kubectl set image deployment/${APP} -n \${NAMESPACE} \
-                \$(kubectl get deployment/${APP} -n \${NAMESPACE} -o jsonpath='{.spec.template.spec.containers[0].name}')=${IMAGE}
-              kubectl rollout status deployment/${APP} -n \${NAMESPACE} --timeout=120s
-            fi
-          EOF

@@ -18,7 +18,7 @@
 - AWS 공통 자원이 먼저 준비되어야 함
 - 고객 계정은 플랫폼 EventBridge ARN을 받은 뒤 연결
 - Lambda 코드는 Terraform과 별도로 배포
-- 앱 이미지는 현재 Git manifest 갱신과 Bastion 롤아웃이 함께 반영
+- 앱 이미지는 Git manifest 갱신 후 Argo CD가 반영
 
 ## Current Operating Assumptions
 
@@ -199,7 +199,7 @@ AWS Secrets Manager 기준 경로:
 
 1. 앱 레포에서 `repository_dispatch`
 2. 이 레포 manifest 이미지 갱신 및 커밋
-3. Bastion 경유 `kubectl set image`
+3. Argo CD가 sync 상태를 맞추며 rollout
 
 예외:
 
@@ -207,9 +207,9 @@ AWS Secrets Manager 기준 경로:
 
 운영 메모:
 
-- 현재는 Argo CD만으로 배포가 끝나지 않는다
+- rollout 기준은 Argo CD sync / health 상태다
 - manifest 커밋이 남지 않은 직접 수동 `kubectl set image`는 피하는 편이 안전하다
-- 클러스터와 Git 상태가 잠깐 어긋나더라도, 최종 기준은 Git manifest다
+- 최종 기준은 Git manifest다
 
 ## Runtime Verification
 
@@ -349,9 +349,8 @@ gitops/environments/staging/root/*
 
 ## Current Gaps
 
-아직 운영 문서에 남겨둘 큰 과제는 아래 4가지입니다.
+아직 운영 문서에 남겨둘 큰 과제는 아래 3가지입니다.
 
 - monitoring 본체를 Helm 유지로 둘지, GitOps 편입할지 여부
-- pure Argo CD 배포로 정리할지 여부
 - `dev`, `staging` 환경의 실제 생성 시점
 - private repo 전환 시 실제 credential cutover 시점

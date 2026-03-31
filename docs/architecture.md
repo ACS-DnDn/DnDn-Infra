@@ -224,22 +224,21 @@ gitops/
 
 ## Current Deployment Reality
 
-문서상 목표와 달리, 현재 앱 배포는 완전한 Argo-only 흐름은 아닙니다.
+현재 앱 배포는 pure Argo CD 경로를 기준으로 합니다.
 
 현재 prod 이미지 반영 순서는 아래와 같습니다.
 
 1. 앱 레포가 이미지를 빌드해 ECR에 푸시
 2. `update-image.yml`이 이 레포의 manifest 이미지를 갱신하고 커밋
-3. 같은 워크플로우가 Bastion을 통해 `kubectl set image`로 즉시 롤아웃
-4. Argo CD가 이후 Git 상태를 기준으로 계속 reconcile
+3. Argo CD가 Git 상태를 감지해 rollout
+4. 운영자는 Argo CD sync / health로 반영 상태를 확인
 
-즉 현재는 Git이 기준선이지만, 롤아웃 방식은 GitOps와 직접 `kubectl`이 같이 존재하는 하이브리드 구조입니다.
+즉 현재 배포 경로의 기준선도 Git이고, 실제 rollout 책임도 Argo CD에 둡니다.
 
 ## Known Gaps
 
-현재 구조에서 문서에 남겨둘 큰 미해결 항목은 아래 4가지입니다.
+현재 구조에서 문서에 남겨둘 큰 미해결 항목은 아래 3가지입니다.
 
 - monitoring 본체를 Helm 유지로 둘지, GitOps 편입할지 여부
-- pure Argo CD 배포로 정리할지 여부
 - `dev`, `staging` 환경의 실제 생성 시점
 - private repo 전환 시 실제 credential cutover 시점
