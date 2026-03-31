@@ -21,6 +21,28 @@
 
 즉 앱 레포는 실행 산출물을 만들고, 이 레포는 그 산출물이 올라갈 AWS / Kubernetes 런타임과 배포 경로를 관리합니다.
 
+## Repo Boundaries
+
+한 줄로 요약하면 아래가 기준입니다.
+
+- `DnDn-Infra`는 where / how to run 을 관리
+- `DnDn-App`, `DnDn-HR`는 what to run 을 관리
+
+좀 더 실무적으로 보면 아래 표 정도면 충분합니다.
+
+| Repo | Owns | Does Not Own |
+| --- | --- | --- |
+| `DnDn-Infra` | AWS 자원, GitOps 선언, 환경별 값, 운영 절차 | 제품 기능 로직, UI 로직 |
+| `DnDn-App` | 메인 서비스 코드, API, worker, report, contracts, 이미지 | AWS 자원 생성, Argo CD 선언, EKS 직접 배포 |
+| `DnDn-HR` | HR 포털 UI와 이미지 | 플랫폼 공통 인프라, 메인 API 배포, EKS 직접 배포 |
+
+경계가 애매할 때는 이 질문으로 판단합니다.
+
+`이 파일이 없어도 AWS 자원과 배포 선언을 유지할 수 있는가`
+
+- 가능하면 `DnDn-App` 또는 `DnDn-HR` 쪽일 가능성이 큼
+- 불가능하면 `DnDn-Infra` 쪽일 가능성이 큼
+
 ## High-Level Shape
 
 현재 구조를 한 줄로 요약하면 아래와 같습니다.
@@ -121,6 +143,19 @@ Terraform은 이 함수들의 런타임 리소스를 만들고, 실제 코드는
   - `dndn-api`, `dndn-report`, `dndn-worker`용 `ServiceMonitor`
 
 주의할 점은, 이 레포가 관리하는 monitoring 범위는 `ServiceMonitor`뿐이고, 실제 kube-prometheus-stack 설치 경로와 values는 아직 이 레포에서 완전히 선언되지 않았다는 점입니다.
+
+현재 prod 워크로드 메모는 아래 표로 보는 편이 가장 빠릅니다.
+
+| Workload | Exposure | Secret | Notes |
+| --- | --- | --- | --- |
+| `dndn-web` | `Ingress` | no | nginx 정적 서빙 |
+| `dndn-api` | `ClusterIP` + `Ingress` | yes | AWS Secrets Manager + ESO |
+| `dndn-worker` | internal | no | ConfigMap + IRSA |
+| `dndn-report-api` | `Ingress` | yes | `/report-api` path 노출 |
+| `dndn-report-worker` | internal | yes | report 공용 이미지 worker |
+| `dndn-hr` | `Ingress` | no | nginx 정적 서빙 |
+
+`dndn-report-api`와 `dndn-report-worker`는 런타임은 분리되지만 동일한 `DnDn-App/apps/report` 이미지 태그를 공유합니다.
 
 ### 5. GitOps Control Plane
 
