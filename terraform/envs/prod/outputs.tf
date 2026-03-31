@@ -18,8 +18,8 @@ output "rds_endpoint" {
 }
 
 output "rds_secret_arn" {
-  description = "RDS 마스터 계정 Secret ARN — Lambda 환경변수 RDS_SECRET_ARN에 사용"
-  value       = module.rds.master_user_secret_arn
+  description = "앱 런타임용 DB 연결 정보 Secret ARN — Lambda 환경변수 RDS_SECRET_ARN에 사용"
+  value       = module.rds.app_secret_arn
 }
 
 # ── Cognito ───────────────────────────────────────────────────────────────────

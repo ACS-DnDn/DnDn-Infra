@@ -26,6 +26,12 @@ variable "db_username" {
   default     = "dndn_app"
 }
 
+variable "app_db_secret_name" {
+  description = "앱 런타임이 참조하는 DB 연결 정보 Secret 이름"
+  type        = string
+  default     = null
+}
+
 variable "private_subnet_ids" {
   description = "프라이빗 서브넷 ID 목록 [2a, 2c]"
   type        = list(string)
