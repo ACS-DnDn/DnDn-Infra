@@ -286,6 +286,46 @@ Resources:
             Resource: '*'
 
   # ============================================================
+  #  VPC Flow Logs — Log Group + IAM Role (customer creates Flow Log manually)
+  # ============================================================
+  FlowLogsLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /dndn/vpc-flow-logs
+      RetentionInDays: 14
+      Tags:
+        - Key: ManagedBy
+          Value: DnDn
+
+  FlowLogsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: DnDnFlowLogsRole
+      Description: IAM Role for VPC Flow Logs to publish to CloudWatch Logs
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: vpc-flow-logs.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: FlowLogsPublish
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - logs:DescribeLogGroups
+                  - logs:DescribeLogStreams
+                Resource: !Sub '${FlowLogsLogGroup.Arn}:*'
+      Tags:
+        - Key: ManagedBy
+          Value: DnDn
+
+  # ============================================================
   #  EventBridge — Real-time event forwarding (customer account → DnDn platform)
   # ============================================================
 
@@ -430,3 +470,9 @@ Outputs:
     Condition: ShouldForwardEvents
     Description: EventBridge forwarding role ARN
     Value: !GetAtt EventBridgeForwardRole.Arn
+  FlowLogsLogGroupName:
+    Description: CloudWatch Log Group for VPC Flow Logs — select this when creating Flow Logs in VPC console
+    Value: !Ref FlowLogsLogGroup
+  FlowLogsRoleArn:
+    Description: IAM Role ARN for VPC Flow Logs — select this when creating Flow Logs in VPC console
+    Value: !GetAtt FlowLogsRole.Arn
