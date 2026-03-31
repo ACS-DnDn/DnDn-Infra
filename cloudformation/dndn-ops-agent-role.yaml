@@ -318,9 +318,12 @@ Resources:
                 Action:
                   - logs:CreateLogStream
                   - logs:PutLogEvents
+                Resource: !Sub '${FlowLogsLogGroup.Arn}:*'
+              - Effect: Allow
+                Action:
                   - logs:DescribeLogGroups
                   - logs:DescribeLogStreams
-                Resource: !Sub '${FlowLogsLogGroup.Arn}:*'
+                Resource: '*'
       Tags:
         - Key: ManagedBy
           Value: DnDn
