@@ -72,11 +72,14 @@ resource "aws_secretsmanager_secret" "app_db" {
 
 resource "aws_secretsmanager_secret_version" "app_db" {
   secret_id = aws_secretsmanager_secret.app_db.id
-  secret_string = jsonencode({
-    host     = aws_db_instance.main.address
-    port     = aws_db_instance.main.port
-    username = jsondecode(data.aws_secretsmanager_secret_version.app_db_existing.secret_string)["username"]
-    password = jsondecode(data.aws_secretsmanager_secret_version.app_db_existing.secret_string)["password"]
-    dbname   = var.db_name
-  })
+  secret_string = jsonencode(
+    merge(
+      jsondecode(data.aws_secretsmanager_secret_version.app_db_existing.secret_string),
+      {
+        host   = aws_db_instance.main.address
+        port   = aws_db_instance.main.port
+        dbname = var.db_name
+      }
+    )
+  )
 }
