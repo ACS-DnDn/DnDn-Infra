@@ -16,6 +16,18 @@ variable "project" {
   default     = "DnDn"
 }
 
+variable "cognito_user_pool_name" {
+  description = "dev Cognito User Pool 이름"
+  type        = string
+  default     = "DnDn_UserPool_DEV_RESERVED"
+}
+
+variable "cognito_app_client_name" {
+  description = "dev Cognito App Client 이름"
+  type        = string
+  default     = "DnDn_AppClient_DEV_RESERVED"
+}
+
 variable "platform_account_id" {
   description = "Platform AWS Account ID"
   type        = string

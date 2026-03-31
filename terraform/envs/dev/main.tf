@@ -132,6 +132,11 @@ module "cognito" {
 
   project     = var.project
   environment = var.environment
+
+  # prod에서 재사용 중인 DEV Cognito 리소스와 이름 충돌이 나지 않도록
+  # reserved suffix를 사용한 별도 이름을 명시한다.
+  user_pool_name  = var.cognito_user_pool_name
+  app_client_name = var.cognito_app_client_name
 }
 
 # ── EventBridge ───────────────────────────────────────────────────────────

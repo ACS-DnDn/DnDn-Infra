@@ -21,5 +21,9 @@ alb_dns_name = "CHANGE_ME_after_ingress"
 # domain    = "dev.dndn.cloud"
 # hr_domain = "dev.dndnhr.cloud"
 
+# prod가 재사용 중인 기존 DEV Cognito 리소스와 겹치지 않도록 별도 이름 사용
+# cognito_user_pool_name  = "DnDn_UserPool_DEV_RESERVED"
+# cognito_app_client_name = "DnDn_AppClient_DEV_RESERVED"
+
 # 이벤트를 전송할 수 있는 고객 계정 ID 목록 (없으면 빈 배열)
 # allowed_account_ids = ["123456789012"]
