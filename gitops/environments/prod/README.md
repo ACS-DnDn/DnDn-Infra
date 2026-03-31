@@ -42,7 +42,27 @@ External Secrets Operator가 아래 경로를 읽어 동일한 이름의 Kuberne
 
 `apps/monitoring` 아래에는 현재 `dndn-api`, `dndn-report`, `dndn-worker`용 `ServiceMonitor`가 포함되어 있으며, root source에서는 `dndn-monitoring` child app으로 연결됩니다.
 
-중요한 점은, 이 디렉터리가 직접 관리하는 monitoring 범위는 `ServiceMonitor`뿐이라는 점입니다. kube-prometheus-stack 본체 설치 경로와 values는 아직 이 레포 기준으로 완전히 선언되지 않았습니다.
+중요한 점은, 이 디렉터리가 직접 관리하는 monitoring 범위는 `ServiceMonitor`뿐이라는 점입니다.
+
+현재 확인된 monitoring 본체 상태:
+
+- Helm release: `kube-prometheus`
+- chart: `kube-prometheus-stack` `82.13.5`
+- appVersion: `v0.89.0`
+- namespace: `monitoring`
+- observed non-sensitive values
+  - `alertmanager.enabled=false`
+  - Grafana service: `NodePort` `30300`
+  - Prometheus retention: `7d`
+  - Prometheus memory: request `256Mi`, limit `512Mi`
+
+즉 kube-prometheus-stack 본체는 Helm으로 설치되어 있고, 현재 이 레포나 Argo CD Application으로 본체 선언을 관리하지는 않습니다.
+
+`argocd` namespace에는 repo/repo-creds secret도 현재 확인되지 않습니다.
+
+private repo 전환 시에는 `argocd` namespace에 직접 수기 secret을 두기보다, AWS Secrets Manager + External Secrets Operator 기반 `repo-creds` 동기화 방식을 기준으로 가져가는 것을 권장합니다.
+
+남아 있는 과제는 monitoring 본체를 계속 Helm 운영으로 둘지, GitOps 편입할지 결정하는 것입니다.
 
 ## Image Rollout
 

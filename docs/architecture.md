@@ -144,6 +144,21 @@ Terraform은 이 함수들의 런타임 리소스를 만들고, 실제 코드는
 
 주의할 점은, 이 레포가 관리하는 monitoring 범위는 `ServiceMonitor`뿐이고, 실제 kube-prometheus-stack 설치 경로와 values는 아직 이 레포에서 완전히 선언되지 않았다는 점입니다.
 
+현재 확인된 monitoring 본체 상태:
+
+- namespace: `monitoring`
+- Helm release name: `kube-prometheus`
+- chart: `kube-prometheus-stack` `82.13.5`
+- appVersion: `v0.89.0`
+- Helm release secret 생성 시각: `2026-03-23T11:52:02Z`
+- observed non-sensitive values
+  - `alertmanager.enabled=false`
+  - Grafana service: `NodePort` `30300`
+  - Prometheus retention: `7d`
+  - Prometheus memory: request `256Mi`, limit `512Mi`
+
+즉 monitoring 본체는 Helm으로 설치되어 있고, 현재 이 레포 / Argo CD가 직접 선언 관리하는 것은 본체가 아니라 `ServiceMonitor` 리소스들입니다.
+
 현재 prod 워크로드 메모는 아래 표로 보는 편이 가장 빠릅니다.
 
 | Workload | Exposure | Secret | Notes |
@@ -172,6 +187,41 @@ Argo CD는 `app-of-apps` 구조로 운영됩니다.
 - `ClusterSecretStore/aws-secretsmanager`
 - `argocd` ingress
 
+## Planned Environment Layout
+
+`dev`, `staging`을 실제로 만들게 되면 현재 구조를 아래처럼 확장하는 것을 기준으로 합니다.
+
+```text
+terraform/
+  envs/
+    dev/
+    staging/
+    prod/
+
+gitops/
+  bootstrap/
+    root-app-dev.yaml
+    root-app-staging.yaml
+    root-app-prod.yaml
+  environments/
+    dev/
+      apps/
+      root/
+    staging/
+      apps/
+      root/
+    prod/
+      apps/
+      root/
+```
+
+운영 원칙:
+
+- `prod`를 기준 구조로 삼고 `dev`, `staging`은 같은 레이아웃으로 복제
+- child app 이름은 유지하고, 환경별 차이는 `gitops/environments/<env>`에서 관리
+- Terraform도 `envs/<env>` 엔트리만 분리하고 모듈은 공통 재사용
+- bootstrap root app은 환경마다 별도 진입점 유지
+
 ## Current Deployment Reality
 
 문서상 목표와 달리, 현재 앱 배포는 완전한 Argo-only 흐름은 아닙니다.
@@ -187,9 +237,9 @@ Argo CD는 `app-of-apps` 구조로 운영됩니다.
 
 ## Known Gaps
 
-현재 구조에서 아직 덜 닫힌 부분은 아래입니다.
+현재 구조에서 문서에 남겨둘 큰 미해결 항목은 아래 4가지입니다.
 
-- `dev`, `staging` 환경 부재
-- monitoring 설치 경로 / values / ownership 미정리
-- Argo CD repo credential 선언 부재
-- event enricher 확장 전략과 후속 worker 방향
+- monitoring 본체를 Helm 유지로 둘지, GitOps 편입할지 여부
+- pure Argo CD 배포로 정리할지 여부
+- `dev`, `staging` 환경의 실제 생성 시점
+- private repo 전환 시 실제 credential cutover 시점

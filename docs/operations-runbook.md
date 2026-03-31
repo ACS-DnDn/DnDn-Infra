@@ -254,12 +254,104 @@ kubectl logs -n dndn-report deploy/dndn-report-worker --tail=100
 
 현재 이 레포가 직접 관리하는 monitoring 범위는 `dndn-monitoring` child app 아래 `ServiceMonitor` 리소스뿐입니다.
 
-다만 kube-prometheus-stack 본체의 설치 경로, chart/version, values, ownership은 이 레포 기준으로 아직 완전히 선언되지 않았고 별도 정리가 필요합니다.
+현재 확인된 본체 정보:
+
+- Helm release: `kube-prometheus`
+- chart: `kube-prometheus-stack` `82.13.5`
+- appVersion: `v0.89.0`
+- namespace: `monitoring`
+- Helm release secret 생성 시각: `2026-03-23T11:52:02Z`
+- observed non-sensitive values
+  - `alertmanager.enabled=false`
+  - Grafana service: `NodePort` `30300`
+  - Prometheus retention: `7d`
+  - Prometheus memory: request `256Mi`, limit `512Mi`
+
+또한 `argocd`에는 repo/repo-creds secret이 확인되지 않았고, monitoring 본체를 관리하는 별도 Application도 없습니다. `dndn-monitoring` 앱은 `ServiceMonitor` 3개만 관리합니다.
+
+다만 설치 주체와 이후 변경 절차는 이 레포 기준으로 아직 완전히 정리되지 않았고 별도 문서화가 필요합니다.
+
+## Monitoring Ownership And Change Rules
+
+현재 운영 기준에서는 monitoring 본체를 `DnDn-Infra` 운영 범위로 보고, 변경 책임도 인프라 운영자에게 둡니다.
+
+현재 관리 분리:
+
+- Helm release `kube-prometheus`
+  - Grafana / Prometheus / operator / kube-state-metrics / node-exporter 본체
+- Argo CD `dndn-monitoring`
+  - `ServiceMonitor` 3개만 관리
+
+변경 절차 기준:
+
+1. 현재 release 상태와 values를 먼저 확인
+2. chart/version 변경 여부를 명시
+3. Helm 변경은 운영 창구에서 수행
+4. 변경 후 `monitoring` pod, Grafana ingress, Prometheus 상태 확인
+5. 변경 결과를 이 레포 문서에 반영
+
+즉 지금 단계에서는 monitoring 본체를 "레포 밖 Helm 운영", 앱 메트릭 연결만 "레포 안 GitOps 운영"으로 본다.
+
+## Private Repo Credential Strategy
+
+private repo 전환 시 Argo CD credential은 `argocd` namespace에 직접 수기 생성하지 않고, AWS Secrets Manager + External Secrets Operator 경로로 넣는 것을 기준으로 합니다.
+
+권장 구조:
+
+- Secrets Manager secret
+  - 예: `/dndn/prod/argocd/repo-creds`
+- `argocd` namespace `ExternalSecret`
+  - GitHub credential을 Argo CD용 secret으로 동기화
+- Argo CD secret type
+  - `repo-creds`
+- URL prefix
+  - `https://github.com/ACS-DnDn`
+
+운영 원칙:
+
+- 토큰은 Git에 두지 않음
+- 가능한 한 repo 단건 secret보다 `repo-creds` prefix 방식 우선
+- private cutover 전에 `Application` / `AppProject`의 `repoURL`과 credential prefix가 맞는지 검증
+
+현재 상태:
+
+- `argocd` namespace에 repo/repo-creds secret 없음
+- public GitHub direct access 전제
+
+## Dev And Staging Structure
+
+`dev`, `staging`을 만들 경우 디렉터리 구조는 아래를 기준으로 합니다.
+
+```text
+terraform/envs/dev
+terraform/envs/staging
+
+gitops/bootstrap/root-app-dev.yaml
+gitops/bootstrap/root-app-staging.yaml
+
+gitops/environments/dev/apps/*
+gitops/environments/dev/root/*
+
+gitops/environments/staging/apps/*
+gitops/environments/staging/root/*
+```
+
+권장 운영 차이:
+
+- `dev`
+  - 구조 검증과 실험용
+  - automated sync 허용
+- `staging`
+  - prod 직전 검증용
+  - prod와 최대한 동일한 배포 경로 유지
+- `prod`
+  - 승인된 변경만 반영
 
 ## Current Gaps
 
-아직 남아 있는 운영 과제는 아래입니다.
+아직 운영 문서에 남겨둘 큰 과제는 아래 4가지입니다.
 
-- monitoring 스택 본체 설치 경로 / values / ownership
+- monitoring 본체를 Helm 유지로 둘지, GitOps 편입할지 여부
 - pure Argo CD 배포로 정리할지 여부
-- `dev`, `staging` 환경 전략
+- `dev`, `staging` 환경의 실제 생성 시점
+- private repo 전환 시 실제 credential cutover 시점
