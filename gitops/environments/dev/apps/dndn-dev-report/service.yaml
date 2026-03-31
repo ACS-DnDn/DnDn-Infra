@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: dndn-dev-report
+  namespace: dndn-dev-report
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  labels:
+    app: dndn-dev-report-api
+spec:
+  type: ClusterIP
+  selector:
+    app: dndn-dev-report-api
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
+      protocol: TCP

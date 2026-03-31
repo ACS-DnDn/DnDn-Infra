@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: dndn-dev-api
+  namespace: dndn-dev-api
+  labels:
+    app: dndn-dev-api
+spec:
+  type: ClusterIP
+  selector:
+    app: dndn-dev-api
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
+      protocol: TCP

@@ -1,0 +1,29 @@
+# terraform apply 전에 이 파일을 terraform.tfvars로 복사하고 값을 채우세요.
+# terraform.tfvars는 .gitignore에 포함되어 커밋되지 않습니다.
+
+# Lambda → API 내부 인증 키 (랜덤 문자열)
+internal_api_key = "CHANGE_ME_random_secret_key"
+
+# API Internal URL (ALB 배포 후 DNS로 변경)
+# 초기에는 빈 값 또는 placeholder — scheduler-trigger Lambda가 사용
+api_internal_url = "http://placeholder.local"
+
+# K8s Ingress가 ALB를 생성한 뒤 Route53 alias 대상으로 사용할 DNS 이름
+# 예: k8s-dndndev-xxxxxxxxxx.ap-northeast-2.elb.amazonaws.com
+alb_dns_name = "CHANGE_ME_after_ingress"
+
+# dev는 전역 리소스를 기본 비활성화로 둠
+# 필요할 때만 true로 전환
+# manage_eventbridge         = true
+# manage_public_dns          = true
+# manage_public_assets_bucket = true
+
+# domain    = "dev.dndn.cloud"
+# hr_domain = "dev.dndnhr.cloud"
+
+# prod가 재사용 중인 기존 DEV Cognito 리소스와 겹치지 않도록 별도 이름 사용
+# cognito_user_pool_name  = "DnDn_UserPool_DEV_RESERVED"
+# cognito_app_client_name = "DnDn_AppClient_DEV_RESERVED"
+
+# 이벤트를 전송할 수 있는 고객 계정 ID 목록 (없으면 빈 배열)
+# allowed_account_ids = ["123456789012"]

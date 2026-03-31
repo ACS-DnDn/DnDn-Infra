@@ -1,0 +1,17 @@
+# NOTE:
+# dev/root 는 Argo CD root app이 직접 읽는 self-contained source 입니다.
+# 동일한 AppProject/Application 정의가 gitops/projects/*, gitops/apps/* 에도 존재하지만,
+# root app은 Argo CD의 kustomize path restriction 때문에 이 디렉터리 안 파일만 참조합니다.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - platform-project.yaml
+  - dndn-dev-external-secrets-app.yaml
+  - aws-secretsmanager-store.yaml
+  - dndn-dev-api-app.yaml
+  - dndn-dev-web-app.yaml
+  - dndn-dev-worker-app.yaml
+  - dndn-dev-report-app.yaml
+  - dndn-dev-hr-app.yaml
+  - dndn-dev-monitoring-app.yaml
+  - argocd-ingress.yaml

@@ -1,0 +1,46 @@
+# ── ALB Ingress: dev.dndn.cloud — Web 프론트엔드 (기본 라우트) ─────────────────
+# 동일 ALB를 공유하기 위해 group.name = "dndn-dev-public" 사용
+# 각 네임스페이스별 Ingress를 group.order로 우선순위 지정
+#
+# certificate-arn은 terraform apply 후 output 값으로 채울 것:
+#   terraform output acm_certificate_arn
+#   terraform output acm_hr_certificate_arn
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dndn-dev-web-ingress
+  namespace: dndn-dev-web
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+    alb.ingress.kubernetes.io/certificate-arn: "REPLACE_ME_DEV_CERT_ARN"
+    alb.ingress.kubernetes.io/group.name: dndn-dev-public
+    alb.ingress.kubernetes.io/group.order: "100"
+    alb.ingress.kubernetes.io/healthcheck-path: /
+spec:
+  rules:
+    - host: www.dev.dndn.cloud
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: dndn-dev-web
+                port:
+                  number: 80
+    - host: dev.dndn.cloud
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: dndn-dev-web
+                port:
+                  number: 80

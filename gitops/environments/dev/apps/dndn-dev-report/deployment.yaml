@@ -1,0 +1,104 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dndn-dev-report-api
+  namespace: dndn-dev-report
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+  labels:
+    app: dndn-dev-report-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dndn-dev-report-api
+  template:
+    metadata:
+      labels:
+        app: dndn-dev-report-api
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      serviceAccountName: dndn-dev-reporter-sa
+      containers:
+        - name: report-api
+          image: 387721658341.dkr.ecr.ap-northeast-2.amazonaws.com/dndn-dev-report:ab51a3facacd9bc8dbc7d25dc01f70087491fc2c
+          securityContext:
+            allowPrivilegeEscalation: false
+          ports:
+            - containerPort: 8000
+          env:
+            - name: UV_NO_CACHE
+              value: "true"
+          envFrom:
+            - configMapRef:
+                name: dndn-dev-report-config
+            - secretRef:
+                name: dndn-dev-report-secret
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dndn-dev-report-worker
+  namespace: dndn-dev-report
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+  labels:
+    app: dndn-dev-report-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dndn-dev-report-worker
+  template:
+    metadata:
+      labels:
+        app: dndn-dev-report-worker
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      serviceAccountName: dndn-dev-reporter-sa
+      containers:
+        - name: report-worker
+          image: 387721658341.dkr.ecr.ap-northeast-2.amazonaws.com/dndn-dev-report:ab51a3facacd9bc8dbc7d25dc01f70087491fc2c
+          command: ["/app/.venv/bin/python", "-m", "apps.report.src.sqs_worker"]
+          securityContext:
+            allowPrivilegeEscalation: false
+          env:
+            - name: UV_NO_CACHE
+              value: "true"
+          envFrom:
+            - configMapRef:
+                name: dndn-dev-report-config
+            - secretRef:
+                name: dndn-dev-report-secret
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi

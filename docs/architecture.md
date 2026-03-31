@@ -91,7 +91,9 @@ Operational Workloads
 
 ### 2. Shared AWS Infrastructure
 
-플랫폼 계정의 공통 인프라는 `terraform/envs/prod`가 기준입니다.
+플랫폼 계정의 공통 인프라는 현재 `terraform/envs/prod`가 실제 적용 기준입니다.
+
+추가로 `terraform/envs/dev` scaffold가 코드상으로 준비되어 있지만, 아직 workflow나 실제 state/backend 생성까지 연결된 활성 환경은 아닙니다.
 
 현재 prod에서 실제로 조립되는 모듈:
 
@@ -201,27 +203,24 @@ Argo CD는 `app-of-apps` 구조로 운영됩니다.
 - `ClusterSecretStore/aws-secretsmanager`
 - `argocd` ingress
 
-## Planned Environment Layout
+## Environment Layout
 
-`dev`, `staging`을 실제로 만들게 되면 현재 구조를 아래처럼 확장하는 것을 기준으로 합니다.
+현재 저장소에는 `prod`와 `dev` 구조가 잡혀 있고, `dev`도 prod와 유사한 app-of-apps / child app 골격까지 코드상 포함합니다.
+
+활성화 기준 레이아웃은 아래와 같습니다.
 
 ```text
 terraform/
   envs/
     dev/
-    staging/
     prod/
 
 gitops/
   bootstrap/
     root-app-dev.yaml
-    root-app-staging.yaml
     root-app-prod.yaml
   environments/
     dev/
-      apps/
-      root/
-    staging/
       apps/
       root/
     prod/
@@ -231,10 +230,17 @@ gitops/
 
 운영 원칙:
 
-- `prod`를 기준 구조로 삼고 `dev`, `staging`은 같은 레이아웃으로 복제
+- `prod`를 기준 구조로 삼고 `dev`는 같은 레이아웃으로 축소 복제
 - child app 이름은 유지하고, 환경별 차이는 `gitops/environments/<env>`에서 관리
 - Terraform도 `envs/<env>` 엔트리만 분리하고 모듈은 공통 재사용
 - bootstrap root app은 환경마다 별도 진입점 유지
+- `dev` scaffold 변경만으로는 현재 prod Terraform workflow가 돌지 않도록 분리
+
+현재 주의점:
+
+- `dev`는 root app, child app, app manifest까지 코드상 준비됨
+- 다만 `route53`, `acm`, `eventbridge`, `s3_public`는 기본 비활성화 상태이며, 일부 GitOps 값도 placeholder로 남아 있음
+- 즉 현재 상태는 "의도가 보이는 reserved dev 환경 코드"이지 "즉시 apply 가능한 완전한 독립 dev 환경"은 아님
 
 ## Current Deployment Reality
 
@@ -253,5 +259,6 @@ gitops/
 
 현재 구조에서 문서에 남겨둘 큰 미해결 항목은 아래 2가지입니다.
 
-- `dev`, `staging` 환경의 실제 생성 시점
+- `dev` scaffold를 실제 인프라와 Argo CD 환경으로 활성화할 시점
+  - `route53`, `acm`, `eventbridge`, `s3_public` 같은 전역 리소스 활성화 전략과 placeholder 값 확정 포함
 - private repo 전환 시 실제 credential cutover 시점

@@ -52,7 +52,7 @@ output "s3_bucket_name" {
 
 output "event_bus_arn" {
   description = "플랫폼 EventBridge Bus ARN — 고객 CFN 파라미터 DnDnEventBusArn에 사용"
-  value       = module.eventbridge.event_bus_arn
+  value       = var.manage_eventbridge ? module.eventbridge[0].event_bus_arn : null
 }
 
 # ── EventBridge Scheduler ─────────────────────────────────────────────────────
@@ -98,24 +98,24 @@ output "irsa_external_secrets_role_arn" {
 
 output "acm_certificate_arn" {
   description = "dndn.cloud ACM 인증서 ARN — ALB Ingress annotation에 사용"
-  value       = module.acm.certificate_arn
+  value       = var.manage_public_dns ? module.acm[0].certificate_arn : null
 }
 
 output "acm_hr_certificate_arn" {
   description = "dndnhr.cloud ACM 인증서 ARN — ALB Ingress annotation에 사용"
-  value       = module.acm.hr_certificate_arn
+  value       = var.manage_public_dns ? module.acm[0].hr_certificate_arn : null
 }
 
 # ── S3 Public ─────────────────────────────────────────────────────────────────
 
 output "s3_public_bucket_name" {
   description = "퍼블릭 자산 버킷 이름 — CFN 템플릿 업로드 대상"
-  value       = module.s3_public.bucket_name
+  value       = var.manage_public_assets_bucket ? module.s3_public[0].bucket_name : null
 }
 
 output "s3_public_cfn_base_url" {
   description = "고객 배포용 CFN base URL — 온보딩 플로우에서 Launch Stack URL 생성에 사용"
-  value       = module.s3_public.cfn_base_url
+  value       = var.manage_public_assets_bucket ? module.s3_public[0].cfn_base_url : null
 }
 
 # ── App Secrets ──────────────────────────────────────────────────────────────
@@ -134,10 +134,10 @@ output "app_secret_report_arn" {
 
 output "route53_name_servers" {
   description = "dndn.cloud NS 레코드 — 도메인 등록기관에 입력 필요"
-  value       = module.route53.name_servers
+  value       = var.manage_public_dns ? module.route53[0].name_servers : null
 }
 
 output "route53_hr_name_servers" {
   description = "dndnhr.cloud NS 레코드 — 도메인 등록기관에 입력 필요"
-  value       = module.route53.hr_name_servers
+  value       = var.manage_public_dns ? module.route53[0].hr_name_servers : null
 }
