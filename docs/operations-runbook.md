@@ -168,6 +168,21 @@ AWS Secrets Manager 기준 경로:
 - `/dndn/prod/api`
 - `/dndn/prod/report`
 
+## RDS Credential Rule
+
+현재 `prod` DB credential의 source of truth는 RDS managed master secret이 아니라 AWS Secrets Manager의 `dndn-prd-app-db` secret입니다.
+
+- `finding-enricher`, `health-enricher` Lambda는 `RDS_SECRET_ARN`으로 `dndn-prd-app-db`를 사용합니다
+- 현재 prod RDS는 운영상 `manage_master_user_password`를 사용하지 않습니다
+- Terraform도 `master_user_secret`이 아니라 `app-db` secret 기준으로 맞춥니다
+
+비밀번호 변경 시에는 아래를 하나의 절차로 수행합니다.
+
+1. RDS 비밀번호 변경
+2. `dndn-prd-app-db` secret 갱신
+3. 관련 워크로드 재기동 또는 재배포
+4. DB 연결 확인
+
 ## Terraform Operation Rules
 
 현재 `terraform.yml` 운영 기준은 아래와 같습니다.
