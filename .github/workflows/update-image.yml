@@ -10,6 +10,10 @@ on:
     # client_payload 예시:
     # { "app": "dndn-api", "image": "387721658341.dkr.ecr.ap-northeast-2.amazonaws.com/dndn-prd-api:abc123" }
 
+concurrency:
+  group: gitops-image-update-prod
+  cancel-in-progress: false
+
 permissions:
   contents: write
 
@@ -45,8 +49,8 @@ jobs:
             exit 1
           fi
 
-          # sed로 image 라인 교체
-          sed -i "s|image: .*|image: ${IMAGE}|" "$MANIFEST"
+          # container spec의 image 필드만 교체
+          sed -i "s|^\\([[:space:]]*\\)image: .*|\\1image: ${IMAGE}|" "$MANIFEST"
 
           echo "Updated ${MANIFEST} → ${IMAGE}"
           cat "$MANIFEST" | grep "image:"
@@ -58,4 +62,5 @@ jobs:
           git add gitops/
           git diff --cached --quiet && echo "No changes" && exit 0
           git commit -m "chore: update ${{ github.event.client_payload.app }} image to ${{ github.event.client_payload.image }}"
+          git pull --rebase origin main
           git push
