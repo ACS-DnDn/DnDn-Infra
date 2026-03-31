@@ -374,10 +374,12 @@ gitops/environments/dev/root/*
 - `prod`
   - 승인된 변경만 반영
 
-## Current Gaps
+## Future Options
 
-아직 운영 문서에 남겨둘 큰 과제는 아래 2가지입니다.
+현재 `prod` 운영 기준으로 즉시 처리할 큰 과제는 없습니다.
 
-- `dev` scaffold를 실제 인프라와 Argo CD 환경으로 활성화할 시점
-  - `route53`, `acm`, `eventbridge`, `s3_public` 같은 전역 리소스 활성화 전략과 placeholder 값 확정 포함
-- private repo 전환 시 실제 credential cutover 시점
+필요 시 아래 항목만 후속으로 검토합니다.
+
+- `dev` scaffold 실제 활성화
+  - `route53`, `acm`, `eventbridge`, `s3_public` 같은 전역 리소스 전략과 placeholder 값 확정 포함
+- private repo 전환 시 credential cutover

@@ -10,5 +10,4 @@
   - `web`, `api`, `worker`, `report`, `hr`, `monitoring` manifest까지 포함
   - 다만 인증서 ARN, 일부 Cognito/EventBridge 값은 placeholder로 남겨둠
 - `gitops/bootstrap/root-app-dev.yaml`
-  - future entrypoint로만 준비됨
-
+  - 필요 시 적용할 future entrypoint로만 준비됨

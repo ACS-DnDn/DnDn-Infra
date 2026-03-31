@@ -236,7 +236,7 @@ gitops/
 - bootstrap root app은 환경마다 별도 진입점 유지
 - `dev` scaffold 변경만으로는 현재 prod Terraform workflow가 돌지 않도록 분리
 
-현재 주의점:
+현재 상태:
 
 - `dev`는 root app, child app, app manifest까지 코드상 준비됨
 - 다만 `route53`, `acm`, `eventbridge`, `s3_public`는 기본 비활성화 상태이며, 일부 GitOps 값도 placeholder로 남아 있음
@@ -255,10 +255,12 @@ gitops/
 
 즉 현재 배포 경로의 기준선도 Git이고, 실제 rollout 책임도 Argo CD에 둡니다.
 
-## Known Gaps
+## Future Options
 
-현재 구조에서 문서에 남겨둘 큰 미해결 항목은 아래 2가지입니다.
+현재 `prod` 구조 기준으로 큰 미해결 항목은 없습니다.
 
-- `dev` scaffold를 실제 인프라와 Argo CD 환경으로 활성화할 시점
-  - `route53`, `acm`, `eventbridge`, `s3_public` 같은 전역 리소스 활성화 전략과 placeholder 값 확정 포함
-- private repo 전환 시 실제 credential cutover 시점
+필요 시 아래 항목만 후속으로 검토하면 됩니다.
+
+- `dev` scaffold 실제 활성화
+  - `route53`, `acm`, `eventbridge`, `s3_public` 같은 전역 리소스 전략과 placeholder 값 확정 포함
+- private repo 전환 시 credential cutover
