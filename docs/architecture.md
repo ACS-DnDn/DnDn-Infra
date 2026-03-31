@@ -159,6 +159,20 @@ Terraform은 이 함수들의 런타임 리소스를 만들고, 실제 코드는
 
 즉 monitoring 본체는 Helm으로 설치되어 있고, 현재 이 레포 / Argo CD가 직접 선언 관리하는 것은 본체가 아니라 `ServiceMonitor` 리소스들입니다.
 
+현재 운영 원칙은 monitoring 본체를 앱 배포 도메인과 분리하는 것입니다.
+
+이유:
+
+- 앱 배포 sync 실패가 Prometheus / Grafana 본체 안정성에 영향을 주지 않게 하기 위함
+- 관측 도구를 앱 rollout 실패 도메인 밖에 두기 위함
+
+즉 현재 구조는 의도적으로 아래처럼 나뉩니다.
+
+- monitoring 본체
+  - 별도 Helm 운영
+- 앱 메트릭 연결
+  - 이 레포의 `dndn-monitoring` Argo CD app이 `ServiceMonitor`만 관리
+
 현재 prod 워크로드 메모는 아래 표로 보는 편이 가장 빠릅니다.
 
 | Workload | Exposure | Secret | Notes |
@@ -237,8 +251,7 @@ gitops/
 
 ## Known Gaps
 
-현재 구조에서 문서에 남겨둘 큰 미해결 항목은 아래 3가지입니다.
+현재 구조에서 문서에 남겨둘 큰 미해결 항목은 아래 2가지입니다.
 
-- monitoring 본체를 Helm 유지로 둘지, GitOps 편입할지 여부
 - `dev`, `staging` 환경의 실제 생성 시점
 - private repo 전환 시 실제 credential cutover 시점

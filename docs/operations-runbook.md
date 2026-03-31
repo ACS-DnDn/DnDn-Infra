@@ -269,7 +269,12 @@ kubectl logs -n dndn-report deploy/dndn-report-worker --tail=100
 
 또한 `argocd`에는 repo/repo-creds secret이 확인되지 않았고, monitoring 본체를 관리하는 별도 Application도 없습니다. `dndn-monitoring` 앱은 `ServiceMonitor` 3개만 관리합니다.
 
-다만 설치 주체와 이후 변경 절차는 이 레포 기준으로 아직 완전히 정리되지 않았고 별도 문서화가 필요합니다.
+현재 운영 의도는 monitoring 본체를 앱 배포 도메인과 분리하는 것입니다.
+
+이유:
+
+- 앱 배포 sync 중 문제가 생겨도 Prometheus / Grafana 본체까지 같이 영향받지 않게 하기 위함
+- 관측 스택을 앱 rollout 실패 도메인 밖에 두기 위함
 
 ## Monitoring Ownership And Change Rules
 
@@ -291,6 +296,8 @@ kubectl logs -n dndn-report deploy/dndn-report-worker --tail=100
 5. 변경 결과를 이 레포 문서에 반영
 
 즉 지금 단계에서는 monitoring 본체를 "레포 밖 Helm 운영", 앱 메트릭 연결만 "레포 안 GitOps 운영"으로 본다.
+
+이 분리는 의도된 운영 정책이며, 앱 배포와 monitoring 본체를 같은 root/app-of-apps 흐름에 묶지 않는 것을 기준으로 한다.
 
 ## Private Repo Credential Strategy
 
@@ -349,8 +356,7 @@ gitops/environments/staging/root/*
 
 ## Current Gaps
 
-아직 운영 문서에 남겨둘 큰 과제는 아래 3가지입니다.
+아직 운영 문서에 남겨둘 큰 과제는 아래 2가지입니다.
 
-- monitoring 본체를 Helm 유지로 둘지, GitOps 편입할지 여부
 - `dev`, `staging` 환경의 실제 생성 시점
 - private repo 전환 시 실제 credential cutover 시점
