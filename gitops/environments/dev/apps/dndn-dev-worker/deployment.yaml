@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dndn-dev-worker
+  namespace: dndn-dev-worker
+  labels:
+    app: dndn-dev-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dndn-dev-worker
+  template:
+    metadata:
+      labels:
+        app: dndn-dev-worker
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      serviceAccountName: dndn-dev-worker-sa
+      containers:
+        - name: worker
+          image: 387721658341.dkr.ecr.ap-northeast-2.amazonaws.com/dndn-dev-worker:614110cad3f0537f06abc727569d0cb963ff36b4
+          securityContext:
+            allowPrivilegeEscalation: false
+          envFrom:
+            - configMapRef:
+                name: dndn-dev-worker-config
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi

@@ -1,0 +1,18 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: dndn-dev-worker
+  namespace: monitoring
+  labels:
+    release: kube-prometheus
+spec:
+  namespaceSelector:
+    matchNames:
+      - dndn-dev-worker
+  selector:
+    matchLabels:
+      app: dndn-dev-worker
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s

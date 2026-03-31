@@ -4,11 +4,14 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - 'terraform/**'
+      - 'terraform/envs/prod/**'
+      - 'terraform/modules/**'
+      - '.github/workflows/terraform.yml'
   push:
     branches: [main]
     paths:
-      - 'terraform/**'
+      - 'terraform/envs/prod/**'
+      - 'terraform/modules/**'
   workflow_dispatch:
     inputs:
       mode:

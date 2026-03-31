@@ -1,0 +1,41 @@
+# ── ALB Ingress: dev.dndnhr.cloud /api → dndn-dev-api (같은 네임스페이스) ──────────
+# ExternalName이 ALB ip target-type에서 동작하지 않으므로
+# dndn-dev-api 네임스페이스에서 직접 서비스 참조
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dndnhr-api-ingress
+  namespace: dndn-dev-api
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+    alb.ingress.kubernetes.io/certificate-arn: "REPLACE_ME_DEV_HR_CERT_ARN"
+    alb.ingress.kubernetes.io/group.name: dndn-dev-public
+    alb.ingress.kubernetes.io/group.order: "15"
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+spec:
+  rules:
+    - host: www.dev.dndnhr.cloud
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: dndn-dev-api
+                port:
+                  number: 8000
+    - host: dev.dndnhr.cloud
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: dndn-dev-api
+                port:
+                  number: 8000

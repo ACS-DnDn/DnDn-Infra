@@ -1,0 +1,43 @@
+# ── ALB Ingress: dev.dndnhr.cloud — HR 프론트엔드 ─────────────────────────────
+# dndn-dev-public 그룹에 합류 → 동일 ALB 공유
+# HR 전용 ACM 인증서를 추가 인증서로 등록
+# /api 경로는 dndn-dev-api 네임스페이스의 dndnhr-api-ingress에서 처리
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dndn-dev-hr-ingress
+  namespace: dndn-dev-hr
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+    alb.ingress.kubernetes.io/certificate-arn: "REPLACE_ME_DEV_HR_CERT_ARN"
+    alb.ingress.kubernetes.io/group.name: dndn-dev-public
+    alb.ingress.kubernetes.io/group.order: "90"
+    alb.ingress.kubernetes.io/healthcheck-path: /
+spec:
+  rules:
+    - host: www.dev.dndnhr.cloud
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: dndn-dev-hr
+                port:
+                  number: 80
+    - host: dev.dndnhr.cloud
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: dndn-dev-hr
+                port:
+                  number: 80
