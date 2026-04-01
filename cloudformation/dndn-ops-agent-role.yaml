@@ -189,6 +189,7 @@ Resources:
               - cloudwatch:GetMetricStatistics
               - cloudwatch:ListMetrics
               - cloudwatch:DescribeAlarms
+              - cloudwatch:DescribeAlarmHistory
               - cloudwatch:DescribeAnomalyDetectors
             Resource: '*'
           - Sid: LogsRead
