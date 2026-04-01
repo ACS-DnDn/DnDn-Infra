@@ -1,0 +1,42 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cluster-autoscaler
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: platform
+  source:
+    repoURL: https://kubernetes.github.io/autoscaler
+    chart: cluster-autoscaler
+    # EKS 1.32 기준 — 업그레이드 시 k8s 버전과 맞는 CA 버전으로 교체
+    targetRevision: 9.45.0
+    helm:
+      values: |
+        autoDiscovery:
+          clusterName: dndn-prd
+        awsRegion: ap-northeast-2
+        extraArgs:
+          scale-down-delay-after-add: 5m
+          scale-down-unneeded-time: 5m
+          skip-nodes-with-system-pods: "false"
+        rbac:
+          create: true
+          serviceAccount:
+            create: true
+            name: cluster-autoscaler
+        resources:
+          requests:
+            cpu: 100m
+            memory: 300Mi
+          limits:
+            cpu: 100m
+            memory: 300Mi
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

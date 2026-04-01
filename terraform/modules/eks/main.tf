@@ -86,6 +86,32 @@ resource "aws_iam_role_policy_attachment" "node_ecr" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
 }
 
+# ── Cluster Autoscaler IAM Policy ────────────────────────────────────────
+
+resource "aws_iam_role_policy" "node_cluster_autoscaler" {
+  name = "${local.prefix}-ClusterAutoscalerPolicy"
+  role = aws_iam_role.node.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "autoscaling:DescribeAutoScalingGroups",
+        "autoscaling:DescribeAutoScalingInstances",
+        "autoscaling:DescribeLaunchConfigurations",
+        "autoscaling:DescribeScalingActivities",
+        "autoscaling:SetDesiredCapacity",
+        "autoscaling:TerminateInstanceInAutoScalingGroup",
+        "ec2:DescribeImages",
+        "ec2:GetInstanceTypesFromInstanceRequirements",
+        "eks:DescribeNodegroup"
+      ]
+      Resource = "*"
+    }]
+  })
+}
+
 # ── Managed Node Group ────────────────────────────────────────────────────
 
 resource "aws_eks_node_group" "main" {
@@ -104,6 +130,12 @@ resource "aws_eks_node_group" "main" {
 
   update_config {
     max_unavailable = 1
+  }
+
+  # Cluster Autoscaler 자동 발견 태그
+  tags = {
+    "k8s.io/cluster-autoscaler/enabled"                                 = "true"
+    "k8s.io/cluster-autoscaler/${lower(var.project)}-${lower(var.environment)}" = "true"
   }
 
   # 추가 SG (ALB → NodePort 트래픽)
