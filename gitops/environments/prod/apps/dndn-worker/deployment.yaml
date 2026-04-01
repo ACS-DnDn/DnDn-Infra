@@ -22,7 +22,7 @@ spec:
       serviceAccountName: dndn-worker-sa
       containers:
         - name: worker
-          image: 387721658341.dkr.ecr.ap-northeast-2.amazonaws.com/dndn-prd-worker:0fe66325aeca57071a9a4f8e3ad79f0ce90832f4
+          image: 387721658341.dkr.ecr.ap-northeast-2.amazonaws.com/dndn-prd-worker:3c733a1d005747b9ee7f568bff08536938c8682c
           securityContext:
             allowPrivilegeEscalation: false
           envFrom:
