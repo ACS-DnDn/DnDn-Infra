@@ -15,4 +15,5 @@ resources:
   - dndn-hr-app.yaml
   - dndn-monitoring-app.yaml
   - cluster-autoscaler-app.yaml
+  - metrics-server-app.yaml
   - argocd-ingress.yaml

@@ -10,6 +10,8 @@ spec:
   sourceRepos:
     - https://github.com/ACS-DnDn/DnDn-Infra.git
     - https://charts.external-secrets.io
+    - https://kubernetes.github.io/autoscaler
+    - https://kubernetes-sigs.github.io/metrics-server
   destinations:
     - namespace: dndn-api
       server: https://kubernetes.default.svc
@@ -26,6 +28,8 @@ spec:
     - namespace: argocd
       server: https://kubernetes.default.svc
     - namespace: monitoring
+      server: https://kubernetes.default.svc
+    - namespace: kube-system
       server: https://kubernetes.default.svc
   clusterResourceWhitelist:
     - group: "*"
