@@ -135,7 +135,7 @@ resource "aws_eks_node_group" "main" {
   # Cluster Autoscaler 자동 발견 태그
   tags = {
     "k8s.io/cluster-autoscaler/enabled"                                 = "true"
-    "k8s.io/cluster-autoscaler/${lower(var.project)}-${lower(var.environment)}" = "owned"
+    "k8s.io/cluster-autoscaler/${lower(var.project)}-${lower(var.environment)}" = "true"
   }
 
   # 추가 SG (ALB → NodePort 트래픽)
