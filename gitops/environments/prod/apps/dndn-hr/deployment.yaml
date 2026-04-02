@@ -21,7 +21,7 @@ spec:
         fsGroup: 101
       containers:
         - name: hr
-          image: 387721658341.dkr.ecr.ap-northeast-2.amazonaws.com/dndn-prd-hr:a26a6603bd6847ef535e6f2c617ac6e02b05e095
+          image: 387721658341.dkr.ecr.ap-northeast-2.amazonaws.com/dndn-prd-hr:5d833a1bc8960a177c1283af7b6258ccd687df17
           securityContext:
             allowPrivilegeEscalation: false
           ports:
